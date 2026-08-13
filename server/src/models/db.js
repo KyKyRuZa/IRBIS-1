@@ -1,0 +1,116 @@
+import pkg from 'pg';
+const { Pool } = pkg;
+
+const pool = new Pool({
+  host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || 5432,
+  database: process.env.DB_NAME || 'irbis',
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD || 'postgres',
+});
+
+export async function initDB() {
+  const createTables = `
+    CREATE TABLE IF NOT EXISTS sites (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      responsible_person VARCHAR(255)
+    );
+
+    CREATE TABLE IF NOT EXISTS employees (
+      id SERIAL PRIMARY KEY,
+      full_name VARCHAR(255) NOT NULL,
+      personnel_number VARCHAR(255),
+      position VARCHAR(255) NOT NULL,
+      site_id INTEGER REFERENCES sites(id) ON DELETE SET NULL,
+      position_change_date DATE,
+      gender VARCHAR(20) CHECK (gender IN ('male', 'female', 'other')),
+      hire_date DATE,
+      clothing_size VARCHAR(50),
+      shoe_size VARCHAR(50),
+      hat_size VARCHAR(50),
+      respirator_size VARCHAR(50),
+      gloves_size VARCHAR(50),
+      height INTEGER,
+      status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'terminated')),
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS item_types (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      category VARCHAR(50) NOT NULL CHECK (category IN ('clothing', 'footwear', 'siz', 'consumable')),
+      unit VARCHAR(50) DEFAULT 'шт',
+      default_wear_time_months INTEGER,
+      seasonality VARCHAR(50) CHECK (seasonality IN ('winter', 'summer', 'year_round')),
+      requires_certificate BOOLEAN DEFAULT FALSE
+    );
+
+    CREATE TABLE IF NOT EXISTS certificates (
+      id SERIAL PRIMARY KEY,
+      product_name VARCHAR(255) NOT NULL,
+      certificate_number VARCHAR(255),
+      issue_date DATE,
+      expiry_date DATE,
+      file_path VARCHAR(500),
+      item_type_id INTEGER REFERENCES item_types(id) ON DELETE CASCADE,
+      status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'expiring', 'expired'))
+    );
+
+    CREATE TABLE IF NOT EXISTS issue_norms (
+      id SERIAL PRIMARY KEY,
+      item_type_id INTEGER REFERENCES item_types(id) ON DELETE CASCADE,
+      period_months INTEGER NOT NULL,
+      quantity INTEGER DEFAULT 1,
+      gender VARCHAR(20) CHECK (gender IN ('male', 'female', 'other')),
+      position VARCHAR(255),
+      site_id INTEGER REFERENCES sites(id) ON DELETE SET NULL,
+      seasonality VARCHAR(50) CHECK (seasonality IN ('winter', 'summer', 'year_round')),
+      etn_point VARCHAR(255),
+      period_text TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS issue_records (
+      id SERIAL PRIMARY KEY,
+      employee_id INTEGER REFERENCES employees(id) ON DELETE CASCADE,
+      item_type_id INTEGER REFERENCES item_types(id) ON DELETE CASCADE,
+      quantity INTEGER DEFAULT 1,
+      issue_date DATE DEFAULT NOW(),
+      expiry_date DATE,
+      reorder_date DATE,
+      certificate_id INTEGER REFERENCES certificates(id) ON DELETE SET NULL,
+      status VARCHAR(20) DEFAULT 'issued' CHECK (status IN ('issued', 'due_for_disposal', 'disposed')),
+      signature_path VARCHAR(500),
+      signature_date DATE
+    );
+  `;
+  await pool.query(createTables);
+
+  const alterTables = `
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'employees' AND column_name = 'personnel_number') THEN
+        ALTER TABLE employees ADD COLUMN personnel_number VARCHAR(255);
+      END IF;
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'employees' AND column_name = 'position_change_date') THEN
+        ALTER TABLE employees ADD COLUMN position_change_date DATE;
+      END IF;
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'employees' AND column_name = 'hat_size') THEN
+        ALTER TABLE employees ADD COLUMN hat_size VARCHAR(50);
+      END IF;
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'employees' AND column_name = 'respirator_size') THEN
+        ALTER TABLE employees ADD COLUMN respirator_size VARCHAR(50);
+      END IF;
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'employees' AND column_name = 'gloves_size') THEN
+        ALTER TABLE employees ADD COLUMN gloves_size VARCHAR(50);
+      END IF;
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'employees' AND column_name = 'height') THEN
+        ALTER TABLE employees ADD COLUMN height INTEGER;
+      END IF;
+    END $$;
+  `;
+  await pool.query(alterTables);
+  console.log('Database initialized with migrations');
+}
+
+export default pool;
