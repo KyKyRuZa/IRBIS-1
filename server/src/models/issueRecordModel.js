@@ -1,10 +1,10 @@
 import pool from './db.js';
 
-export async function createIssueRecord(employeeId, itemTypeId, quantity, issueDate, expiryDate, certificateId) {
+export async function createIssueRecord(employeeId, itemTypeId, quantity, issueDate, expiryDate, certificateId, reorderDate, wearTimeOverride) {
   const result = await pool.query(
-    `INSERT INTO issue_records (employee_id, item_type_id, quantity, issue_date, expiry_date, certificate_id) 
-     VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-    [employeeId, itemTypeId, quantity, issueDate, expiryDate, certificateId]
+    `INSERT INTO issue_records (employee_id, item_type_id, quantity, issue_date, expiry_date, certificate_id, reorder_date, wear_time_override_months) 
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+    [employeeId, itemTypeId, quantity, issueDate, expiryDate, certificateId, reorderDate, wearTimeOverride]
   );
   return result.rows[0];
 }
@@ -51,6 +51,33 @@ export async function disposeIssueRecord(id) {
     [id]
   );
   return result.rows[0];
+}
+
+export async function returnIssueRecord(id, returnDate, returnQuantity) {
+  const result = await pool.query(
+    "UPDATE issue_records SET status='returned', return_date=$1, return_quantity=$2 WHERE id=$3 RETURNING *",
+    [returnDate, returnQuantity, id]
+  );
+  return result.rows[0];
+}
+
+export async function batchIssueRecords(records) {
+  const result = await pool.query(
+    `INSERT INTO issue_records (employee_id, item_type_id, quantity, issue_date, expiry_date, certificate_id, reorder_date, wear_time_override_months, notes)
+     SELECT * FROM UNNEST($1::int[], $2::int[], $3::int[], $4::date[], $5::date[], $6::int[], $7::date[], $8::int[], $9::text[]) RETURNING *`,
+    [
+      records.map(r => r.employee_id),
+      records.map(r => r.item_type_id),
+      records.map(r => r.quantity),
+      records.map(r => r.issue_date),
+      records.map(r => r.expiry_date),
+      records.map(r => r.certificate_id),
+      records.map(r => r.reorder_date),
+      records.map(r => r.wear_time_override),
+      records.map(r => r.notes || null)
+    ]
+  );
+  return result.rows;
 }
 
 export async function getExpiringItems(monthsAhead = 2) {

@@ -574,3 +574,59 @@ export async function exportItemsReport(req, res) {
     res.status(500).json({ error: error.message });
   }
 }
+
+export async function exportGroupConsumablesReport(req, res) {
+  try {
+    const { site_id, period } = req.query;
+    if (!site_id) return res.status(400).json({ error: 'site_id is required' });
+
+    const employees = await pool.query(`
+      SELECT e.* FROM employees e WHERE e.site_id = $1 AND e.status = 'active' ORDER BY e.full_name
+    `, [site_id]);
+
+    const norms = await pool.query(`
+      SELECT in_.item_type_id, it.name as item_name, in_.period_text, in_.quantity, in_.period_months
+      FROM issue_norms in_
+      JOIN item_types it ON it.id = in_.item_type_id
+      WHERE it.category = 'consumable'
+        AND (in_.site_id = $1 OR in_.site_id IS NULL)
+    `, [site_id]);
+
+    const doc = new Document({
+      sections: [{
+        properties: {
+          page: {
+            size: { width: 16838, height: 11906 },
+            margin: { top: 720, bottom: 720, left: 720, right: 720 }
+          }
+        },
+        children: [
+          new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 200 }, children: [new TextRun({ text: 'ГРУППОВАЯ ВЕДОМОСТЬ ВЫДАЧИ РАСХОДНИКОВ', font: 'Times New Roman', size: 28, bold: true })] }),
+          new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 120 }, children: [new TextRun({ text: 'АЗС ИРБИС', font: 'Times New Roman', size: 24 })] }),
+          emptyP(),
+          buildTable(
+            [
+              ['Сотрудник', ...norms.rows.map(n => n.item_name), 'Итого'],
+              ...employees.rows.map(emp => {
+                const vals = norms.rows.map(() => '1');
+                return [emp.full_name, ...vals, String(vals.length)];
+              })
+            ],
+            [20, ...norms.rows.map(() => 10), 8]
+          ),
+          emptyP(),
+          new Paragraph({ children: [new TextRun({ text: `Дата формирования: ${new Date().toLocaleDateString('ru-RU')}`, font: 'Times New Roman', size: 22, italics: true })] }),
+        ]
+      }]
+    });
+
+    const buffer = await Packer.toBuffer(doc);
+    const filename = `Групповая_ведомость_расходники_${new Date().toISOString().split('T')[0]}.docx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`);
+    res.send(buffer);
+  } catch (error) {
+    console.error('exportGroupConsumablesReport error', error);
+    res.status(500).json({ error: error.message });
+  }
+}

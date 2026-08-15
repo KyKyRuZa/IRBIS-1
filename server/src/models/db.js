@@ -79,9 +79,35 @@ export async function initDB() {
       expiry_date DATE,
       reorder_date DATE,
       certificate_id INTEGER REFERENCES certificates(id) ON DELETE SET NULL,
-      status VARCHAR(20) DEFAULT 'issued' CHECK (status IN ('issued', 'due_for_disposal', 'disposed')),
+      status VARCHAR(20) DEFAULT 'issued' CHECK (status IN ('issued', 'due_for_disposal', 'disposed', 'returned')),
       signature_path VARCHAR(500),
-      signature_date DATE
+      signature_date DATE,
+      return_date DATE,
+      return_quantity INTEGER DEFAULT 0,
+      wear_time_override_months INTEGER,
+      notes TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      username VARCHAR(255) UNIQUE NOT NULL,
+      password_hash VARCHAR(255) NOT NULL,
+      role VARCHAR(50) DEFAULT 'user' CHECK (role IN ('admin', 'user')),
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS forms (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      description TEXT,
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS form_taken (
+      id SERIAL PRIMARY KEY,
+      form_id INTEGER REFERENCES forms(id) ON DELETE CASCADE,
+      employee_id INTEGER REFERENCES employees(id) ON DELETE CASCADE,
+      taken_at TIMESTAMP DEFAULT NOW()
     );
   `;
   await pool.query(createTables);
@@ -107,6 +133,24 @@ export async function initDB() {
       IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'employees' AND column_name = 'height') THEN
         ALTER TABLE employees ADD COLUMN height INTEGER;
       END IF;
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'issue_records' AND column_name = 'return_date') THEN
+        ALTER TABLE issue_records ADD COLUMN return_date DATE;
+      END IF;
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'issue_records' AND column_name = 'return_quantity') THEN
+        ALTER TABLE issue_records ADD COLUMN return_quantity INTEGER DEFAULT 0;
+      END if;
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'issue_records' AND column_name = 'wear_time_override_months') THEN
+        ALTER TABLE issue_records ADD COLUMN wear_time_override_months INTEGER;
+      END if;
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'issue_records' AND column_name = 'notes') THEN
+        ALTER TABLE issue_records ADD COLUMN notes TEXT;
+      END if;
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'issue_records' AND column_name = 'reorder_date') THEN
+        ALTER TABLE issue_records ADD COLUMN reorder_date DATE;
+      END if;
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'certificates' AND column_name = 'status') THEN
+        ALTER TABLE certificates ADD COLUMN status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'expiring', 'expired'));
+      END if;
     END $$;
   `;
   await pool.query(alterTables);

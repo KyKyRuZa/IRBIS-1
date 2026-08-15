@@ -86,7 +86,48 @@ export default function EmployeeCard() {
                 <td>{record.item_type_name}</td>
                 <td>{record.quantity}</td>
                 <td>{record.expiry_date ? new Date(record.expiry_date).toLocaleDateString() : '-'}</td>
-                <td>{record.status === 'issued' ? 'Выдано' : 'Списано'}</td>
+                <td>
+                  {record.status === 'issued' ? (
+                    <span className="badge badge-success">Выдано</span>
+                  ) : record.status === 'disposed' ? (
+                    <span className="badge badge-danger">Списано</span>
+                  ) : record.status === 'returned' ? (
+                    <span className="badge badge-info">Возвращено</span>
+                  ) : (
+                    <span className="badge">{record.status}</span>
+                  )}
+                </td>
+                <td>
+                  {record.status === 'issued' && (
+                    <>
+                      <button 
+                        className="btn btn-danger" 
+                        style={{ padding: '5px 10px', fontSize: '12px', marginRight: '5px' }}
+                        onClick={async () => {
+                          if (window.confirm(`Списать "${record.item_type_name}"?`)) {
+                            await axios.patch(`/api/issues/${record.id}/dispose`);
+                            fetchEmployee();
+                          }
+                        }}
+                      >
+                        Списать
+                      </button>
+                      <button 
+                        className="btn btn-secondary" 
+                        style={{ padding: '5px 10px', fontSize: '12px' }}
+                        onClick={async () => {
+                          const returnQty = prompt(`Вернуть количество (макс. ${record.quantity}):`, '1');
+                          if (returnQty && Number(returnQty) > 0 && Number(returnQty) <= record.quantity) {
+                            await axios.patch(`/api/issues/${record.id}/return`, { return_quantity: Number(returnQty) });
+                            fetchEmployee();
+                          }
+                        }}
+                      >
+                        Вернуть
+                      </button>
+                    </>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

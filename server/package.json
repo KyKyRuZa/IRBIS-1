@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "archiver": "^8.0.0",
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "docx": "^9.7.1",
     "docxtemplater": "^3.69.3",

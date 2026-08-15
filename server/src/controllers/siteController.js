@@ -1,4 +1,4 @@
-import { createSite, getAllSites } from '../models/siteModel.js';
+import { createSite, getAllSites } from '../models/employeeModel.js';
 
 export async function addSite(req, res) {
   try {

@@ -208,9 +208,23 @@ export default function EmployeeList() {
                   {emp.status === 'active' ? 'Работает' : 'Уволен'}
                 </td>
                 <td>
-                  <Link to={`/employees/${emp.id}`} className="btn" style={{ padding: '5px 10px', fontSize: '12px' }}>
+                  <Link to={`/employees/${emp.id}`} className="btn" style={{ padding: '5px 10px', fontSize: '12px', marginRight: '5px' }}>
                     Карточка
                   </Link>
+                  {emp.status === 'active' && (
+                    <button 
+                      className="btn btn-danger" 
+                      style={{ padding: '5px 10px', fontSize: '12px' }}
+                      onClick={async () => {
+                        if (window.confirm(`Уволить сотрудника ${emp.full_name}?`)) {
+                          await axios.patch(`/api/employees/${emp.id}/terminate`);
+                          fetchEmployees();
+                        }
+                      }}
+                    >
+                      Уволить
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}

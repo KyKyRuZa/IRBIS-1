@@ -12,7 +12,7 @@ export default defineConfig({
       },
     },
   },
-  experimental: {
-    rolldown: true,
+  build: {
+    sourcemap: true,
   },
 });
