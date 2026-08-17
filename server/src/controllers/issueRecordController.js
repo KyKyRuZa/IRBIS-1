@@ -37,7 +37,7 @@ export async function issueItem(req, res) {
       expiryDate ? expiryDate.toISOString().split('T')[0] : null,
       certificate_id || null,
       reorderDate ? reorderDate.toISOString().split('T')[0] : null,
-      wearTimeOverride || null
+      wear_time_override || null
     );
     if (signature_path || signature_date) {
       await pool.query('UPDATE issue_records SET signature_path=$1, signature_date=$2 WHERE id=$3', [signature_path || null, signature_date || null, record.id]);

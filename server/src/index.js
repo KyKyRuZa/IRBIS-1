@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import cron from 'node-cron';
 import employeeRoutes from './routes/employeeRoutes.js';
 import siteRoutes from './routes/siteRoutes.js';
 import itemTypeRoutes from './routes/itemTypeRoutes.js';
@@ -12,11 +13,15 @@ import exportRoutes from './routes/exportRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import formRoutes from './routes/formRoutes.js';
+import pushRoutes from './routes/pushRoutes.js';
+import uploadRoutes from './routes/uploadRoutes.js';
 import { initDB } from './models/db.js';
+import { aggregateNotifications } from './services/notificationService.js';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/employees', employeeRoutes);
@@ -29,10 +34,16 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/forms', formRoutes);
+app.use('/api/push', pushRoutes);
+app.use('/api/upload', uploadRoutes);
 
 const PORT = process.env.PORT || 5000;
 
 initDB().then(() => {
+  aggregateNotifications().catch(err => console.error('Initial notification aggregation failed:', err));
+  cron.schedule('0 8 * * *', () => {
+    aggregateNotifications().catch(err => console.error('Notification job failed:', err));
+  });
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });

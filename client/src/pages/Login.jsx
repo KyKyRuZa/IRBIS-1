@@ -37,46 +37,56 @@ export default function Login() {
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: 'var(--bg)' }}>
-      <div className="card" style={{ width: '100%', maxWidth: '400px', padding: '30px' }}>
-        <h2 style={{ textAlign: 'center', color: 'var(--primary)', marginBottom: '20px' }}>
-          {isRegister ? 'Регистрация' : 'АЗС ИРБИС — Вход'}
-        </h2>
-        {error && <div style={{ color: 'red', marginBottom: '15px', textAlign: 'center' }}>{error}</div>}
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Логин</label>
-            <input 
-              type="text" 
-              className="form-control"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
+    <div className="page-wrapper page-login">
+      <div className="page-header">
+        <div className="container">
+          <div>
+            <h1>АЗС ИРБИС</h1>
+            <div className="page-subtitle">Система учёта СИЗ и спецодежды</div>
           </div>
-          <div className="form-group">
-            <label>Пароль</label>
-            <input 
-              type="password" 
-              className="form-control"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <button type="submit" className="btn" style={{ width: '100%' }}>
-            {isRegister ? 'Зарегистрироваться' : 'Войти'}
-          </button>
-        </form>
-        <p style={{ textAlign: 'center', marginTop: '15px', fontSize: '14px' }}>
-          {isRegister ? 'Уже есть аккаунт?' : 'Нет аккаунта?'}{' '}
-          <button 
-            onClick={() => { setIsRegister(!isRegister); setError(''); }}
-            style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }}
-          >
-            {isRegister ? 'Войти' : 'Зарегистрироваться'}
-          </button>
-        </p>
+        </div>
+      </div>
+      <div className="container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <div className="card" style={{ width: '100%', maxWidth: '400px', padding: '30px' }}>
+          <h2 style={{ textAlign: 'center', color: 'var(--primary)', marginBottom: '20px' }}>
+            {isRegister ? 'Регистрация' : 'АЗС ИРБИС — Вход'}
+          </h2>
+          {error && <div style={{ color: 'red', marginBottom: '15px', textAlign: 'center' }}>{error}</div>}
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Логин</label>
+              <input 
+                type="text" 
+                className="form-control"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Пароль</label>
+              <input 
+                type="password" 
+                className="form-control"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <button type="submit" className="btn" style={{ width: '100%' }}>
+              {isRegister ? 'Зарегистрироваться' : 'Войти'}
+            </button>
+          </form>
+          <p style={{ textAlign: 'center', marginTop: '15px', fontSize: '14px' }}>
+            {isRegister ? 'Уже есть аккаунт?' : 'Нет аккаунта?'}{' '}
+            <button 
+              onClick={() => { setIsRegister(!isRegister); setError(''); }}
+              style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline' }}
+            >
+              {isRegister ? 'Войти' : 'Зарегистрироваться'}
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -50,66 +50,78 @@ export default function IssueNorms() {
   };
 
   return (
-    <div className="card">
-      <h2 style={{ color: 'var(--primary)', marginBottom: '15px' }}>Нормы выдачи</h2>
-      
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Наименование *</label>
-          <select 
-            className="form-control"
-            value={formData.item_type_id}
-            onChange={(e) => setFormData({...formData, item_type_id: e.target.value})}
-            required
-          >
-            <option value="">Выберите...</option>
-            {items.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name} ({categories[item.category]})
-              </option>
-            ))}
-          </select>
+    <div className="page-wrapper page-norms">
+      <div className="page-header">
+        <div className="container">
+          <div>
+            <h1>Нормы выдачи</h1>
+            <div className="page-subtitle">Установленные нормы по должностям и периодичности</div>
+          </div>
         </div>
-        <div className="form-group">
-          <label>Периодичность (месяцы) *</label>
-          <input 
-            type="number" 
-            className="form-control"
-            value={formData.period_months}
-            onChange={(e) => setFormData({...formData, period_months: e.target.value})}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>Количество</label>
-          <input 
-            type="number" 
-            className="form-control"
-            value={formData.quantity}
-            onChange={(e) => setFormData({...formData, quantity: e.target.value})}
-          />
-        </div>
-        <button type="submit" className="btn">Добавить норму</button>
-      </form>
+      </div>
+      <div className="container">
+        <div className="card">
+          <h2 style={{ color: 'var(--primary)', marginBottom: '15px' }}>Нормы выдачи</h2>
+          
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Наименование *</label>
+              <select 
+                className="form-control"
+                value={formData.item_type_id}
+                onChange={(e) => setFormData({...formData, item_type_id: e.target.value})}
+                required
+              >
+                <option value="">Выберите...</option>
+                {items.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name} ({categories[item.category]})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Периодичность (месяцы) *</label>
+              <input 
+                type="number" 
+                className="form-control"
+                value={formData.period_months}
+                onChange={(e) => setFormData({...formData, period_months: e.target.value})}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Количество</label>
+              <input 
+                type="number" 
+                className="form-control"
+                value={formData.quantity}
+                onChange={(e) => setFormData({...formData, quantity: e.target.value})}
+              />
+            </div>
+            <button type="submit" className="btn">Добавить норму</button>
+          </form>
 
-      <table className="table" style={{ marginTop: '20px' }}>
-        <thead>
-          <tr>
-            <th>Наименование</th>
-            <th>Периодичность</th>
-            <th>Кол-во</th>
-          </tr>
-        </thead>
-        <tbody>
-          {norms.map((norm) => (
-            <tr key={norm.id}>
-              <td>{norm.item_type_name}</td>
-              <td>{norm.period_months} мес</td>
-              <td>{norm.quantity}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+          <table className="table" style={{ marginTop: '20px' }}>
+            <thead>
+              <tr>
+                <th>Наименование</th>
+                <th>Периодичность</th>
+                <th>Кол-во</th>
+              </tr>
+            </thead>
+            <tbody>
+              {norms.map((norm) => (
+                <tr key={norm.id}>
+                  <td>{norm.item_type_name}</td>
+                  <td>{norm.period_months} мес</td>
+                  <td>{norm.quantity}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

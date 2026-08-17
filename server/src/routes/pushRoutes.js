@@ -1,0 +1,19 @@
+import { Router } from 'express';
+import {
+  subscribePush,
+  unsubscribePush,
+  sendPushToEmployee,
+  sendPushToAll,
+  getVapidPublicKey,
+} from '../controllers/pushController.js';
+import { authMiddleware, adminOnly } from '../middleware/auth.js';
+
+const router = Router();
+
+router.get('/vapid-public-key', getVapidPublicKey);
+router.post('/subscribe', authMiddleware, subscribePush);
+router.post('/unsubscribe', authMiddleware, unsubscribePush);
+router.post('/send', authMiddleware, adminOnly, sendPushToEmployee);
+router.post('/send-all', authMiddleware, adminOnly, sendPushToAll);
+
+export default router;

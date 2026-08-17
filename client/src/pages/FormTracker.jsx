@@ -53,91 +53,109 @@ export default function FormTracker() {
   };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>Учёт форм (Админ панель)</h1>
+    <div className="page-wrapper page-forms">
+      <div className="page-header">
+        <div className="container">
+          <div>
+            <h1>Учёт форм</h1>
+            <div className="page-subtitle">Административная панель учёта бланков и документов</div>
+          </div>
+        </div>
+      </div>
+      <div className="container" style={{ padding: '20px' }}>
+        <div className="card">
+          <h2 style={{ color: 'var(--primary)', marginBottom: '15px' }}>Добавить форму</h2>
+          <form onSubmit={handleAddForm} style={{ marginBottom: '20px' }}>
+            <div className="form-group">
+              <label>Название формы</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Название формы"
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Описание</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Описание"
+                value={formDesc}
+                onChange={(e) => setFormDesc(e.target.value)}
+              />
+            </div>
+            <button type="submit" className="btn">Добавить форму</button>
+          </form>
+        </div>
 
-      <h2>Добавить форму</h2>
-      <form onSubmit={handleAddForm} style={{ marginBottom: '20px' }}>
-        <div>
-          <input
-            type="text"
-            placeholder="Название формы"
-            value={formName}
-            onChange={(e) => setFormName(e.target.value)}
-            required
-          />
+        <div className="card">
+          <h2 style={{ color: 'var(--primary)', marginBottom: '15px' }}>Отметить форму взятой</h2>
+          <form onSubmit={handleTakeForm} style={{ marginBottom: '20px' }}>
+            <div className="form-group">
+              <label>Сотрудник</label>
+              <select
+                className="form-control"
+                value={selectedEmployee}
+                onChange={(e) => setSelectedEmployee(e.target.value)}
+                required
+              >
+                <option value="">Выберите сотрудника</option>
+                {employees.map((emp) => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.full_name} ({emp.position})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Форма</label>
+              <select
+                className="form-control"
+                value={selectedForm}
+                onChange={(e) => setSelectedForm(e.target.value)}
+                required
+              >
+                <option value="">Выберите форму</option>
+                {forms.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button type="submit" className="btn">Отметить</button>
+          </form>
         </div>
-        <div style={{ marginTop: '10px' }}>
-          <input
-            type="text"
-            placeholder="Описание"
-            value={formDesc}
-            onChange={(e) => setFormDesc(e.target.value)}
-          />
-        </div>
-        <button type="submit" style={{ marginTop: '10px' }}>
-          Добавить форму
-        </button>
-      </form>
 
-      <h2>Отметить форму взятой</h2>
-      <form onSubmit={handleTakeForm} style={{ marginBottom: '20px' }}>
-        <div>
-          <select
-            value={selectedEmployee}
-            onChange={(e) => setSelectedEmployee(e.target.value)}
-            required
-          >
-            <option value="">Выберите сотрудника</option>
-            {employees.map((emp) => (
-              <option key={emp.id} value={emp.id}>
-                {emp.full_name} ({emp.position})
-              </option>
-            ))}
-          </select>
+        <div className="card">
+          <h2 style={{ color: 'var(--primary)', marginBottom: '15px' }}>История взятия форм</h2>
+          <table className="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Сотрудник (ФИО)</th>
+                <th>Должность</th>
+                <th>Форма</th>
+                <th>Дата</th>
+              </tr>
+            </thead>
+            <tbody>
+              {records.map((r) => (
+                <tr key={r.id}>
+                  <td>{r.id}</td>
+                  <td>{r.full_name}</td>
+                  <td>{r.position}</td>
+                  <td>{r.form_name}</td>
+                  <td>{new Date(r.taken_at).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        <div style={{ marginTop: '10px' }}>
-          <select
-            value={selectedForm}
-            onChange={(e) => setSelectedForm(e.target.value)}
-            required
-          >
-            <option value="">Выберите форму</option>
-            {forms.map((f) => (
-              <option key={f.id} value={f.id}>
-                {f.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <button type="submit" style={{ marginTop: '10px' }}>
-          Отметить
-        </button>
-      </form>
-
-      <h2>История взятия форм</h2>
-      <table border="1" cellPadding="10">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Сотрудник (ФИО)</th>
-            <th>Должность</th>
-            <th>Форма</th>
-            <th>Дата</th>
-          </tr>
-        </thead>
-        <tbody>
-          {records.map((r) => (
-            <tr key={r.id}>
-              <td>{r.id}</td>
-              <td>{r.full_name}</td>
-              <td>{r.position}</td>
-              <td>{r.form_name}</td>
-              <td>{new Date(r.taken_at).toLocaleString()}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      </div>
     </div>
   );
 }

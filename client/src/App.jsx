@@ -1,5 +1,6 @@
 import { Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 import EmployeeList from './pages/EmployeeList.jsx';
 import EmployeeCard from './pages/EmployeeCard.jsx';
 import ItemCatalog from './pages/ItemCatalog.jsx';
@@ -10,6 +11,7 @@ import Reports from './pages/Reports.jsx';
 import SitesPage from './pages/SitesPage.jsx';
 import Login from './pages/Login.jsx';
 import FormTracker from './pages/FormTracker.jsx';
+import { usePushNotifications } from './hooks/usePushNotifications.js';
 import './index.css';
 
 function ProtectedRoute({ children }) {
@@ -18,9 +20,30 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+function getPageClass(pathname) {
+  if (pathname === '/login') return 'page-login';
+  if (pathname.startsWith('/employees')) return 'page-employee-card';
+  if (pathname === '/sites') return 'page-sites';
+  if (pathname === '/items') return 'page-items';
+  if (pathname === '/norms') return 'page-norms';
+  if (pathname === '/issue') return 'page-issue';
+  if (pathname === '/certificates') return 'page-certificates';
+  if (pathname === '/reports') return 'page-reports';
+  if (pathname === '/forms') return 'page-forms';
+  return 'page-employees';
+}
+
 function AppContent() {
   const [user, setUser] = useState(null);
   const location = useLocation();
+  const { supported, subscribed, loading, error, subscribe, unsubscribe } = usePushNotifications();
+  const pageClass = getPageClass(location.pathname);
+
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(console.error);
+    }
+  }, []);
 
   useEffect(() => {
     try {
@@ -54,6 +77,15 @@ function AppContent() {
               <Link to="/certificates">Сертификаты</Link>
               <Link to="/reports">Отчёты</Link>
               {user?.role === 'admin' && <Link to="/forms">Учёт форм</Link>}
+              {supported && user && (
+                <button
+                  onClick={subscribed ? unsubscribe : subscribe}
+                  disabled={loading}
+                  style={{ marginLeft: '10px', padding: '5px 10px', cursor: 'pointer' }}
+                >
+                  {loading ? '...' : subscribed ? 'Отключить уведомления' : 'Включить уведомления'}
+                </button>
+              )}
               {user && (
                 <span style={{ marginLeft: '15px', fontSize: '14px' }}>
                   {user.username} ({user.role === 'admin' ? 'Админ' : 'Пользователь'})
@@ -64,10 +96,10 @@ function AppContent() {
           </div>
         </nav>
       )}
-      <main className="container">
+      <main className={`container ${pageClass}`}>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/" element={<ProtectedRoute><EmployeeList /></ProtectedRoute>} />
+          <Route path="/" element={<ProtectedRoute><EmployeeList user={user} /></ProtectedRoute>} />
           <Route path="/sites" element={<ProtectedRoute><SitesPage /></ProtectedRoute>} />
           <Route path="/employees/:id" element={<ProtectedRoute><EmployeeCard /></ProtectedRoute>} />
           <Route path="/items" element={<ProtectedRoute><ItemCatalog /></ProtectedRoute>} />

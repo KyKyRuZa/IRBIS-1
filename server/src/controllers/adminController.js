@@ -70,103 +70,20 @@ export async function getDemandReport(req, res) {
 
 export async function getNotifications(req, res) {
   try {
-    const notifications = [];
-
-    const expiringItems = await pool.query(`
-      SELECT r.*, e.full_name, e.position, e.site_id, s.name as site_name, it.name as item_name
-      FROM issue_records r
-      JOIN employees e ON r.employee_id = e.id
-      JOIN item_types it ON r.item_type_id = it.id
-      LEFT JOIN sites s ON e.site_id = s.id
-      WHERE r.expiry_date <= NOW() + make_interval(months => 1)
-        AND r.status = 'issued'
-      ORDER BY r.expiry_date ASC
+    const result = await pool.query(`
+      SELECT notification_id as id, type, severity, message, employee_id, site_id, date
+      FROM notifications
+      ORDER BY date DESC
     `);
-    expiringItems.rows.forEach(r => {
-      notifications.push({
-        id: `item_${r.id}`,
-        type: 'expiring_item',
-        severity: 'warning',
-        message: `Срок носки "${r.item_name}" у ${r.full_name} истекает ${new Date(r.expiry_date).toLocaleDateString('ru-RU')}`,
-        employee_id: r.employee_id,
-        site_id: r.site_id,
-        date: r.expiry_date
-      });
-    });
-
-    const expiredItems = await pool.query(`
-      SELECT r.*, e.full_name, e.position, it.name as item_name
-      FROM issue_records r
-      JOIN employees e ON r.employee_id = e.id
-      JOIN item_types it ON r.item_type_id = it.id
-      WHERE r.expiry_date < NOW()
-        AND r.status = 'issued'
-    `);
-    expiredItems.rows.forEach(r => {
-      notifications.push({
-        id: `expired_${r.id}`,
-        type: 'expired_item',
-        severity: 'danger',
-        message: `Срок носки "${r.item_name}" у ${r.full_name} просрочен! Следует списать и выдать новую.`,
-        employee_id: r.employee_id,
-        date: r.expiry_date
-      });
-    });
-
-    const expiringCerts = await pool.query(`
-      SELECT c.*, it.name as item_name
-      FROM certificates c
-      JOIN item_types it ON c.item_type_id = it.id
-      WHERE c.expiry_date <= NOW() + make_interval(months => 1)
-        AND c.status != 'expired'
-    `);
-    expiringCerts.rows.forEach(c => {
-      notifications.push({
-        id: `cert_${c.id}`,
-        type: 'expiring_certificate',
-        severity: 'warning',
-        message: `Сертификат на "${c.item_name}" №${c.certificate_number} истекает ${new Date(c.expiry_date).toLocaleDateString('ru-RU')}`,
-        date: c.expiry_date
-      });
-    });
-
-    const expiredCerts = await pool.query(`
-      SELECT c.*, it.name as item_name
-      FROM certificates c
-      JOIN item_types it ON c.item_type_id = it.id
-      WHERE c.expiry_date < NOW()
-        AND c.status != 'expired'
-    `);
-    expiredCerts.rows.forEach(c => {
-      notifications.push({
-        id: `expired_cert_${c.id}`,
-        type: 'expired_certificate',
-        severity: 'danger',
-        message: `Сертификат на "${c.item_name}" №${c.certificate_number} просрочен!`,
-        date: c.expiry_date
-      });
-    });
-
-    const reorderItems = await pool.query(`
-      SELECT r.*, e.full_name, it.name as item_name
-      FROM issue_records r
-      JOIN employees e ON r.employee_id = e.id
-      JOIN item_types it ON r.item_type_id = it.id
-      WHERE r.reorder_date <= NOW()
-        AND r.status = 'issued'
-    `);
-    reorderItems.rows.forEach(r => {
-      notifications.push({
-        id: `reorder_${r.id}`,
-        type: 'reorder',
-        severity: 'info',
-        message: `По "${r.item_name}" у ${r.full_name} пора заказывать новую партию (с ${new Date(r.reorder_date).toLocaleDateString('ru-RU')})`,
-        employee_id: r.employee_id,
-        date: r.reorder_date
-      });
-    });
-
-    notifications.sort((a, b) => new Date(b.date) - new Date(a.date));
+    const notifications = result.rows.map(row => ({
+      id: row.id,
+      type: row.type,
+      severity: row.severity,
+      message: row.message,
+      employee_id: row.employee_id,
+      site_id: row.site_id,
+      date: row.date
+    }));
     res.json(notifications);
   } catch (error) {
     res.status(500).json({ error: error.message });

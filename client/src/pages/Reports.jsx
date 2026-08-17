@@ -120,7 +120,16 @@ export default function Reports() {
   };
 
   return (
-    <div>
+    <div className="page-wrapper page-reports">
+      <div className="page-header">
+        <div className="container">
+          <div>
+            <h1>Отчёты</h1>
+            <div className="page-subtitle">Аналитика, экспорт и сводные данные</div>
+          </div>
+        </div>
+      </div>
+      <div className="container">
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h2 style={{ color: 'var(--primary)', marginBottom: '0' }}>Отчёты</h2>
@@ -278,6 +287,7 @@ export default function Reports() {
             ))}
           </tbody>
         </table>
+      </div>
       </div>
     </div>
   );

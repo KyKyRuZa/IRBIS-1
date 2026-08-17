@@ -109,6 +109,30 @@ export async function initDB() {
       employee_id INTEGER REFERENCES employees(id) ON DELETE CASCADE,
       taken_at TIMESTAMP DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS notifications (
+      id SERIAL PRIMARY KEY,
+      notification_id VARCHAR(255) UNIQUE NOT NULL,
+      type VARCHAR(50) NOT NULL,
+      severity VARCHAR(50) NOT NULL,
+      message TEXT NOT NULL,
+      employee_id INTEGER REFERENCES employees(id) ON DELETE CASCADE,
+      site_id INTEGER REFERENCES sites(id) ON DELETE SET NULL,
+      date TIMESTAMP NOT NULL,
+      read BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS push_subscriptions (
+      id SERIAL PRIMARY KEY,
+      employee_id INTEGER REFERENCES employees(id) ON DELETE CASCADE,
+      endpoint TEXT NOT NULL,
+      p256dh TEXT NOT NULL,
+      auth TEXT NOT NULL,
+      user_agent TEXT,
+      created_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(employee_id, endpoint)
+    );
   `;
   await pool.query(createTables);
 
