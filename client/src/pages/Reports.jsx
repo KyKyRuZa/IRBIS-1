@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { api, downloadBlob } from '../lib/api.js';
 
 export default function Reports() {
   const [records, setRecords] = useState([]);
@@ -22,10 +23,10 @@ export default function Reports() {
     const load = async () => {
       try {
         const [sitesRes, itemsRes, recordsRes, expiringRes] = await Promise.all([
-          axios.get('/api/sites'),
-          axios.get('/api/items'),
-          axios.get('/api/issues'),
-          axios.get('/api/issues/expiring?months=2'),
+          api.get('/api/sites'),
+          api.get('/api/items'),
+          api.get('/api/issues'),
+          api.get('/api/issues/expiring?months=2'),
         ]);
         if (!mounted) return;
         setSites(Array.isArray(sitesRes.data) ? sitesRes.data : []);
@@ -37,7 +38,7 @@ export default function Reports() {
       }
       if (!mounted) return;
       try {
-        const demandRes = await axios.get('/api/admin/demand', { params: { site_id: filters.site_id } });
+        const demandRes = await api.get('/api/admin/demand', { params: { site_id: filters.site_id } });
         setDemand(Array.isArray(demandRes.data) ? demandRes.data : []);
       } catch (e) {
         console.error('Failed to load demand report', e);
@@ -45,7 +46,7 @@ export default function Reports() {
       }
       if (!mounted) return;
       try {
-        const notifRes = await axios.get('/api/admin/notifications');
+        const notifRes = await api.get('/api/admin/notifications');
         setNotifications(Array.isArray(notifRes.data) ? notifRes.data : []);
       } catch (e) {
         console.error('Failed to load notifications', e);
@@ -57,32 +58,32 @@ export default function Reports() {
   }, []);
 
   const fetchSites = async () => {
-    const res = await axios.get('/api/sites');
+    const res = await api.get('/api/sites');
     setSites(res.data);
   };
 
   const fetchItems = async () => {
-    const res = await axios.get('/api/items');
+    const res = await api.get('/api/items');
     setItems(res.data);
   };
 
   const fetchRecords = async () => {
-    const res = await axios.get('/api/issues', { params: filters });
+    const res = await api.get('/api/issues', { params: filters });
     setRecords(res.data);
   };
 
   const fetchExpiring = async () => {
-    const res = await axios.get('/api/issues/expiring?months=2');
+    const res = await api.get('/api/issues/expiring?months=2');
     setExpiring(res.data);
   };
 
   const fetchDemand = async () => {
-    const res = await axios.get('/api/admin/demand', { params: { site_id: filters.site_id } });
+    const res = await api.get('/api/admin/demand', { params: { site_id: filters.site_id } });
     setDemand(res.data);
   };
 
   const fetchNotifications = async () => {
-    const res = await axios.get('/api/admin/notifications');
+    const res = await api.get('/api/admin/notifications');
     setNotifications(res.data);
   };
 
@@ -96,26 +97,119 @@ export default function Reports() {
     fetchDemand();
   };
 
-  const handleExcelExport = () => {
+  const handleExcelExport = async () => {
     const params = new URLSearchParams();
     if (filters.site_id) params.append('site_id', filters.site_id);
     if (filters.item_type_id) params.append('item_type_id', filters.item_type_id);
     if (filters.date_from) params.append('date_from', filters.date_from);
     if (filters.date_to) params.append('date_to', filters.date_to);
     if (filters.status) params.append('status', filters.status);
-    window.open(`/api/reports/excel?${params.toString()}`, '_blank');
+    try {
+      const res = await downloadBlob('/api/reports/excel', Object.fromEntries(params));
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'irbis-act-vydachi.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (e) {
+      console.error('Failed to export excel', e);
+    }
   };
 
-  const handleDemandExport = () => {
+  const handleDemandExport = async () => {
     const params = new URLSearchParams();
     if (filters.site_id) params.append('site_id', filters.site_id);
-    window.open(`/api/reports/demand/excel?${params.toString()}`, '_blank');
+    try {
+      const res = await downloadBlob('/api/reports/demand/excel', Object.fromEntries(params));
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'potrebnost_siz.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (e) {
+      console.error('Failed to export demand excel', e);
+    }
   };
 
-  const handleGroupConsumables = () => {
+  const handleIssuesReport = async () => {
+    try {
+      const res = await downloadBlob('/api/export/issues-report');
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'issues-report.docx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (e) {
+      console.error('Failed to export issues report', e);
+    }
+  };
+
+  const handleExpiringReport = async () => {
+    try {
+      const res = await downloadBlob('/api/export/expiring-report');
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'expiring-report.docx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (e) {
+      console.error('Failed to export expiring report', e);
+    }
+  };
+
+  const handleGroupConsumables = async () => {
     const siteId = prompt('Введите ID объекта для групповой ведомости расходников:');
     if (siteId) {
-      window.open(`/api/export/group-consumables?site_id=${siteId}`, '_blank');
+      try {
+        const res = await downloadBlob('/api/export/group-consumables', { site_id: siteId });
+        const url = window.URL.createObjectURL(new Blob([res.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'group-consumables.docx');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      } catch (e) {
+        console.error('Failed to export group consumables', e);
+      }
+    }
+  };
+
+  const handleAllCards = async () => {
+    try {
+      const res = await downloadBlob('/api/export/all-cards');
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'all-cards.docx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (e) {
+      console.error('Failed to export all cards', e);
+    }
+  };
+
+  const handleBackup = async () => {
+    try {
+      const res = await downloadBlob('/api/admin/backup');
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'irbis-backup.sql');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (e) {
+      console.error('Failed to download backup', e);
     }
   };
 
@@ -200,12 +294,12 @@ export default function Reports() {
 
         <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
           <button className="btn" onClick={handleExcelExport}>Экспорт в Excel</button>
-          <button className="btn" onClick={() => window.open('/api/export/issues-report', '_blank')}>Отчёт по выдачам (Word)</button>
-          <button className="btn" onClick={() => window.open('/api/export/expiring-report', '_blank')}>Отчёт по истекающим срокам (Word)</button>
+          <button className="btn" onClick={handleIssuesReport}>Отчёт по выдачам (Word)</button>
+          <button className="btn" onClick={handleExpiringReport}>Отчёт по истекающим срокам (Word)</button>
           <button className="btn" onClick={handleDemandExport}>Потребность в СИЗ (Excel)</button>
           <button className="btn btn-secondary" onClick={handleGroupConsumables}>Групповая ведомость расходников (Word)</button>
-          <button className="btn btn-secondary" onClick={() => window.open('/api/export/all-cards', '_blank')}>Все карточки СИЗ (Word ZIP)</button>
-          <button className="btn btn-secondary" onClick={() => window.open('/api/admin/backup', '_blank')}>Резервная копия БД</button>
+          <button className="btn btn-secondary" onClick={handleAllCards}>Все карточки СИЗ (Word ZIP)</button>
+          <button className="btn btn-secondary" onClick={handleBackup}>Резервная копия БД</button>
         </div>
       </div>
 

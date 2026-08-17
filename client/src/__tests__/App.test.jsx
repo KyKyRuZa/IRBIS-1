@@ -7,6 +7,15 @@ vi.mock('axios', () => {
   const mockAxios = {
     get: vi.fn(() => Promise.resolve({ data: [] })),
     post: vi.fn(() => Promise.resolve({})),
+    create: vi.fn(() => ({
+      get: vi.fn(() => Promise.resolve({ data: [] })),
+      post: vi.fn(() => Promise.resolve({})),
+      request: vi.fn(() => Promise.resolve({ data: [] })),
+      interceptors: {
+        request: { use: vi.fn() },
+        response: { use: vi.fn() }
+      }
+    }))
   };
   return { default: mockAxios };
 });

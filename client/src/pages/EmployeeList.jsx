@@ -215,14 +215,14 @@ export default function EmployeeList({ user }) {
                   <td className={emp.status === 'active' ? 'status-active' : 'status-terminated'}>
                     {emp.status === 'active' ? 'Работает' : 'Уволен'}
                   </td>
-                  <td>
-                    <Link to={`/employees/${emp.id}`} className="btn" style={{ padding: '5px 10px', fontSize: '12px', marginRight: '5px' }}>
+                <td>
+                  <div className="action-buttons">
+                    <Link to={`/employees/${emp.id}`} className="btn">
                       Карточка
                     </Link>
                     {emp.status === 'active' && user?.role === 'admin' && (
                       <button 
-                        className="btn btn-danger" 
-                        style={{ padding: '5px 10px', fontSize: '12px' }}
+                        className="btn btn-danger"
                         onClick={async () => {
                           if (window.confirm(`Уволить сотрудника ${emp.full_name}?`)) {
                             await axios.patch(`/api/employees/${emp.id}/terminate`);
@@ -233,7 +233,8 @@ export default function EmployeeList({ user }) {
                         Уволить
                       </button>
                     )}
-                  </td>
+                  </div>
+                </td>
                 </tr>
               ))}
             </tbody>

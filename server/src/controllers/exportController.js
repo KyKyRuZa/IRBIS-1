@@ -225,6 +225,8 @@ export async function exportConsumables(req, res) {
       : ['Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
 
     const data = {
+      employee_name: emp.full_name || '',
+      personnel_number: emp.personnel_number || '',
       period_label: period === 'first' ? 'I полугодие' : 'II полугодие',
     };
 

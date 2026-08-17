@@ -66,7 +66,7 @@ function AppContent() {
         <nav className="navbar">
           <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Link to="/" className="logo">
-              <span style={{ fontSize: '28px', fontWeight: 'bold' }}>АЗС ИРБИС</span>
+              <img src="/logo_irbis.webp" alt="АЗС ИРБИС" style={{ height: '48px', width: 'auto' }} />
             </Link>
             <div className="nav-links">
               <Link to="/">Сотрудники</Link>

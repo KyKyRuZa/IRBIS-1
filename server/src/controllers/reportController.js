@@ -1,4 +1,8 @@
 import ExcelJS from 'exceljs';
+import {
+  Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun,
+  WidthType, AlignmentType, BorderStyle
+} from 'docx';
 
 import pool from '../models/db.js';
 
@@ -8,6 +12,82 @@ const categories = {
   siz: 'СИЗ',
   consumable: 'Расходники'
 };
+
+function formatDate(d) {
+  if (!d) return '';
+  const dt = new Date(d);
+  const monthTexts = {
+    '01': 'января', '02': 'февраля', '03': 'марта', '04': 'апреля',
+    '05': 'мая', '06': 'июня', '07': 'июля', '08': 'августа',
+    '09': 'сентября', '10': 'октября', '11': 'ноября', '12': 'декабря'
+  };
+  return `${dt.getDate()} ${monthTexts[String(dt.getMonth() + 1).padStart(2, '0')]} ${dt.getFullYear()}`;
+}
+
+function makeCell(text, opts = {}) {
+  const fontSize = opts.size || 21;
+  const spacingBefore = opts.spacingBefore ?? 40;
+  const spacingAfter = opts.spacingAfter ?? 40;
+  const paragraphSpacing = { before: spacingBefore, after: spacingAfter };
+
+  return new TableCell({
+    children: [new Paragraph({
+      spacing: paragraphSpacing,
+      alignment: opts.alignment || AlignmentType.LEFT,
+      children: [new TextRun({
+        text: String(text ?? ''),
+        font: 'Times New Roman',
+        size: fontSize,
+        bold: !!opts.bold,
+        italics: !!opts.italics,
+      })]
+    })],
+    width: opts.width ? { size: opts.width, type: WidthType.PERCENTAGE } : undefined,
+    verticalAlign: opts.verticalAlign,
+    shading: opts.shading ? { fill: opts.shading } : undefined,
+  });
+}
+
+function headerCell(text, width) {
+  return makeCell(text, { bold: true, size: 22, shading: 'E7E6E6', width, spacingBefore: 60, spacingAfter: 60 });
+}
+
+function buildTable(rows, columnWidths) {
+  const headerRow = rows[0];
+  const dataRows = rows.slice(1);
+  const tableRows = [
+    new TableRow({
+      tableHeader: true,
+      children: headerRow.map((h, i) => headerCell(h, columnWidths ? columnWidths[i] : undefined))
+    }),
+    ...dataRows.map(row => new TableRow({
+      children: row.map((cell, i) => makeCell(cell, { width: columnWidths ? columnWidths[i] : undefined }))
+    }))
+  ];
+  return new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    borders: {
+      top: { style: BorderStyle.SINGLE, size: 2 },
+      bottom: { style: BorderStyle.SINGLE, size: 2 },
+      left: { style: BorderStyle.SINGLE, size: 2 },
+      right: { style: BorderStyle.SINGLE, size: 2 },
+      insideHorizontal: { style: BorderStyle.SINGLE, size: 2 },
+      insideVertical: { style: BorderStyle.SINGLE, size: 2 },
+    },
+    rows: tableRows
+  });
+}
+
+function sectionTitle(text) {
+  return new Paragraph({
+    spacing: { before: 200, after: 120 },
+    children: [new TextRun({ text, font: 'Times New Roman', size: 24, bold: true })]
+  });
+}
+
+function emptyP() {
+  return new Paragraph({ spacing: { after: 60 }, children: [] });
+}
 
 export async function exportToExcel(req, res) {
   try {

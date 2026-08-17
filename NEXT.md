@@ -12,8 +12,8 @@ docker compose up --build
 - БД: postgres/postgres
 
 ## Стек
-- Бэк: express, pg, bcrypt, docx, docxtemplater, exceljs, archiver, nodemon, node-cron, web-push, multer
-- Фронт: react, react-router-dom v6, axios, vite
+- Бэк: express, pg, bcrypt, docx, docxtemplater, exceljs, archiver, nodemon, node-cron, web-push, multer, adm-zip
+- Фронт: react, react-router-dom v6, axios, vite, vitest, testing-library
 - Докер: postgres:17-alpine, node:20-alpine, nginx:alpine
 
 ## Структура
@@ -34,20 +34,34 @@ server/
     controllers/employeeController.js # CRUD сотрудников
     controllers/issueRecordController.js # CRUD выдач
     controllers/certificateController.js # CRUD сертификатов
+    controllers/exportController.js # экспорт Word/Excel
+    controllers/reportController.js # отчёты Word/Excel
     services/notificationService.js # агрегация уведомлений в таблицу
     templates/             # .docx шаблоны
+    scripts/
+      seed.js              # сидинг БД (11 сотрудников, 13 позиций, 14 сертификатов, 143 выдачи, 312 норм, 3 формы)
+      verify-docs.js       # проверка генерации документов
+  tests/
+    api.test.js            # интеграционные тесты API (10 тестов)
 client/
   src/
     main.jsx              # createRoot, BrowserRouter
-    App.jsx               # роуты, ProtectedRoute, навигация
+    App.jsx               # роуты, ProtectedRoute, навигация, page themes
+    lib/api.js            # axios-инстанс с авторизацией + downloadBlob()
     pages/*.jsx           # страницы
-    index.css             # глобальные стили
+    index.css             # глобальные стили + page themes
+    __tests__/            # фронтенд-тесты (vitest)
+    hooks/
+      usePushNotifications.js # подписка на push
+  public/
+    logo_irbis.webp       # логотип
+    sw.js                  # Service Worker
 ```
 
 ## Важно
 - **Роутер**: `BrowserRouter` только в `main.jsx`. В `App.jsx` его быть не должно — двойной роутер ломает рендер.
 - **Аутентификация**: токен в `localStorage` как `user:id:username:role` в base64. Middleware проверяет `Authorization: Bearer ...`.
-- **Админские эндпоинты** (`/api/admin/*`, `/api/export/demand/excel`) требуют `adminOnly`.
+- **Админские эндпоинты** (`/api/admin/*`, `/api/reports/*`, `/api/export/*`) требуют `adminOnly`. В `client/src/lib/api.js` есть axios-инстанс, который автоматически подставляет токен.
 - **initDB()** создаёт таблицы и делает ALTER TABLE для старых БД. Если добавляешь новое поле — добавь ALTER.
 - **Групповая выдача**: `POST /api/issues/batch` принимает `site_id, item_type_id, quantity, ...`.
 - **Возврат СИЗ**: `PATCH /api/issues/:id/return` с телом `{ return_date, return_quantity }`.
@@ -56,18 +70,27 @@ client/
 - **Потребность**: `GET /api/admin/demand` + `GET /api/reports/demand/excel`.
 - **Уведомления**: `GET /api/admin/notifications`.
 - **Резервная копия**: `GET /api/admin/backup` (pg_dump).
-- **Формы**: таблицы `forms` и `form_taken` теперь создаются в `initDB()`. Роут `/api/forms` уже работает.
+- **Формы**: таблицы `forms` и `form_taken` создаются в `initDB()`. Роут `/api/forms` работает.
 - **Push-уведомления**: таблица `push_subscriptions` создаётся в `initDB()`. Роуты `/api/push/*` работают. Service Worker: `client/public/sw.js`. Подписка в `App.jsx` через хук `usePushNotifications`.
 - **Загрузка файлов**: реализована через `multer`. Эндпоинты `POST /api/upload/certificate` и `POST /api/upload/signature`. Файлы сохраняются в `/app/uploads` (certificates/ и signatures/). Статика доступна через `/uploads/*`.
+- **Сидинг**: `node src/scripts/seed.js` из папки `server/`. Очищает все таблицы и заполняет демо-данными. Создаёт админ-пользователя `admin`/`admin` (если его нет).
+- **Верификация документов**: `node src/scripts/verify-docs.js` из папки `server/`. Проверяет все эндпоинты экспорта и сохраняет файлы в `server/src/tmp/`.
 
 ## Известные проблемы / TODO
-- Push-уведомления реализованы: `web-push`, VAPID ключи в `.env`, таблица `push_subscriptions`, эндпоинты `/api/push/*`, Service Worker, интеграция в React.
-- Загрузка файлов реализована: `multer`, эндпоинты `/api/upload/*`, хранилище `/uploads`, отображение файлов в UI.
-- Нет прав доступа на уровне UI кроме скрытия ссылки «Учёт форм» у не-админов.
-- В `Reports.jsx` `fetchDemand` и `fetchNotifications` требуют авторизации; при 401 не падают благодаря try/catch.
-- В `EmployeeList.jsx` не хватает `height` в `formData` — есть предупреждение React, но не критично.
-- `issue_records.reorder_date` заполняется автоматически за 2 месяца до expiry_date.
-- `issue_records.return_quantity` по умолчанию 0, статус `returned` добавляется в CHECK.
+- **Исправлено**: `wear_time_override_months` не сохранялся при выдаче — было `wearTimeOverride`, стало `wear_time_override`.
+- **Исправлено**: В `EmployeeList.jsx` добавлено `height` в `formData` — убрано React-предупреждение.
+- **Исправлено**: Админские кнопки («Уволить» и др.) скрыты для не-админов в UI.
+- **Исправлено**: Добавлены `authMiddleware + adminOnly` на `exportRoutes` и `reportRoutes`.
+- **Исправлено**: В `reportController.js` отсутствовал импорт `docx` и вспомогательные функции для генерации Word-отчётов. Теперь отчёты генерируются корректно.
+- **Исправлено**: В `exportController.js` в `exportConsumables` добавлены `employee_name` и `personnel_number` в data для шаблона.
+- **Исправлено**: В `Reports.jsx` все запросы к `/api/admin/*` и `/api/reports/*` теперь идут через авторизованный axios-инстанс из `lib/api.js`. Экспорты скачиваются через `downloadBlob()` с заголовком `Authorization`.
+- **Исправлено**: Шапка сайта сделана белой, добавлен логотип `logo_irbis.webp`.
+- **Добавлено**: Page-specific темизация для всех 11 страниц через CSS-переменные `.page-*`.
+- **Добавлено**: Класс `.action-buttons` для выравнивания кнопок «Карточка»/«Уволить» в таблице сотрудников.
+- **Добавлено**: Фронтенд-тесты на vitest + testing-library (`client/src/__tests__/`).
+- **Добавлено**: Бэкенд-тесты на node:test (`server/tests/api.test.js`) — 10 тестов, покрывают auth и wear_time_override.
+- **Seed**: создаёт 11 сотрудников (включая 1 уволенного), 13 позиций, 14 сертификатов (active + 1 expired), 143 выдачи (разные статусы), 312 норм, 3 формы, 5 push-подписок, админ-пользователя.
+- **Токен для тестов/ручного доступа**: admin/admin → localStorage token = `Buffer.from('1:admin:admin').toString('base64')`.
 
 ## Что уже сделано по ТЗ
 ✅ Групповая выдача
@@ -84,3 +107,8 @@ client/
 ✅ Аутентификация/роли (admin/user)
 ✅ Резервное копирование
 ✅ forms/form_taken таблицы
+✅ Page-specific темизация
+✅ Логотип
+✅ Авторизация на всех админских/экспортных роутах
+✅ Сидинг БД
+✅ Проверка заполняемости документов
