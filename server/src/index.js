@@ -53,6 +53,20 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
+
+const gracefulShutdown = async () => {
+  console.log('Received shutdown signal, closing database pool...');
+  try {
+    await pool.end();
+    console.log('Database pool closed');
+  } catch (err) {
+    console.error('Error closing database pool:', err);
+  }
+  process.exit(0);
+};
+
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
 initDB().then(() => {
   aggregateNotifications().catch(err => console.error('Initial notification aggregation failed:', err));
   cron.schedule('0 8 * * *', () => {
