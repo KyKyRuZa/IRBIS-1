@@ -1,15 +1,16 @@
+import jwt from 'jsonwebtoken';
+
 export function authMiddleware(req, res, next) {
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) {
     return res.status(401).json({ error: 'Authorization token required' });
   }
   try {
-    const decoded = Buffer.from(token, 'base64').toString('utf-8');
-    const [id, username, role] = decoded.split(':');
-    req.user = { id: Number(id), username, role };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = { id: decoded.id, username: decoded.username, role: decoded.role };
     next();
-  } catch (error) {
-    return res.status(401).json({ error: 'Invalid token' });
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
   }
 }
 

@@ -1,5 +1,6 @@
 import pool from '../models/db.js';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 export async function login(req, res) {
   try {
@@ -16,12 +17,12 @@ export async function login(req, res) {
     if (!valid) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    res.json({ 
-      id: user.id, 
-      username: user.username, 
-      role: user.role,
-      token: Buffer.from(`${user.id}:${user.username}:${user.role}`).toString('base64')
-    });
+    const token = jwt.sign(
+      { id: user.id, username: user.username, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '8h' }
+    );
+    res.json({ id: user.id, username: user.username, role: user.role, token });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

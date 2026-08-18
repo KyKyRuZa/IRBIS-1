@@ -1,10 +1,11 @@
+import jwt from 'jsonwebtoken';
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert';
 
 const BASE = process.env.IRBIS_BASE || 'http://localhost:5000';
 
 function buildToken(id = 1, username = 'admin', role = 'admin') {
-  return Buffer.from(`${id}:${username}:${role}`).toString('base64');
+  return jwt.sign({ id, username, role }, process.env.JWT_SECRET || 'test-secret', { expiresIn: '8h' });
 }
 
 async function request(path, opts = {}) {
