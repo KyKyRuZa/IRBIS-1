@@ -15,6 +15,7 @@ import authRoutes from './routes/authRoutes.js';
 import formRoutes from './routes/formRoutes.js';
 import pushRoutes from './routes/pushRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
+import { logger } from './utils/logger.js';
 import { initDB } from './models/db.js';
 import { aggregateNotifications } from './services/notificationService.js';
 
@@ -47,7 +48,7 @@ app.use('/api/push', pushRoutes);
 app.use('/api/upload', uploadRoutes);
 
 app.use((err, req, res, next) => {
-  console.error(err);
+  logger.error(err);
   res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
 });
 
@@ -60,7 +61,7 @@ const gracefulShutdown = async () => {
     await pool.end();
     console.log('Database pool closed');
   } catch (err) {
-    console.error('Error closing database pool:', err);
+    logger.error('Error closing database pool:', err);
   }
   process.exit(0);
 };
@@ -73,6 +74,6 @@ initDB().then(() => {
     aggregateNotifications().catch(err => console.error('Notification job failed:', err));
   });
   app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    logger.info(`Server running on port ${PORT}`);
   });
 });
