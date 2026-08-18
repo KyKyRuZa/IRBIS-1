@@ -33,3 +33,22 @@ export async function updateCertificateStatus() {
   `);
   return result.rowCount;
 }
+
+export async function getCertificateById(id) {
+  const result = await pool.query('SELECT * FROM certificates WHERE id = $1', [id]);
+  return result.rows[0];
+}
+
+export async function updateCertificate(id, data) {
+  const { product_name, certificate_number, issue_date, expiry_date, file_path, item_type_id } = data;
+  const result = await pool.query(
+    'UPDATE certificates SET product_name=$1, certificate_number=$2, issue_date=$3, expiry_date=$4, file_path=$5, item_type_id=$6 WHERE id=$7 RETURNING *',
+    [product_name, certificate_number, issue_date, expiry_date, file_path, item_type_id, id]
+  );
+  return result.rows[0];
+}
+
+export async function deleteCertificate(id) {
+  const result = await pool.query('DELETE FROM certificates WHERE id=$1 RETURNING *', [id]);
+  return result.rows[0];
+}

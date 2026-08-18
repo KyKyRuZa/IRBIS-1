@@ -1,19 +1,34 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import path from 'path';
+
+const proxyTarget = process.env.VITE_API_TARGET || 'http://localhost:5000';
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(import.meta.dirname, './src'),
+      '@components': path.resolve(import.meta.dirname, './src/components'),
+      '@pages': path.resolve(import.meta.dirname, './src/pages'),
+      '@hooks': path.resolve(import.meta.dirname, './src/hooks'),
+      '@lib': path.resolve(import.meta.dirname, './src/lib'),
+      '@contexts': path.resolve(import.meta.dirname, './src/contexts'),
+      '@features': path.resolve(import.meta.dirname, './src/features'),
+    },
+  },
   server: {
+    host: '0.0.0.0',
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: proxyTarget,
         changeOrigin: true,
       },
     },
   },
   build: {
-    sourcemap: true,
+    sourcemap: false,
   },
   test: {
     globals: true,

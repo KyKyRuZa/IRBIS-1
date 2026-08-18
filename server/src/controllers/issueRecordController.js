@@ -6,7 +6,10 @@ import {
   disposeIssueRecord,
   returnIssueRecord,
   batchIssueRecords,
-  getExpiringItems
+  getExpiringItems,
+  getIssueRecordById,
+  updateIssueRecord,
+  deleteIssueRecord
 } from '../models/issueRecordModel.js';
 import pool from '../models/db.js';
 
@@ -166,6 +169,36 @@ export async function getExpiring(req, res) {
     const months = parseInt(req.query.months) || 2;
     const items = await getExpiringItems(months);
     res.json(items);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+export async function getIssue(req, res) {
+  try {
+    const record = await getIssueRecordById(req.params.id);
+    if (!record) return res.status(404).json({ error: 'Issue record not found' });
+    res.json(record);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+export async function updateIssue(req, res) {
+  try {
+    const record = await updateIssueRecord(req.params.id, req.body);
+    if (!record) return res.status(404).json({ error: 'Issue record not found' });
+    res.json(record);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+export async function deleteIssue(req, res) {
+  try {
+    const record = await deleteIssueRecord(req.params.id);
+    if (!record) return res.status(404).json({ error: 'Issue record not found' });
+    res.json({ message: 'Issue record deleted' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

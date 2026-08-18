@@ -1,25 +1,23 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { pushService } from '@lib/services/push.service.js';
+import { useAuth } from '@hooks/useAuth.js';
 
 export function usePushNotifications() {
   const [supported, setSupported] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { token } = useAuth();
 
   useEffect(() => {
     setSupported('serviceWorker' in navigator && 'PushManager' in window);
   }, []);
 
-  const getToken = () => localStorage.getItem('token');
-
   const getVapidKey = async () => {
-    const res = await axios.get('/api/push/vapid-public-key');
-    return res.data;
+    return pushService.getVapidKey();
   };
 
   const subscribe = async () => {
-    const token = getToken();
     if (!token) {
       setError('Требуется авторизация');
       return;
@@ -34,16 +32,12 @@ export function usePushNotifications() {
         userVisibleOnly: true,
         applicationServerKey: vapidKey,
       });
-      await axios.post(
-        '/api/push/subscribe',
+      await pushService.subscribe(
+        subscription.endpoint,
         {
-          endpoint: subscription.endpoint,
-          keys: {
-            p256dh: subscription.toJSON().keys.p256dh,
-            auth: subscription.toJSON().keys.auth,
-          },
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
+          p256dh: subscription.toJSON().keys.p256dh,
+          auth: subscription.toJSON().keys.auth,
+        }
       );
       setSubscribed(true);
     } catch (e) {
@@ -55,7 +49,6 @@ export function usePushNotifications() {
   };
 
   const unsubscribe = async () => {
-    const token = getToken();
     if (!token) return;
     setLoading(true);
     setError('');
@@ -63,11 +56,7 @@ export function usePushNotifications() {
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription();
       if (subscription) {
-        await axios.post(
-          '/api/push/unsubscribe',
-          { endpoint: subscription.endpoint },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await pushService.unsubscribe(subscription.endpoint);
         await subscription.unsubscribe();
         setSubscribed(false);
       }

@@ -1,0 +1,105 @@
+.pageWrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  padding: 20px;
+}
+
+.content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+.card {
+  background: white;
+  border-radius: 8px;
+  padding: 30px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.title {
+  margin: 0 0 8px;
+  font-size: 24px;
+  color: var(--dark);
+}
+
+.subtitle {
+  margin: 0 0 24px;
+  color: var(--secondary);
+  font-size: 14px;
+}
+
+.heading {
+  text-align: center;
+  color: var(--primary);
+  margin-bottom: 20px;
+  font-size: 20px;
+}
+
+.error {
+  color: var(--danger);
+  font-size: 13px;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.formGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.field {
+  margin-bottom: 0;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.field input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: var(--border);
+}
+
+.submitButton {
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.footer {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.linkButton {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  text-decoration: underline;
+  marginLeft: 5px;
+  font-size: 14px;
+}

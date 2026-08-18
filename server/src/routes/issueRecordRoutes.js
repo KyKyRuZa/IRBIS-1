@@ -5,7 +5,10 @@ import {
   listIssues,
   dispose,
   returnItem,
-  getExpiring
+  getExpiring,
+  getIssue,
+  updateIssue,
+  deleteIssue
 } from '../controllers/issueRecordController.js';
 
 const router = Router();
@@ -13,6 +16,9 @@ const router = Router();
 router.post('/', issueItem);
 router.post('/batch', batchIssue);
 router.get('/', listIssues);
+router.get('/:id', getIssue);
+router.put('/:id', updateIssue);
+router.delete('/:id', deleteIssue);
 router.patch('/:id/dispose', dispose);
 router.patch('/:id/return', returnItem);
 router.get('/expiring', getExpiring);

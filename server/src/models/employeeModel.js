@@ -88,3 +88,27 @@ export async function terminateEmployee(id) {
   );
   return result.rows[0];
 }
+
+export async function deleteEmployee(id) {
+  const result = await pool.query('DELETE FROM employees WHERE id=$1 RETURNING *', [id]);
+  return result.rows[0];
+}
+
+export async function getSiteById(id) {
+  const result = await pool.query('SELECT * FROM sites WHERE id = $1', [id]);
+  return result.rows[0];
+}
+
+export async function updateSite(id, data) {
+  const { name, responsible_person } = data;
+  const result = await pool.query(
+    'UPDATE sites SET name=$1, responsible_person=$2 WHERE id=$3 RETURNING *',
+    [name, responsible_person, id]
+  );
+  return result.rows[0];
+}
+
+export async function deleteSite(id) {
+  const result = await pool.query('DELETE FROM sites WHERE id=$1 RETURNING *', [id]);
+  return result.rows[0];
+}

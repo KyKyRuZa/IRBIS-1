@@ -1,0 +1,28 @@
+.wrapper {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--secondary);
+}
+
+.icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.title {
+  margin: 0 0 8px;
+  color: var(--dark);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.description {
+  margin: 0 0 16px;
+  color: var(--secondary);
+  font-size: 14px;
+}
+
+.action {
+  display: flex;
+  justify-content: center;
+}

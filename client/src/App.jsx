@@ -1,22 +1,24 @@
 import { Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import EmployeeList from './pages/EmployeeList.jsx';
-import EmployeeCard from './pages/EmployeeCard.jsx';
-import ItemCatalog from './pages/ItemCatalog.jsx';
-import IssueNorms from './pages/IssueNorms.jsx';
-import IssueForm from './pages/IssueForm.jsx';
-import Certificates from './pages/Certificates.jsx';
-import Reports from './pages/Reports.jsx';
-import SitesPage from './pages/SitesPage.jsx';
-import Login from './pages/Login.jsx';
-import FormTracker from './pages/FormTracker.jsx';
-import { usePushNotifications } from './hooks/usePushNotifications.js';
+import { useState, useEffect, Suspense, lazy } from 'react';
+import { useAuth } from '@hooks/useAuth.js';
+import Header from '@components/Header.jsx';
+import LoadingSpinner from '@components/ui/LoadingSpinner.jsx';
 import './index.css';
 
+const EmployeeList = lazy(() => import('@features/employees/pages/EmployeeList.jsx'));
+const EmployeeCard = lazy(() => import('@features/employees/pages/EmployeeCard.jsx'));
+const ItemCatalog = lazy(() => import('@features/items/pages/ItemCatalog.jsx'));
+const IssueNorms = lazy(() => import('@features/issues/pages/IssueNorms.jsx'));
+const IssueForm = lazy(() => import('@features/issues/pages/IssueForm.jsx'));
+const Certificates = lazy(() => import('@features/certificates/pages/Certificates.jsx'));
+const Reports = lazy(() => import('@features/reports/pages/Reports.jsx'));
+const SitesPage = lazy(() => import('@features/sites/pages/SitesPage.jsx'));
+const Login = lazy(() => import('@features/auth/pages/Login.jsx'));
+const FormTracker = lazy(() => import('@features/forms/pages/FormTracker.jsx'));
+
 function ProtectedRoute({ children }) {
-  const token = localStorage.getItem('token');
-  if (!token) return <Navigate to="/login" replace />;
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
   return children;
 }
 
@@ -34,9 +36,8 @@ function getPageClass(pathname) {
 }
 
 function AppContent() {
-  const [user, setUser] = useState(null);
+  const { user, logout } = useAuth();
   const location = useLocation();
-  const { supported, subscribed, loading, error, subscribe, unsubscribe } = usePushNotifications();
   const pageClass = getPageClass(location.pathname);
 
   useEffect(() => {
@@ -45,70 +46,24 @@ function AppContent() {
     }
   }, []);
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('user');
-      if (stored) setUser(JSON.parse(stored));
-    } catch (e) {
-      console.error('Failed to parse user from localStorage', e);
-    }
-  }, []);
-
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
-  };
-
   return (
     <>
-      {location.pathname !== '/login' && (
-        <nav className="navbar">
-          <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Link to="/" className="logo">
-              <img src="/logo_irbis.webp" alt="АЗС ИРБИС" style={{ height: '48px', width: 'auto' }} />
-            </Link>
-            <div className="nav-links">
-              <Link to="/">Сотрудники</Link>
-              <Link to="/sites">Объекты</Link>
-              <Link to="/items">Номенклатура</Link>
-              <Link to="/norms">Нормы выдачи</Link>
-              <Link to="/issue">Выдача</Link>
-              <Link to="/certificates">Сертификаты</Link>
-              <Link to="/reports">Отчёты</Link>
-              {user?.role === 'admin' && <Link to="/forms">Учёт форм</Link>}
-              {supported && user && (
-                <button
-                  onClick={subscribed ? unsubscribe : subscribe}
-                  disabled={loading}
-                  style={{ marginLeft: '10px', padding: '5px 10px', cursor: 'pointer' }}
-                >
-                  {loading ? '...' : subscribed ? 'Отключить уведомления' : 'Включить уведомления'}
-                </button>
-              )}
-              {user && (
-                <span style={{ marginLeft: '15px', fontSize: '14px' }}>
-                  {user.username} ({user.role === 'admin' ? 'Админ' : 'Пользователь'})
-                  <button onClick={logout} style={{ marginLeft: '10px', padding: '5px 10px', cursor: 'pointer' }}>Выйти</button>
-                </span>
-              )}
-            </div>
-          </div>
-        </nav>
-      )}
+      <Header />
       <main className={`container ${pageClass}`}>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={<ProtectedRoute><EmployeeList user={user} /></ProtectedRoute>} />
-          <Route path="/sites" element={<ProtectedRoute><SitesPage /></ProtectedRoute>} />
-          <Route path="/employees/:id" element={<ProtectedRoute><EmployeeCard /></ProtectedRoute>} />
-          <Route path="/items" element={<ProtectedRoute><ItemCatalog /></ProtectedRoute>} />
-          <Route path="/norms" element={<ProtectedRoute><IssueNorms /></ProtectedRoute>} />
-          <Route path="/issue" element={<ProtectedRoute><IssueForm /></ProtectedRoute>} />
-          <Route path="/certificates" element={<ProtectedRoute><Certificates /></ProtectedRoute>} />
-          <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-          {user?.role === 'admin' && <Route path="/forms" element={<ProtectedRoute><FormTracker /></ProtectedRoute>} />}
-        </Routes>
+        <Suspense fallback={<LoadingSpinner size={48} />}>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/" element={<ProtectedRoute><EmployeeList /></ProtectedRoute>} />
+            <Route path="/sites" element={<ProtectedRoute><SitesPage /></ProtectedRoute>} />
+            <Route path="/employees/:id" element={<ProtectedRoute><EmployeeCard /></ProtectedRoute>} />
+            <Route path="/items" element={<ProtectedRoute><ItemCatalog /></ProtectedRoute>} />
+            <Route path="/norms" element={<ProtectedRoute><IssueNorms /></ProtectedRoute>} />
+            <Route path="/issue" element={<ProtectedRoute><IssueForm /></ProtectedRoute>} />
+            <Route path="/certificates" element={<ProtectedRoute><Certificates /></ProtectedRoute>} />
+            <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+            {user?.role === 'admin' && <Route path="/forms" element={<ProtectedRoute><FormTracker /></ProtectedRoute>} />}
+          </Routes>
+        </Suspense>
       </main>
     </>
   );

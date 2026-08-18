@@ -1,0 +1,93 @@
+.pageWrapper {
+  min-height: calc(100vh - 60px);
+  background: white;
+}
+
+.pageHeader {
+  background: white;
+  color: var(--dark);
+  padding: 30px 0;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pageHeaderContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title {
+  margin: 0;
+  font-size: 28px;
+}
+
+.subtitle {
+  opacity: 0.9;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+.formSection {
+  margin-bottom: 20px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.field {
+  margin-bottom: 0;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.field input:focus,
+.field select:focus {
+  outline: none;
+  border-color: var(--border);
+}
+
+.tableWrapper {
+  margin-top: 20px;
+}
+
+.checkboxLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.error {
+  color: red;
+}
+
+.smallButton {
+  padding: 6px 12px;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}

@@ -2,7 +2,10 @@ import {
   createCertificate,
   getAllCertificates,
   getCertificatesByItemTypeId,
-  updateCertificateStatus
+  updateCertificateStatus,
+  getCertificateById,
+  updateCertificate as updateCertificateModel,
+  deleteCertificate as deleteCertificateModel
 } from '../models/certificateModel.js';
 
 export async function addCertificate(req, res) {
@@ -23,6 +26,36 @@ export async function listCertificates(req, res) {
     await updateCertificateStatus();
     const certificates = await getAllCertificates();
     res.json(certificates);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+export async function getCertificate(req, res) {
+  try {
+    const certificate = await getCertificateById(req.params.id);
+    if (!certificate) return res.status(404).json({ error: 'Certificate not found' });
+    res.json(certificate);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+export async function updateCertificate(req, res) {
+  try {
+    const certificate = await updateCertificateModel(req.params.id, req.body);
+    if (!certificate) return res.status(404).json({ error: 'Certificate not found' });
+    res.json(certificate);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+export async function deleteCertificate(req, res) {
+  try {
+    const certificate = await deleteCertificateModel(req.params.id);
+    if (!certificate) return res.status(404).json({ error: 'Certificate not found' });
+    res.json({ message: 'Certificate deleted' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

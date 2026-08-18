@@ -8,7 +8,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -44,10 +44,15 @@ services:
   frontend:
     build: ./client
     ports:
-      - "5173:80"
+      - "5173:5173"
     depends_on:
       backend:
         condition: service_healthy
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    environment:
+      VITE_API_TARGET: http://backend:5000
 
 volumes:
   pgdata:

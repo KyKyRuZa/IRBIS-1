@@ -1,7 +1,10 @@
 import {
   createIssueNorm,
   getAllIssueNorms,
-  getNormsForEmployee
+  getNormsForEmployee,
+  getNormById,
+  updateIssueNorm,
+  deleteIssueNorm
 } from '../models/issueNormModel.js';
 
 export async function addNorm(req, res) {
@@ -21,6 +24,36 @@ export async function listNorms(req, res) {
   try {
     const norms = await getAllIssueNorms();
     res.json(norms);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+export async function getNorm(req, res) {
+  try {
+    const norm = await getNormById(req.params.id);
+    if (!norm) return res.status(404).json({ error: 'Norm not found' });
+    res.json(norm);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+export async function updateNorm(req, res) {
+  try {
+    const norm = await updateIssueNorm(req.params.id, req.body);
+    if (!norm) return res.status(404).json({ error: 'Norm not found' });
+    res.json(norm);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+export async function deleteNorm(req, res) {
+  try {
+    const norm = await deleteIssueNorm(req.params.id);
+    if (!norm) return res.status(404).json({ error: 'Norm not found' });
+    res.json({ message: 'Norm deleted' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

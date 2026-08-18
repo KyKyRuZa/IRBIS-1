@@ -92,3 +92,29 @@ export async function getExpiringItems(monthsAhead = 2) {
   `, [monthsAhead]);
   return result.rows;
 }
+
+export async function getIssueRecordById(id) {
+  const result = await pool.query(`
+    SELECT r.*, e.full_name, e.position, e.site_id, it.name as item_type_name, it.category, c.certificate_number
+    FROM issue_records r
+    JOIN employees e ON r.employee_id = e.id
+    JOIN item_types it ON r.item_type_id = it.id
+    LEFT JOIN certificates c ON r.certificate_id = c.id
+    WHERE r.id = $1
+  `, [id]);
+  return result.rows[0];
+}
+
+export async function updateIssueRecord(id, data) {
+  const { employee_id, item_type_id, quantity, issue_date, expiry_date, certificate_id, reorder_date, wear_time_override_months, notes, status } = data;
+  const result = await pool.query(
+    `UPDATE issue_records SET employee_id=$1, item_type_id=$2, quantity=$3, issue_date=$4, expiry_date=$5, certificate_id=$6, reorder_date=$7, wear_time_override_months=$8, notes=$9, status=$10 WHERE id=$11 RETURNING *`,
+    [employee_id, item_type_id, quantity, issue_date, expiry_date, certificate_id, reorder_date, wear_time_override_months, notes, status, id]
+  );
+  return result.rows[0];
+}
+
+export async function deleteIssueRecord(id) {
+  const result = await pool.query('DELETE FROM issue_records WHERE id=$1 RETURNING *', [id]);
+  return result.rows[0];
+}

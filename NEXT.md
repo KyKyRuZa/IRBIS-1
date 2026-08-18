@@ -54,7 +54,7 @@ client/
     hooks/
       usePushNotifications.js # подписка на push
   public/
-    logo_irbis.webp       # логотип
+    logo.webp       # логотип
     sw.js                  # Service Worker
 ```
 
@@ -84,7 +84,7 @@ client/
 - **Исправлено**: В `reportController.js` отсутствовал импорт `docx` и вспомогательные функции для генерации Word-отчётов. Теперь отчёты генерируются корректно.
 - **Исправлено**: В `exportController.js` в `exportConsumables` добавлены `employee_name` и `personnel_number` в data для шаблона.
 - **Исправлено**: В `Reports.jsx` все запросы к `/api/admin/*` и `/api/reports/*` теперь идут через авторизованный axios-инстанс из `lib/api.js`. Экспорты скачиваются через `downloadBlob()` с заголовком `Authorization`.
-- **Исправлено**: Шапка сайта сделана белой, добавлен логотип `logo_irbis.webp`.
+- **Исправлено**: Шапка сайта сделана белой, добавлен логотип `logo.webp`.
 - **Добавлено**: Page-specific темизация для всех 11 страниц через CSS-переменные `.page-*`.
 - **Добавлено**: Класс `.action-buttons` для выравнивания кнопок «Карточка»/«Уволить» в таблице сотрудников.
 - **Добавлено**: Фронтенд-тесты на vitest + testing-library (`client/src/__tests__/`).
