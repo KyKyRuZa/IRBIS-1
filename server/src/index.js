@@ -18,11 +18,20 @@ import uploadRoutes from './routes/uploadRoutes.js';
 import { initDB } from './models/db.js';
 import { aggregateNotifications } from './services/notificationService.js';
 
+import rateLimit from 'express-rate-limit';
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { error: 'Too many login attempts, please try again later' },
+});
+
 const app = express();
 app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') || false, credentials: true }));
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
+app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/sites', siteRoutes);
