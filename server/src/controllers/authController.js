@@ -1,13 +1,12 @@
 import pool from '../models/db.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { LoginSchema, RegisterSchema, ChangePasswordSchema } from '../validation/index.js';
 
 export async function login(req, res, next) {
   try {
-    const { username, password } = req.body;
-    if (!username || !password) {
-      return res.status(400).json({ error: 'username and password are required' });
-    }
+    const { username, password } = LoginSchema.parse(req.body);
+
     const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
     const user = result.rows[0];
     if (!user) {
@@ -30,10 +29,8 @@ export async function login(req, res, next) {
 
 export async function register(req, res, next) {
   try {
-    const { username, password, role } = req.body;
-    if (!username || !password) {
-      return res.status(400).json({ error: 'username and password are required' });
-    }
+    const { username, password, role } = RegisterSchema.parse(req.body);
+
     const existing = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
     if (existing.rows.length > 0) {
       return res.status(400).json({ error: 'User already exists' });
@@ -51,12 +48,10 @@ export async function register(req, res, next) {
 
 export async function changePassword(req, res, next) {
   try {
-    const { old_password, new_password } = req.body;
+    const { old_password, new_password } = ChangePasswordSchema.parse(req.body);
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
-    if (!old_password || !new_password) {
-      return res.status(400).json({ error: 'old_password and new_password are required' });
-    }
+
     const result = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
     const user = result.rows[0];
     if (!user) return res.status(404).json({ error: 'User not found' });

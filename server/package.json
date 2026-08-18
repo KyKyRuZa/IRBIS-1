@@ -27,7 +27,8 @@
     "pg": "^8.12.0",
     "pizzip": "^3.2.0",
     "pug": "^3.0.4",
-    "web-push": "^3.6.7"
+    "web-push": "^3.6.7",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.4"

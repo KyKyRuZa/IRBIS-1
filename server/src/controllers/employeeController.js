@@ -2,27 +2,26 @@ import { createEmployee, getAllEmployees, getEmployeeById, updateEmployee, termi
 import { getNormsForEmployee } from '../models/issueNormModel.js';
 import { getIssueRecordsByEmployee } from '../models/issueRecordModel.js';
 import pool from '../models/db.js';
+import { EmployeeSchema } from '../validation/index.js';
+import { validate } from '../middleware/validate.js';
 
 export async function registerEmployee(req, res, next) {
   try {
-    const { full_name, position, site_id, gender, hire_date, clothing_size, shoe_size, height, personnel_number, hat_size, respirator_size, gloves_size, position_change_date } = req.body;
-    if (!full_name || !position) {
-      return res.status(400).json({ error: 'full_name and position are required' });
-    }
+    const data = EmployeeSchema.parse(req.body);
     const employee = await createEmployee(
-      full_name,
-      position,
-      site_id === '' ? null : Number(site_id),
-      gender || null,
-      hire_date || null,
-      clothing_size || null,
-      shoe_size || null,
-      height ? Number(height) : null,
-      personnel_number || null,
-      hat_size || null,
-      respirator_size || null,
-      gloves_size || null,
-      position_change_date || null
+      data.full_name,
+      data.position,
+      data.site_id === '' || data.site_id === null ? null : Number(data.site_id),
+      data.gender || null,
+      data.hire_date || null,
+      data.clothing_size || null,
+      data.shoe_size || null,
+      data.height ? Number(data.height) : null,
+      data.personnel_number || null,
+      data.hat_size || null,
+      data.respirator_size || null,
+      data.gloves_size || null,
+      data.position_change_date || null
     );
     res.status(201).json(employee);
   } catch (error) {
@@ -30,7 +29,7 @@ export async function registerEmployee(req, res, next) {
   }
 }
 
-export async function listEmployees(req, res, next) {
+export async function listEmployees(req, res) {
   try {
     const { search, status, site_id } = req.query;
     let query = 'SELECT e.*, s.name as site_name FROM employees e LEFT JOIN sites s ON e.site_id = s.id WHERE 1=1';
@@ -54,11 +53,11 @@ export async function listEmployees(req, res, next) {
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (error) {
-    next(error);
+    res.status(500).json({ error: error.message });
   }
 }
 
-export async function getEmployee(req, res, next) {
+export async function getEmployee(req, res) {
   try {
     const employee = await getEmployeeById(req.params.id);
     if (!employee) return res.status(404).json({ error: 'Employee not found' });
@@ -68,11 +67,11 @@ export async function getEmployee(req, res, next) {
     
     res.json({ ...employee, norms, history });
   } catch (error) {
-    next(error);
+    res.status(500).json({ error: error.message });
   }
 }
 
-export async function editEmployee(req, res, next) {
+export async function editEmployee(req, res) {
   try {
     const data = { ...req.body };
     if (data.site_id === '' || data.site_id === null || data.site_id === undefined) data.site_id = null;
@@ -86,26 +85,26 @@ export async function editEmployee(req, res, next) {
     if (!employee) return res.status(404).json({ error: 'Employee not found' });
     res.json(employee);
   } catch (error) {
-    next(error);
+    res.status(500).json({ error: error.message });
   }
 }
 
-export async function fireEmployee(req, res, next) {
+export async function fireEmployee(req, res) {
   try {
     const employee = await terminateEmployee(req.params.id);
     if (!employee) return res.status(404).json({ error: 'Employee not found' });
     res.json(employee);
   } catch (error) {
-    next(error);
+    res.status(500).json({ error: error.message });
   }
 }
 
-export async function deleteEmployee(req, res, next) {
+export async function deleteEmployee(req, res) {
   try {
     const employee = await deleteEmployeeModel(req.params.id);
     if (!employee) return res.status(404).json({ error: 'Employee not found' });
     res.json({ message: 'Employee deleted' });
   } catch (error) {
-    next(error);
+    res.status(500).json({ error: error.message });
   }
 }
