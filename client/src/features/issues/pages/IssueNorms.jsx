@@ -6,6 +6,7 @@ import { ITEM_CATEGORIES } from '@/lib/constants/item-categories.js';
 import { useResource } from '@/hooks/useResource.js';
 import Modal from '@/components/ui/Modal.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
+import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
 import styles from './IssueNorms.module.css';
 
 const categories = ITEM_CATEGORIES;

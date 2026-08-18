@@ -1,4 +1,4 @@
-import { createEmployee, getAllEmployees, getEmployeeById, updateEmployee, terminateEmployee, deleteEmployee } from '../models/employeeModel.js';
+import { createEmployee, getAllEmployees, getEmployeeById, updateEmployee, terminateEmployee, deleteEmployee as deleteEmployeeModel } from '../models/employeeModel.js';
 import { getNormsForEmployee } from '../models/issueNormModel.js';
 import { getIssueRecordsByEmployee } from '../models/issueRecordModel.js';
 import pool from '../models/db.js';
@@ -102,7 +102,7 @@ export async function fireEmployee(req, res) {
 
 export async function deleteEmployee(req, res) {
   try {
-    const employee = await deleteEmployee(req.params.id);
+    const employee = await deleteEmployeeModel(req.params.id);
     if (!employee) return res.status(404).json({ error: 'Employee not found' });
     res.json({ message: 'Employee deleted' });
   } catch (error) {

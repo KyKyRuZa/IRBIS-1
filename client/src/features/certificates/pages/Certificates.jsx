@@ -5,6 +5,7 @@ import { uploadService } from '@/lib/services/upload.service.js';
 import { CERTIFICATE_STATUSES } from '@/lib/constants/certificate-statuses.js';
 import Modal from '@/components/ui/Modal.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
+import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
 import styles from './Certificates.module.css';
 
 export default function Certificates() {
