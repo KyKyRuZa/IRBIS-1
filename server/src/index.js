@@ -19,7 +19,7 @@ import { initDB } from './models/db.js';
 import { aggregateNotifications } from './services/notificationService.js';
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') || false, credentials: true }));
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
