@@ -1,6 +1,6 @@
 import pool from '../models/db.js';
 
-export async function getDemandReport(req, res) {
+export async function getDemandReport(req, res, next) {
   try {
     const { site_id } = req.query;
     let query = `
@@ -64,11 +64,11 @@ export async function getDemandReport(req, res) {
 
     res.json(demand.filter(d => d.demand_qty > 0));
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function getNotifications(req, res) {
+export async function getNotifications(req, res, next) {
   try {
     const result = await pool.query(`
       SELECT notification_id as id, type, severity, message, employee_id, site_id, date
@@ -86,11 +86,11 @@ export async function getNotifications(req, res) {
     }));
     res.json(notifications);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function backupDatabase(req, res) {
+export async function backupDatabase(req, res, next) {
   try {
     const { exec } = await import('child_process');
     const { promisify } = await import('util');
@@ -113,6 +113,6 @@ export async function backupDatabase(req, res) {
       }
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }

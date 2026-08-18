@@ -14,7 +14,7 @@ webpush.setVapidDetails(
   VAPID_PRIVATE_KEY
 );
 
-export async function subscribePush(req, res) {
+export async function subscribePush(req, res, next) {
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -49,11 +49,11 @@ export async function subscribePush(req, res) {
     `, [effectiveEmployeeId, endpoint, keys.p256dh, keys.auth, userAgent]);
     res.status(201).json({ message: 'Subscription saved', employee_id: effectiveEmployeeId });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function unsubscribePush(req, res) {
+export async function unsubscribePush(req, res, next) {
   try {
     const employeeId = req.user?.id;
     if (!employeeId) {
@@ -66,11 +66,11 @@ export async function unsubscribePush(req, res) {
     await pool.query('DELETE FROM push_subscriptions WHERE employee_id = $1 AND endpoint = $2', [employeeId, endpoint]);
     res.json({ message: 'Subscription removed' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function sendPushToEmployee(req, res) {
+export async function sendPushToEmployee(req, res, next) {
   try {
     const { employeeId, notificationId } = req.body;
     let query = 'SELECT id, endpoint, p256dh, auth FROM push_subscriptions WHERE 1=1';
@@ -109,11 +109,11 @@ export async function sendPushToEmployee(req, res) {
     const remaining = await pool.query('SELECT COUNT(*) FROM push_subscriptions WHERE employee_id = $1', [employeeId]);
     res.json({ message: `Sent attempt finished. Remaining subscriptions for employee: ${remaining.rows[0].count}` });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function sendPushToAll(req, res) {
+export async function sendPushToAll(req, res, next) {
   try {
     const result = await pool.query('SELECT id, endpoint, p256dh, auth FROM push_subscriptions');
     const subscriptions = result.rows;
@@ -139,7 +139,7 @@ export async function sendPushToAll(req, res) {
     const remaining = await pool.query('SELECT COUNT(*) FROM push_subscriptions');
     res.json({ message: `Sent attempt finished. Remaining subscriptions: ${remaining.rows[0].count}` });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 

@@ -37,6 +37,11 @@ app.use('/api/forms', formRoutes);
 app.use('/api/push', pushRoutes);
 app.use('/api/upload', uploadRoutes);
 
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
+});
+
 const PORT = process.env.PORT || 5000;
 
 initDB().then(() => {

@@ -7,7 +7,7 @@ import {
   deleteIssueNorm
 } from '../models/issueNormModel.js';
 
-export async function addNorm(req, res) {
+export async function addNorm(req, res, next) {
   try {
     const { item_type_id, period_months, quantity, gender, position, site_id, seasonality, etn_point, period_text } = req.body;
     if (!item_type_id || !period_months) {
@@ -16,50 +16,50 @@ export async function addNorm(req, res) {
     const norm = await createIssueNorm(item_type_id, period_months, quantity, gender, position, site_id, seasonality, etn_point, period_text);
     res.status(201).json(norm);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function listNorms(req, res) {
+export async function listNorms(req, res, next) {
   try {
     const norms = await getAllIssueNorms();
     res.json(norms);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function getNorm(req, res) {
+export async function getNorm(req, res, next) {
   try {
     const norm = await getNormById(req.params.id);
     if (!norm) return res.status(404).json({ error: 'Norm not found' });
     res.json(norm);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function updateNorm(req, res) {
+export async function updateNorm(req, res, next) {
   try {
     const norm = await updateIssueNorm(req.params.id, req.body);
     if (!norm) return res.status(404).json({ error: 'Norm not found' });
     res.json(norm);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function deleteNorm(req, res) {
+export async function deleteNorm(req, res, next) {
   try {
     const norm = await deleteIssueNorm(req.params.id);
     if (!norm) return res.status(404).json({ error: 'Norm not found' });
     res.json({ message: 'Norm deleted' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function getEmployeeNorms(req, res) {
+export async function getEmployeeNorms(req, res, next) {
   try {
     const pool = (await import('../models/db.js')).default;
     const employee = await pool.query('SELECT * FROM employees WHERE id = $1', [req.params.employeeId]);
@@ -67,6 +67,6 @@ export async function getEmployeeNorms(req, res) {
     const norms = await getNormsForEmployee(employee.rows[0]);
     res.json(norms);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }

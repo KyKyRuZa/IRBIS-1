@@ -13,7 +13,7 @@ import {
 } from '../models/issueRecordModel.js';
 import pool from '../models/db.js';
 
-export async function issueItem(req, res) {
+export async function issueItem(req, res, next) {
   try {
     const { employee_id, item_type_id, quantity, issue_date, certificate_id, wear_time_override, signature_path, signature_date, notes } = req.body;
     if (!employee_id || !item_type_id) {
@@ -47,11 +47,11 @@ export async function issueItem(req, res) {
     }
     res.status(201).json(record);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function batchIssue(req, res) {
+export async function batchIssue(req, res, next) {
   try {
     const { site_id, item_type_id, quantity, issue_date, certificate_id, wear_time_override, notes } = req.body;
     if (!site_id || !item_type_id) {
@@ -92,11 +92,11 @@ export async function batchIssue(req, res) {
     const created = await batchIssueRecords(records);
     res.status(201).json({ count: created.length, records: created });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function listIssues(req, res) {
+export async function listIssues(req, res, next) {
   try {
     const { employee_id, site_id, item_type_id, status, date_from, date_to } = req.query;
     let query = `
@@ -139,67 +139,67 @@ export async function listIssues(req, res) {
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function dispose(req, res) {
+export async function dispose(req, res, next) {
   try {
     const record = await disposeIssueRecord(req.params.id);
     if (!record) return res.status(404).json({ error: 'Record not found' });
     res.json(record);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function returnItem(req, res) {
+export async function returnItem(req, res, next) {
   try {
     const { return_date, return_quantity } = req.body;
     const record = await returnIssueRecord(req.params.id, return_date || new Date().toISOString().split('T')[0], return_quantity || 0);
     if (!record) return res.status(404).json({ error: 'Record not found' });
     res.json(record);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function getExpiring(req, res) {
+export async function getExpiring(req, res, next) {
   try {
     const months = parseInt(req.query.months) || 2;
     const items = await getExpiringItems(months);
     res.json(items);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function getIssue(req, res) {
+export async function getIssue(req, res, next) {
   try {
     const record = await getIssueRecordById(req.params.id);
     if (!record) return res.status(404).json({ error: 'Issue record not found' });
     res.json(record);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function updateIssue(req, res) {
+export async function updateIssue(req, res, next) {
   try {
     const record = await updateIssueRecord(req.params.id, req.body);
     if (!record) return res.status(404).json({ error: 'Issue record not found' });
     res.json(record);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function deleteIssue(req, res) {
+export async function deleteIssue(req, res, next) {
   try {
     const record = await deleteIssueRecord(req.params.id);
     if (!record) return res.status(404).json({ error: 'Issue record not found' });
     res.json({ message: 'Issue record deleted' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }

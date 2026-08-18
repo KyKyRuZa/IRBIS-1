@@ -116,7 +116,7 @@ function emptyP() {
   return new Paragraph({ spacing: { after: 60 }, children: [] });
 }
 
-export async function exportEmployeeCard(req, res) {
+export async function exportEmployeeCard(req, res, next) {
   try {
     const result = await pool.query(`
       SELECT e.*, s.name as site_name, s.responsible_person as site_responsible
@@ -199,11 +199,11 @@ export async function exportEmployeeCard(req, res) {
     res.send(buffer);
   } catch (error) {
     console.error('exportEmployeeCard error', error);
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function exportConsumables(req, res) {
+export async function exportConsumables(req, res, next) {
   try {
     const result = await pool.query(`
       SELECT e.*, s.name as site_name 
@@ -252,11 +252,11 @@ export async function exportConsumables(req, res) {
     res.send(buffer);
   } catch (error) {
     console.error('exportConsumables error', error);
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function exportAllCards(req, res) {
+export async function exportAllCards(req, res, next) {
   try {
     const result = await pool.query(`
       SELECT e.*, s.name as site_name, s.responsible_person as site_responsible
@@ -349,12 +349,12 @@ export async function exportAllCards(req, res) {
   } catch (error) {
     console.error('exportAllCards error', error);
     if (!res.headersSent) {
-      res.status(500).json({ error: error.message });
+      next(error);
     }
   }
 }
 
-export async function exportIssuesReport(req, res) {
+export async function exportIssuesReport(req, res, next) {
   try {
     const result = await pool.query(`
       SELECT r.*, e.full_name as employee_name, e.position, e.personnel_number, s.name as site_name, it.name as item_name, it.category
@@ -431,11 +431,11 @@ export async function exportIssuesReport(req, res) {
     res.send(buffer);
   } catch (error) {
     console.error('exportIssuesReport error', error);
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function exportExpiringReport(req, res) {
+export async function exportExpiringReport(req, res, next) {
   try {
     const months = parseInt(req.query.months) || 2;
     const result = await pool.query(`
@@ -515,11 +515,11 @@ export async function exportExpiringReport(req, res) {
     res.send(buffer);
   } catch (error) {
     console.error('exportExpiringReport error', error);
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function exportItemsReport(req, res) {
+export async function exportItemsReport(req, res, next) {
   try {
     const result = await pool.query('SELECT * FROM item_types ORDER BY category, name');
     const rows = result.rows;
@@ -573,11 +573,11 @@ export async function exportItemsReport(req, res) {
     res.send(buffer);
   } catch (error) {
     console.error('exportItemsReport error', error);
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function exportGroupConsumablesReport(req, res) {
+export async function exportGroupConsumablesReport(req, res, next) {
   try {
     const { site_id, period } = req.query;
     if (!site_id) return res.status(400).json({ error: 'site_id is required' });
@@ -629,6 +629,6 @@ export async function exportGroupConsumablesReport(req, res) {
     res.send(buffer);
   } catch (error) {
     console.error('exportGroupConsumablesReport error', error);
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }

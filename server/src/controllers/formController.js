@@ -6,7 +6,7 @@ import {
   getFormTakenByEmployee
 } from '../models/formModel.js';
 
-export async function addForm(req, res) {
+export async function addForm(req, res, next) {
   try {
     const { name, description } = req.body;
     if (!name) {
@@ -15,20 +15,20 @@ export async function addForm(req, res) {
     const form = await createForm(name, description);
     res.status(201).json(form);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function listForms(req, res) {
+export async function listForms(req, res, next) {
   try {
     const forms = await getAllForms();
     res.json(forms);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function takeForm(req, res) {
+export async function takeForm(req, res, next) {
   try {
     const { employee_id, form_id } = req.body;
     if (!employee_id || !form_id) {
@@ -37,24 +37,24 @@ export async function takeForm(req, res) {
     const record = await recordFormTaken(employee_id, form_id);
     res.status(201).json(record);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function listFormTaken(req, res) {
+export async function listFormTaken(req, res, next) {
   try {
     const records = await getFormTakenRecords();
     res.json(records);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function listFormTakenByEmployee(req, res) {
+export async function listFormTakenByEmployee(req, res, next) {
   try {
     const records = await getFormTakenByEmployee(req.params.employeeId);
     res.json(records);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }

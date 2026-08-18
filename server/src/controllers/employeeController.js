@@ -3,7 +3,7 @@ import { getNormsForEmployee } from '../models/issueNormModel.js';
 import { getIssueRecordsByEmployee } from '../models/issueRecordModel.js';
 import pool from '../models/db.js';
 
-export async function registerEmployee(req, res) {
+export async function registerEmployee(req, res, next) {
   try {
     const { full_name, position, site_id, gender, hire_date, clothing_size, shoe_size, height, personnel_number, hat_size, respirator_size, gloves_size, position_change_date } = req.body;
     if (!full_name || !position) {
@@ -26,11 +26,11 @@ export async function registerEmployee(req, res) {
     );
     res.status(201).json(employee);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function listEmployees(req, res) {
+export async function listEmployees(req, res, next) {
   try {
     const { search, status, site_id } = req.query;
     let query = 'SELECT e.*, s.name as site_name FROM employees e LEFT JOIN sites s ON e.site_id = s.id WHERE 1=1';
@@ -54,11 +54,11 @@ export async function listEmployees(req, res) {
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function getEmployee(req, res) {
+export async function getEmployee(req, res, next) {
   try {
     const employee = await getEmployeeById(req.params.id);
     if (!employee) return res.status(404).json({ error: 'Employee not found' });
@@ -68,11 +68,11 @@ export async function getEmployee(req, res) {
     
     res.json({ ...employee, norms, history });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function editEmployee(req, res) {
+export async function editEmployee(req, res, next) {
   try {
     const data = { ...req.body };
     if (data.site_id === '' || data.site_id === null || data.site_id === undefined) data.site_id = null;
@@ -86,26 +86,26 @@ export async function editEmployee(req, res) {
     if (!employee) return res.status(404).json({ error: 'Employee not found' });
     res.json(employee);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function fireEmployee(req, res) {
+export async function fireEmployee(req, res, next) {
   try {
     const employee = await terminateEmployee(req.params.id);
     if (!employee) return res.status(404).json({ error: 'Employee not found' });
     res.json(employee);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function deleteEmployee(req, res) {
+export async function deleteEmployee(req, res, next) {
   try {
     const employee = await deleteEmployeeModel(req.params.id);
     if (!employee) return res.status(404).json({ error: 'Employee not found' });
     res.json({ message: 'Employee deleted' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }

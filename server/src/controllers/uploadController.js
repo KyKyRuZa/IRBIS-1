@@ -1,7 +1,7 @@
 import pool from '../models/db.js';
 import path from 'path';
 
-export async function uploadCertificate(req, res) {
+export async function uploadCertificate(req, res, next) {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'File is required' });
@@ -17,11 +17,11 @@ export async function uploadCertificate(req, res) {
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function uploadSignature(req, res) {
+export async function uploadSignature(req, res, next) {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'File is required' });
@@ -35,6 +35,6 @@ export async function uploadSignature(req, res) {
     const result = await pool.query('SELECT * FROM issue_records WHERE id=$1', [issue_record_id]);
     res.json(result.rows[0]);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }

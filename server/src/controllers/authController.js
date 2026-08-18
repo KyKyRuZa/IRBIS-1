@@ -2,7 +2,7 @@ import pool from '../models/db.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
-export async function login(req, res) {
+export async function login(req, res, next) {
   try {
     const { username, password } = req.body;
     if (!username || !password) {
@@ -24,11 +24,11 @@ export async function login(req, res) {
     );
     res.json({ id: user.id, username: user.username, role: user.role, token });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function register(req, res) {
+export async function register(req, res, next) {
   try {
     const { username, password, role } = req.body;
     if (!username || !password) {
@@ -45,11 +45,11 @@ export async function register(req, res) {
     );
     res.status(201).json({ id: result.rows[0].id, username: result.rows[0].username, role: result.rows[0].role });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function changePassword(req, res) {
+export async function changePassword(req, res, next) {
   try {
     const { old_password, new_password } = req.body;
     const userId = req.user?.id;
@@ -66,6 +66,6 @@ export async function changePassword(req, res) {
     await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, userId]);
     res.json({ message: 'Password changed successfully' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }

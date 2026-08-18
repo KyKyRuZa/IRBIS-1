@@ -89,7 +89,7 @@ function emptyP() {
   return new Paragraph({ spacing: { after: 60 }, children: [] });
 }
 
-export async function exportToExcel(req, res) {
+export async function exportToExcel(req, res, next) {
   try {
     const { site_id, item_type_id, date_from, date_to, status } = req.query;
     const workbook = new ExcelJS.Workbook();
@@ -140,11 +140,11 @@ export async function exportToExcel(req, res) {
     await workbook.xlsx.write(res);
     res.end();
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function exportDemandReport(req, res) {
+export async function exportDemandReport(req, res, next) {
   try {
     const { site_id } = req.query;
     const result = await pool.query(`
@@ -222,11 +222,11 @@ export async function exportDemandReport(req, res) {
     await workbook.xlsx.write(res);
     res.end();
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function exportIssuesReport(req, res) {
+export async function exportIssuesReport(req, res, next) {
   try {
     const { site_id, employee_id, item_type_id, date_from, date_to, status } = req.query;
     let query = `
@@ -307,11 +307,11 @@ export async function exportIssuesReport(req, res) {
     res.send(buffer);
   } catch (error) {
     console.error('exportIssuesReport error', error);
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function exportExpiringReport(req, res) {
+export async function exportExpiringReport(req, res, next) {
   try {
     const months = parseInt(req.query.months) || 2;
     const result = await pool.query(`
@@ -382,11 +382,11 @@ export async function exportExpiringReport(req, res) {
     res.send(buffer);
   } catch (error) {
     console.error('exportExpiringReport error', error);
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
 
-export async function exportItemsReport(req, res) {
+export async function exportItemsReport(req, res, next) {
   try {
     const result = await pool.query('SELECT * FROM item_types ORDER BY category, name');
     const rows = result.rows;
@@ -432,6 +432,6 @@ export async function exportItemsReport(req, res) {
     res.send(buffer);
   } catch (error) {
     console.error('exportItemsReport error', error);
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 }
