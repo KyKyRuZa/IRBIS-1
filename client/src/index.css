@@ -26,12 +26,6 @@ body {
   color: var(--dark);
 }
 
-.container {
-  max-width: 1500px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
 .navbar {
   background: #ffffff;
   padding: 12px 0;
@@ -243,12 +237,6 @@ body {
     margin-bottom: 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
-
-.page-wrapper .page-header .container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
 
 .page-wrapper .page-header h1 {
   margin: 0;

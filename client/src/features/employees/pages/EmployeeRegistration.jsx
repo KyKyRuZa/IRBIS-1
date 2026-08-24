@@ -36,14 +36,14 @@ export default function EmployeeRegistration() {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.pageHeader}>
-        <div className={`container ${styles.pageHeaderContent}`}>
+        <div className={`${styles.container} ${styles.pageHeaderContent}`}>
           <div className={styles.title}>
             <h1>Регистрация сотрудников</h1>
             <div className={styles.subtitle}>Упрощённый ввод новых кадров</div>
           </div>
         </div>
       </div>
-      <div className="container">
+      <div className={styles.container}>
         <div className="card">
           <form onSubmit={handleSubmit} className={styles.formSection}>
             <div className={styles.formGrid}>

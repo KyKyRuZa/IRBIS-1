@@ -66,7 +66,7 @@ export default function FormTracker() {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.pageHeader}>
-        <div className={`container ${styles.pageHeaderContent}`}>
+        <div className={`${styles.container} ${styles.pageHeaderContent}`}>
           <div className={styles.title}>
             <h1>Учёт форм</h1>
             <div className={styles.subtitle}>Административная панель учёта бланков и документов</div>

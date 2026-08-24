@@ -155,14 +155,14 @@ export default function Reports() {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.pageHeader}>
-        <div className={`container ${styles.pageHeaderContent}`}>
+        <div className={`${styles.container} ${styles.pageHeaderContent}`}>
           <div className={styles.title}>
             <h1>Отчёты</h1>
             <div className={styles.subtitle}>Аналитика, экспорт и сводные данные</div>
           </div>
         </div>
       </div>
-      <div className="container">
+      <div className={styles.container}>
       <div className="card">
         <div className={styles.headerRow}>
           <h2 className={styles.headerTitle}>Отчёты</h2>

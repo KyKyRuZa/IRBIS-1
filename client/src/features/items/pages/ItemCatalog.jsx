@@ -123,7 +123,7 @@ export default function ItemCatalog() {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.pageHeader}>
-        <div className={`container ${styles.pageHeaderContent}`}>
+        <div className={`${styles.container} ${styles.pageHeaderContent}`}>
           <div className={styles.title}>
             <h1>Номенклатура</h1>
             <div className={styles.subtitle}>Справочник спецодежды, обуви и СИЗ</div>
@@ -133,7 +133,7 @@ export default function ItemCatalog() {
           </button>
         </div>
       </div>
-      <div className="container">
+      <div className={styles.container}>
         <div className="card">
           <div className={styles.tabs}>
             <button

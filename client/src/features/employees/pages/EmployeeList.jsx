@@ -112,7 +112,7 @@ export default function EmployeeList() {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.pageHeader}>
-        <div className={`container ${styles.pageHeaderContent}`}>
+        <div className={`${styles.container} ${styles.pageHeaderContent}`}>
           <div className={styles.title}>
             <h1>Справочник сотрудников</h1>
             <div className={styles.subtitle}>Управление кадрами и персональными данными</div>
@@ -122,7 +122,7 @@ export default function EmployeeList() {
           </button>
         </div>
       </div>
-      <div className="container">
+      <div className={styles.container}>
         <div className="card">
           <form className="search-box" onSubmit={handleSearch}>
             <input

@@ -178,7 +178,7 @@ export default function IssueForm() {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.pageHeader}>
-        <div className={`container ${styles.pageHeaderContent}`}>
+        <div className={`${styles.container} ${styles.pageHeaderContent}`}>
           <div className={styles.title}>
             <h1>Выдача спецодежды и СИЗ</h1>
             <div className={styles.subtitle}>Оперативная выдача, групповая раздача и возвраты</div>
@@ -188,7 +188,7 @@ export default function IssueForm() {
           </button>
         </div>
       </div>
-      <div className="container">
+      <div className={styles.container}>
         <div className="card">
           <h3 className={styles.title}>Последние выдачи</h3>
           {loading && <div className="card">Загрузка...</div>}

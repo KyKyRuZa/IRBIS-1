@@ -129,7 +129,7 @@ export default function Certificates() {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.pageHeader}>
-        <div className={`container ${styles.pageHeaderContent}`}>
+        <div className={`${styles.container} ${styles.pageHeaderContent}`}>
           <div className={styles.title}>
             <h1>Сертификаты соответствия</h1>
             <div className={styles.subtitle}>Контроль сроков действия и файлов сертификатов</div>
@@ -139,7 +139,7 @@ export default function Certificates() {
           </button>
         </div>
       </div>
-      <div className="container">
+      <div className={styles.container}>
         <div className="card">
           <div className={styles.tableWrapper}>
             <label className={styles.checkboxLabel}>

@@ -87,7 +87,7 @@ export default function IssueNorms() {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.pageHeader}>
-        <div className={`container ${styles.pageHeaderContent}`}>
+        <div className={`${styles.container} ${styles.pageHeaderContent}`}>
           <div className={styles.title}>
             <h1>Нормы выдачи</h1>
             <div className={styles.subtitle}>Установленные нормы по должностям и периодичности</div>
@@ -97,7 +97,7 @@ export default function IssueNorms() {
           </button>
         </div>
       </div>
-      <div className="container">
+      <div className={styles.container}>
         <div className="card">
           {loading && <div className="card">Загрузка...</div>}
           {error && <div className={`card ${styles.error}`}>{error}</div>}

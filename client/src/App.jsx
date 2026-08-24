@@ -4,6 +4,7 @@ import { useAuth } from '@hooks/useAuth.js';
 import Header from '@components/Header.jsx';
 import LoadingSpinner from '@components/ui/LoadingSpinner.jsx';
 import './index.css';
+import styles from './App.module.css';
 
 const EmployeeList = lazy(() => import('@features/employees/pages/EmployeeList.jsx'));
 const EmployeeCard = lazy(() => import('@features/employees/pages/EmployeeCard.jsx'));
@@ -49,7 +50,7 @@ function AppContent() {
   return (
     <>
       <Header />
-      <main className={`container ${pageClass}`}>
+      <main className={`${styles.container} ${pageClass}`}>
         <Suspense fallback={<LoadingSpinner size={48} />}>
           <Routes>
             <Route path="/login" element={<Login />} />
