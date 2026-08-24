@@ -14,7 +14,6 @@
   color: var(--dark);
   padding: 30px 0;
   margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .pageHeaderContent {
@@ -72,6 +71,7 @@
 
 .tableWrapper {
   margin-top: 20px;
+  padding: 10px 0;
 }
 
 .checkboxLabel {

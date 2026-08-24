@@ -4,11 +4,14 @@ import { employeesService } from '@/lib/services/employees.service.js';
 import { EMPLOYEE_STATUSES } from '@/lib/constants/employee-statuses.js';
 import { ISSUE_STATUSES, ISSUE_STATUS_LABELS } from '@/lib/constants/issue-statuses.js';
 import StatusBadge from '@/components/ui/StatusBadge.jsx';
+import { exportsService } from '@/lib/services/exports.service.js';
+import { useExport } from '@/hooks/useExport.js';
 import styles from './EmployeeCard.module.css';
 
 export default function EmployeeCard() {
   const { id } = useParams();
   const [employee, setEmployee] = useState(null);
+  const { download, exporting } = useExport();
 
   useEffect(() => {
     employeesService.get(id).then(setEmployee);
@@ -22,7 +25,6 @@ export default function EmployeeCard() {
         <div className={`${styles.container} ${styles.pageHeaderContent}`}>
           <div className={styles.title}>
             <h1>Личная карточка сотрудника</h1>
-            <div className={styles.subtitle}>Данные, нормы и история выдач</div>
           </div>
         </div>
       </div>
@@ -51,9 +53,9 @@ export default function EmployeeCard() {
             <div className="card">
               <h3 className={styles.sectionTitle}>Экспорт документов</h3>
               <div className={styles.exportActions}>
-                <button className="btn" onClick={() => window.open(`/api/export/employee-card/${employee.id}`, '_blank')}>Личная карточка СИЗ (Word)</button>
-                <button className="btn btn-secondary" onClick={() => window.open(`/api/export/consumables/${employee.id}?period=first`, '_blank')}>Ведомость расходников I полугодие</button>
-                <button className="btn btn-secondary" onClick={() => window.open(`/api/export/consumables/${employee.id}?period=second`, '_blank')}>Ведомость расходников II полугодие</button>
+                <button className="btn" disabled={exporting} onClick={() => download(() => exportsService.exportEmployeeCard(employee.id), 'employee-card.docx')}>Личная карточка СИЗ (Word)</button>
+                <button className="btn btn-secondary" disabled={exporting} onClick={() => download(() => exportsService.exportConsumables(employee.id, 'first'), 'consumables-first.docx')}>Ведомость расходников I полугодие</button>
+                <button className="btn btn-secondary" disabled={exporting} onClick={() => download(() => exportsService.exportConsumables(employee.id, 'second'), 'consumables-second.docx')}>Ведомость расходников II полугодие</button>
               </div>
             </div>
 

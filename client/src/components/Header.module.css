@@ -10,12 +10,11 @@
 }
 
 .container {
-  max-width: 1440px;
   margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 84px;
+  height: 100px;
   gap: 24px;
   position: relative;
 }
@@ -28,7 +27,7 @@
 }
 
 .logo {
-  height: 52px;
+  height: 90px;
   width: auto;
 }
 
@@ -222,7 +221,7 @@
 
   .nav {
     position: absolute;
-    top: 84px; /* высота хедера */
+    top: 100px; /* высота хедера */
     left: 0;
     right: 0;
     background-color: #ffffff;
@@ -293,12 +292,12 @@
   }
 
   .container {
-    height: 68px;
+    height: 84px;
     gap: 8px;
   }
 
   .logo {
-    height: 40px;
+    height: 48px;
   }
 
   .burger {
@@ -307,7 +306,7 @@
   }
 
   .nav {
-    top: 68px;
+    top: 84px;
     padding: 8px 16px;
   }
 

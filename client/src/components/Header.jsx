@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { usePushNotifications } from '@hooks/usePushNotifications.js';
 import { useAuth } from '@hooks/useAuth.js';
@@ -68,20 +68,31 @@ function Header() {
     loading,
     subscribe,
     unsubscribe,
+    error: pushError,
   } = usePushNotifications();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Скрываем шапку на странице входа
+  const allLinks = useMemo(() => {
+    const base = user?.role === 'admin' ? [...NAV_LINKS, ...ADMIN_LINKS] : NAV_LINKS;
+    return base;
+  }, [user?.role]);
+
+  const handleLinkClick = useCallback(() => setIsMenuOpen(false), []);
+
+  const handleSubscribe = useCallback(async () => {
+    await subscribe();
+  }, [subscribe]);
+
+  const handleUnsubscribe = useCallback(async () => {
+    await unsubscribe();
+  }, [unsubscribe]);
+
+  const handleLogout = useCallback(() => {
+    logout();
+  }, [logout]);
+
   if (location.pathname === '/login') return null;
-
-  // Формируем список ссылок в зависимости от роли
-  const allLinks = user?.role === 'admin'
-    ? [...NAV_LINKS, ...ADMIN_LINKS]
-    : NAV_LINKS;
-
-  // Закрываем меню при клике по ссылке
-  const handleLinkClick = () => setIsMenuOpen(false);
 
   return (
     <header className={styles.header}>
@@ -94,8 +105,9 @@ function Header() {
         {/* Бургер-иконка (видна только на мобильных) */}
         <button
           className={styles.burger}
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          onClick={() => setIsMenuOpen((prev) => !prev)}
           aria-label="Меню"
+          aria-expanded={isMenuOpen}
         >
           <span className={styles.burgerLine} />
           <span className={styles.burgerLine} />
@@ -121,10 +133,11 @@ function Header() {
             supported={supported}
             subscribed={subscribed}
             loading={loading}
-            onSubscribe={subscribe}
-            onUnsubscribe={unsubscribe}
+            onSubscribe={handleSubscribe}
+            onUnsubscribe={handleUnsubscribe}
           />
-          {user && <UserBlock user={user} onLogout={logout} />}
+          {pushError && <span className={styles.pushError} role="alert">{pushError}</span>}
+          {user && <UserBlock user={user} onLogout={handleLogout} />}
         </div>
       </div>
     </header>
