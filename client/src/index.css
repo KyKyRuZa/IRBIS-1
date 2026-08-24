@@ -54,7 +54,7 @@ body {
   color: var(--dark);
   margin-right: 20px;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 16px;
   transition: opacity 0.2s;
 }
 
@@ -290,6 +290,7 @@ body {
   font-size: 12px;
   line-height: 1.2;
   white-space: nowrap;
+  text-decoration: none;
 }
 
 .page-wrapper .search-box input:focus,

@@ -6,7 +6,7 @@ import { certificatesService } from '@/lib/services/certificates.service.js';
 import { issuesService } from '@/lib/services/issues.service.js';
 import { uploadService } from '@/lib/services/upload.service.js';
 import { EMPLOYEE_STATUSES } from '@/lib/constants/employee-statuses.js';
-import { ISSUE_STATUSES } from '@/lib/constants/issue-statuses.js';
+import { ISSUE_STATUSES, ISSUE_STATUS_LABELS } from '@/lib/constants/issue-statuses.js';
 import { useResource } from '@/hooks/useResource.js';
 import { useFormState } from '@/hooks/useFormState.js';
 import Modal from '@/components/ui/Modal.jsx';
@@ -215,39 +215,26 @@ export default function IssueForm() {
                       <td>{record.item_type_name}</td>
                       <td>{record.quantity}</td>
                       <td>{record.expiry_date ? new Date(record.expiry_date).toLocaleDateString() : '-'}</td>
-                      <td>
-                        {record.status === ISSUE_STATUSES.issued ? (
-                          <span className="badge badge-success">{ISSUE_STATUSES.issued}</span>
-                        ) : record.status === ISSUE_STATUSES.disposed ? (
-                          <span className="badge badge-danger">{ISSUE_STATUSES.disposed}</span>
-                        ) : record.status === ISSUE_STATUSES.returned ? (
-                          <span className="badge badge-info">{ISSUE_STATUSES.returned}</span>
-                        ) : (
-                          <span className="badge">{record.status}</span>
-                        )}
-                      </td>
+                       <td>
+                         {record.status === ISSUE_STATUSES.issued ? (
+                           <span className="badge badge-success">{ISSUE_STATUS_LABELS.issued}</span>
+                         ) : record.status === ISSUE_STATUSES.disposed ? (
+                           <span className="badge badge-danger">{ISSUE_STATUS_LABELS.disposed}</span>
+                         ) : record.status === ISSUE_STATUSES.returned ? (
+                           <span className="badge badge-info">{ISSUE_STATUS_LABELS.returned}</span>
+                         ) : record.status === ISSUE_STATUSES.due_for_disposal ? (
+                           <span className="badge badge-warning">{ISSUE_STATUS_LABELS.due_for_disposal}</span>
+                         ) : (
+                           <span className="badge">{record.status}</span>
+                         )}
+                       </td>
                       <td>
                         {record.status === ISSUE_STATUSES.issued && (
-                          <>
-                            <button
-                              className={`btn ${styles.smallButton}`}
-                              onClick={() => handleEdit(record)}
-                            >
-                              Редактировать
-                            </button>
-                            <button
-                              className="btn btn-danger"
-                              onClick={() => setDeleteId(record.id)}
-                            >
-                              Удалить
-                            </button>
-                            <button
-                              className="btn btn-secondary"
-                              onClick={() => setDisposeId(record.id)}
-                            >
-                              Списать
-                            </button>
-                          </>
+                          <div className="action-buttons">
+                            <button className="btn" onClick={() => handleEdit(record)}>Редактировать</button>
+                            <button className="btn btn-danger" onClick={() => setDeleteId(record.id)}>Удалить</button>
+                            <button className="btn btn-secondary" onClick={() => setDisposeId(record.id)}>Списать</button>
+                          </div>
                         )}
                       </td>
                     </tr>

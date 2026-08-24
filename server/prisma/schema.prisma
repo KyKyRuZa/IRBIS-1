@@ -1,0 +1,176 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Site {
+  id                Int            @id @default(autoincrement())
+  name              String         @db.VarChar(255)
+  responsiblePerson String?        @map("responsible_person") @db.VarChar(255)
+  employees         Employee[]
+  issueNorms        IssueNorm[]
+  notifications     Notification[]
+
+  @@map("sites")
+}
+
+model Employee {
+  id                 Int                @id @default(autoincrement())
+  fullName           String             @map("full_name") @db.VarChar(255)
+  personnelNumber    String?            @map("personnel_number") @db.VarChar(255)
+  position           String             @db.VarChar(255)
+  siteId             Int?               @map("site_id")
+  positionChangeDate DateTime?          @map("position_change_date") @db.Date
+  gender             String?            @db.VarChar(20)
+  hireDate           DateTime?          @map("hire_date") @db.Date
+  clothingSize       String?            @map("clothing_size") @db.VarChar(50)
+  shoeSize           String?            @map("shoe_size") @db.VarChar(50)
+  hatSize            String?            @map("hat_size") @db.VarChar(50)
+  respiratorSize     String?            @map("respirator_size") @db.VarChar(50)
+  glovesSize         String?            @map("gloves_size") @db.VarChar(50)
+  height             Int?
+  status             String?            @default("active") @db.VarChar(20)
+  createdAt          DateTime?          @default(now()) @map("created_at") @db.Timestamp(6)
+  site               Site?              @relation(fields: [siteId], references: [id], onUpdate: NoAction)
+  formTaken          FormTaken[]
+  issueRecords       IssueRecord[]
+  notifications      Notification[]
+  pushSubs           PushSubscription[]
+
+  @@map("employees")
+}
+
+model ItemType {
+  id                    Int           @id @default(autoincrement())
+  name                  String        @db.VarChar(255)
+  category              String        @db.VarChar(50)
+  unit                  String?       @default("шт") @db.VarChar(50)
+  defaultWearTimeMonths Int?          @map("default_wear_time_months")
+  seasonality           String?       @db.VarChar(50)
+  requiresCertificate   Boolean?      @default(false) @map("requires_certificate")
+  certificates          Certificate[]
+  issueNorms            IssueNorm[]
+  issueRecords          IssueRecord[]
+
+  @@map("item_types")
+}
+
+model Certificate {
+  id                Int           @id @default(autoincrement())
+  productName       String        @map("product_name") @db.VarChar(255)
+  certificateNumber String?       @map("certificate_number") @db.VarChar(255)
+  issueDate         DateTime?     @map("issue_date") @db.Date
+  expiryDate        DateTime?     @map("expiry_date") @db.Date
+  filePath          String?       @map("file_path") @db.VarChar(500)
+  itemTypeId        Int?          @map("item_type_id")
+  status            String?       @default("active") @db.VarChar(20)
+  itemType          ItemType?     @relation(fields: [itemTypeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  issueRecords      IssueRecord[]
+
+  @@map("certificates")
+}
+
+model IssueNorm {
+  id           Int       @id @default(autoincrement())
+  itemTypeId   Int?      @map("item_type_id")
+  periodMonths Int       @map("period_months")
+  quantity     Int?      @default(1)
+  gender       String?   @db.VarChar(20)
+  position     String?   @db.VarChar(255)
+  siteId       Int?      @map("site_id")
+  seasonality  String?   @db.VarChar(50)
+  etnPoint     String?   @map("etn_point") @db.VarChar(255)
+  periodText   String?   @map("period_text")
+  itemType     ItemType? @relation(fields: [itemTypeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  site         Site?     @relation(fields: [siteId], references: [id], onUpdate: NoAction)
+
+  @@map("issue_norms")
+}
+
+model IssueRecord {
+  id                     Int          @id @default(autoincrement())
+  employeeId             Int?         @map("employee_id")
+  itemTypeId             Int?         @map("item_type_id")
+  quantity               Int?         @default(1)
+  issueDate              DateTime?    @default(now()) @map("issue_date") @db.Date
+  expiryDate             DateTime?    @map("expiry_date") @db.Date
+  reorderDate            DateTime?    @map("reorder_date") @db.Date
+  certificateId          Int?         @map("certificate_id")
+  status                 String?      @default("issued") @db.VarChar(20)
+  signaturePath          String?      @map("signature_path") @db.VarChar(500)
+  signatureDate          DateTime?    @map("signature_date") @db.Date
+  returnDate             DateTime?    @map("return_date") @db.Date
+  returnQuantity         Int?         @default(0) @map("return_quantity")
+  wearTimeOverrideMonths Int?         @map("wear_time_override_months")
+  notes                  String?
+  certificate            Certificate? @relation(fields: [certificateId], references: [id], onUpdate: NoAction)
+  employee               Employee?    @relation(fields: [employeeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  itemType               ItemType?    @relation(fields: [itemTypeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("issue_records")
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  username     String    @unique @db.VarChar(255)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  role         String?   @default("user") @db.VarChar(50)
+  createdAt    DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+
+  @@map("users")
+}
+
+model Form {
+  id          Int         @id @default(autoincrement())
+  name        String      @db.VarChar(255)
+  description String?
+  createdAt   DateTime?   @default(now()) @map("created_at") @db.Timestamp(6)
+  formTaken   FormTaken[]
+
+  @@map("forms")
+}
+
+model FormTaken {
+  id         Int       @id @default(autoincrement())
+  formId     Int?      @map("form_id")
+  employeeId Int?      @map("employee_id")
+  takenAt    DateTime? @default(now()) @map("taken_at") @db.Timestamp(6)
+  employee   Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  form       Form?     @relation(fields: [formId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("form_taken")
+}
+
+model Notification {
+  id              Int       @id @default(autoincrement())
+  notification_id String    @unique @db.VarChar(255)
+  type            String    @db.VarChar(50)
+  severity        String    @db.VarChar(50)
+  message         String
+  employeeId      Int?      @map("employee_id")
+  siteId          Int?      @map("site_id")
+  date            DateTime  @db.Timestamp(6)
+  read            Boolean?  @default(false)
+  createdAt       DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  employee        Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  site            Site?     @relation(fields: [siteId], references: [id], onUpdate: NoAction)
+
+  @@map("notifications")
+}
+
+model PushSubscription {
+  id         Int       @id @default(autoincrement())
+  employeeId Int?      @map("employee_id")
+  endpoint   String
+  p256dh     String
+  auth       String
+  userAgent  String?   @map("user_agent")
+  createdAt  DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  employee   Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([employeeId, endpoint])
+  @@map("push_subscriptions")
+}

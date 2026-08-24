@@ -2,6 +2,27 @@ import { useState, useEffect } from 'react';
 import { pushService } from '@lib/services/push.service.js';
 import { useAuth } from '@hooks/useAuth.js';
 
+function urlBase64ToUint8Array(base64String) {
+  if (!base64String || typeof base64String !== 'string') return new Uint8Array();
+  const trimmed = base64String.trim();
+  if (!trimmed) return new Uint8Array();
+  try {
+    const padding = '='.repeat((4 - trimmed.length % 4) % 4);
+    const base64 = (trimmed + padding)
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
+    const rawData = atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  } catch (e) {
+    console.error('Failed to convert VAPID key to Uint8Array:', e);
+    return new Uint8Array();
+  }
+}
+
 export function usePushNotifications() {
   const [supported, setSupported] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
@@ -27,10 +48,9 @@ export function usePushNotifications() {
     try {
       const registration = await navigator.serviceWorker.ready;
       const vapidKey = await getVapidKey();
-      const convertedVapidKey = vapidKey ? vapidKey : '';
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: vapidKey,
+        applicationServerKey: vapidKey ? urlBase64ToUint8Array(vapidKey) : '',
       });
       await pushService.subscribe(
         subscription.endpoint,

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { employeesService } from '@/lib/services/employees.service.js';
 import { EMPLOYEE_STATUSES } from '@/lib/constants/employee-statuses.js';
-import { ISSUE_STATUSES } from '@/lib/constants/issue-statuses.js';
+import { ISSUE_STATUSES, ISSUE_STATUS_LABELS } from '@/lib/constants/issue-statuses.js';
 import StatusBadge from '@/components/ui/StatusBadge.jsx';
 import styles from './EmployeeCard.module.css';
 

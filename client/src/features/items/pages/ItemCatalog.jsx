@@ -19,6 +19,7 @@ export default function ItemCatalog() {
   const [editingItem, setEditingItem] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [detailItem, setDetailItem] = useState(null);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [formData, setFormData] = useState({
@@ -37,6 +38,17 @@ export default function ItemCatalog() {
   useEffect(() => {
     setCurrentPage(1);
   }, [category, items]);
+
+  useEffect(() => {
+    if (detailItem) {
+      setTimeout(() => {
+        const panel = document.getElementById('detail-panel');
+        if (panel) {
+          panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }, 100);
+    }
+  }, [detailItem]);
 
   const fetchItems = async () => {
     const res = await itemsService.list(category);
@@ -93,11 +105,19 @@ export default function ItemCatalog() {
   };
 
   const showDetails = async (item) => {
-    const [itemRes, certRes] = await Promise.all([
-      itemsService.get(item.id),
-      certificatesService.listByItem(item.id)
-    ]);
-    setDetailItem({ ...itemRes, certificates: certRes });
+    setIsLoadingDetails(true);
+    setDetailItem(null);
+    try {
+      const [itemRes, certRes] = await Promise.all([
+        itemsService.get(item.id),
+        certificatesService.listByItem(item.id)
+      ]);
+      setDetailItem({ ...itemRes, certificates: certRes });
+    } catch (error) {
+      console.error('Failed to load item details:', error);
+    } finally {
+      setIsLoadingDetails(false);
+    }
   };
 
   return (
@@ -155,9 +175,11 @@ export default function ItemCatalog() {
                     )}
                   </td>
                   <td>
-                    <button className={`btn ${styles.smallButton}`} onClick={() => showDetails(item)}>Подробнее</button>
-                    <button className={`btn ${styles.smallButton}`} onClick={() => handleEdit(item)}>Редактировать</button>
-                    <button className="btn btn-danger" onClick={() => handleDelete(item.id)}>Удалить</button>
+                    <div className="action-buttons">
+                      <button className="btn" onClick={() => showDetails(item)}>Подробнее</button>
+                      <button className="btn" onClick={() => handleEdit(item)}>Редактировать</button>
+                      <button className="btn btn-danger" onClick={() => handleDelete(item.id)}>Удалить</button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -171,49 +193,78 @@ export default function ItemCatalog() {
           />
         </div>
 
-        {detailItem && (
-          <div className="card">
-            <h3 className={styles.sectionTitle}>Подробности: {detailItem.name}</h3>
-            <div className={styles.detailsGrid}>
-              <div><strong>Категория:</strong> {categories[detailItem.category]}</div>
-              <div><strong>Единица измерения:</strong> {detailItem.unit || '-'}</div>
-              <div><strong>Срок годности:</strong> {detailItem.default_wear_time_months || '-'} мес.</div>
-              <div><strong>Сезонность:</strong> {seasonality[detailItem.seasonality] || '-'}</div>
-              <div><strong>Требуется сертификат:</strong> {detailItem.requires_certificate ? 'Да' : 'Нет'}</div>
+        <div id="detail-panel" className={`${styles.detailPanel} ${detailItem && !isLoadingDetails ? styles.detailPanelOpen : ''}`}>
+          {isLoadingDetails && (
+            <div className={styles.loadingState}>
+              <div className={styles.spinner}></div>
+              <div className={styles.loadingText}>Загрузка подробных данных...</div>
             </div>
+          )}
+          {detailItem && !isLoadingDetails && (
+            <div className={styles.detailCard}>
+              <div className={styles.detailHeader}>
+                <h3 className={styles.detailTitle}>{detailItem.name}</h3>
+              </div>
+              <div className={styles.detailsGrid}>
+                <div className={styles.detailField}>
+                  <span className={styles.detailFieldLabel}>Категория</span>
+                  <span className={styles.detailFieldValue}>{categories[detailItem.category]}</span>
+                </div>
+                <div className={styles.detailField}>
+                  <span className={styles.detailFieldLabel}>Единица измерения</span>
+                  <span className={styles.detailFieldValue}>{detailItem.unit || '-'}</span>
+                </div>
+                <div className={styles.detailField}>
+                  <span className={styles.detailFieldLabel}>Срок годности</span>
+                  <span className={styles.detailFieldValue}>{detailItem.default_wear_time_months || '-'} мес.</span>
+                </div>
+                <div className={styles.detailField}>
+                  <span className={styles.detailFieldLabel}>Сезонность</span>
+                  <span className={styles.detailFieldValue}>{seasonality[detailItem.seasonality] || '-'}</span>
+                </div>
+                <div className={styles.detailField}>
+                  <span className={styles.detailFieldLabel}>Требуется сертификат</span>
+                  <span className={styles.detailFieldValue}>{detailItem.requires_certificate ? 'Да' : 'Нет'}</span>
+                </div>
+              </div>
 
-            <h4 className={styles.sectionTitle}>Сертификаты</h4>
-            {detailItem.certificates && detailItem.certificates.length > 0 ? (
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Номер</th>
-                    <th>Дата выдачи</th>
-                    <th>Срок действия</th>
-                    <th>Статус</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {detailItem.certificates.map((cert) => (
-                    <tr key={cert.id}>
-                      <td>{cert.certificate_number}</td>
-                      <td>{cert.issue_date}</td>
-                      <td>{cert.expiry_date}</td>
-                      <td>
-                        {cert.status === CERTIFICATE_STATUSES.active && <span className="badge badge-success">{CERTIFICATE_STATUSES.active}</span>}
-                        {cert.status === CERTIFICATE_STATUSES.expiring && <span className="badge badge-warning">{CERTIFICATE_STATUSES.expiring}</span>}
-                        {cert.status === CERTIFICATE_STATUSES.expired && <span className="badge badge-danger">{CERTIFICATE_STATUSES.expired}</span>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <p>Сертификаты отсутствуют</p>
-            )}
-            <button className={`btn btn-secondary ${styles.actionButtons}`} onClick={() => setDetailItem(null)}>Закрыть</button>
-          </div>
-        )}
+              <div className={styles.certificatesSection}>
+                <h4 className={styles.certificatesTitle}>Сертификаты</h4>
+                {detailItem.certificates && detailItem.certificates.length > 0 ? (
+                  <table className={`${styles.certificatesTable} table`}>
+                    <thead>
+                      <tr>
+                        <th>Номер</th>
+                        <th>Дата выдачи</th>
+                        <th>Срок действия</th>
+                        <th>Статус</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {detailItem.certificates.map((cert) => (
+                        <tr key={cert.id}>
+                          <td>{cert.certificate_number}</td>
+                          <td>{cert.issue_date}</td>
+                          <td>{cert.expiry_date}</td>
+                          <td>
+                            {cert.status === CERTIFICATE_STATUSES.active && <span className="badge badge-success">{CERTIFICATE_STATUSES.active}</span>}
+                            {cert.status === CERTIFICATE_STATUSES.expiring && <span className="badge badge-warning">{CERTIFICATE_STATUSES.expiring}</span>}
+                            {cert.status === CERTIFICATE_STATUSES.expired && <span className="badge badge-danger">{CERTIFICATE_STATUSES.expired}</span>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className={styles.emptyCertificates}>Сертификаты отсутствуют</div>
+                )}
+              </div>
+              <div className={styles.actionButtons}>
+                <button className={`btn btn-secondary`} onClick={() => setDetailItem(null)}>Закрыть</button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       <Modal isOpen={showModal} onClose={handleCancel} title={editingItem ? 'Редактировать позицию' : 'Новая позиция'}>

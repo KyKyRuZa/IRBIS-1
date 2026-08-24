@@ -25,7 +25,7 @@ function ProtectedRoute({ children }) {
 function getPageClass(pathname) {
   if (pathname === '/login') return 'page-login';
   if (pathname.startsWith('/employees')) return 'page-employee-card';
-  if (pathname === '/sites') return 'page-sites';
+  if (pathname === '/objects') return 'page-sites';
   if (pathname === '/items') return 'page-items';
   if (pathname === '/norms') return 'page-norms';
   if (pathname === '/issue') return 'page-issue';
@@ -54,7 +54,7 @@ function AppContent() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<ProtectedRoute><EmployeeList /></ProtectedRoute>} />
-            <Route path="/sites" element={<ProtectedRoute><SitesPage /></ProtectedRoute>} />
+            <Route path="/objects" element={<ProtectedRoute><SitesPage /></ProtectedRoute>} />
             <Route path="/employees/:id" element={<ProtectedRoute><EmployeeCard /></ProtectedRoute>} />
             <Route path="/items" element={<ProtectedRoute><ItemCatalog /></ProtectedRoute>} />
             <Route path="/norms" element={<ProtectedRoute><IssueNorms /></ProtectedRoute>} />

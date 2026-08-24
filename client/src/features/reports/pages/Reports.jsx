@@ -222,6 +222,7 @@ export default function Reports() {
               <option value="issued">Выдано</option>
               <option value="disposed">Списано</option>
               <option value="returned">Возвращено</option>
+              <option value="due_for_disposal">Подлежит списанию</option>
             </select>
           </div>
           <button className="btn" onClick={applyFilters}>Применить</button>

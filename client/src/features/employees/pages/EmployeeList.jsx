@@ -166,30 +166,15 @@ export default function EmployeeList() {
                         {emp.status === EMPLOYEE_STATUSES.active ? EMPLOYEE_STATUSES.active : EMPLOYEE_STATUSES.terminated}
                       </td>
                     <td>
-                      <div className={styles.actions}>
+                      <div className="action-buttons">
                         <Link to={`/employees/${emp.id}`} className="btn">
                           Карточка
                         </Link>
                         {emp.status === EMPLOYEE_STATUSES.active && (
                           <>
-                            <button
-                              className={`btn ${styles.smallButton}`}
-                              onClick={() => handleEdit(emp)}
-                            >
-                              Редактировать
-                            </button>
-                            <button
-                              className="btn btn-danger"
-                              onClick={() => setDeleteId(emp.id)}
-                            >
-                              Удалить
-                            </button>
-                            <button
-                              className="btn btn-secondary"
-                              onClick={() => setTerminateId(emp.id)}
-                            >
-                              Уволить
-                            </button>
+                            <button className="btn" onClick={() => handleEdit(emp)}>Редактировать</button>
+                            <button className="btn btn-danger" onClick={() => setDeleteId(emp.id)}>Удалить</button>
+                            <button className="btn btn-secondary" onClick={() => setTerminateId(emp.id)}>Уволить</button>
                           </>
                         )}
                       </div>

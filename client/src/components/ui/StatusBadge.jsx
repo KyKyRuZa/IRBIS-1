@@ -5,6 +5,7 @@ const STATUS_STYLES = {
   issued: { className: 'success', label: 'Выдано' },
   disposed: { className: 'danger', label: 'Списано' },
   returned: { className: 'info', label: 'Возвращено' },
+  due_for_disposal: { className: 'warning', label: 'Подлежит списанию' },
 };
 
 import styles from './StatusBadge.module.css';

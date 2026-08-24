@@ -100,8 +100,10 @@ export default function SitesPage() {
                   <td>{s.name}</td>
                   <td>{s.responsible_person}</td>
                   <td>
-                    <button className={`btn ${styles.smallButton}`} onClick={() => handleEdit(s)}>Редактировать</button>
-                    <button className="btn btn-danger" onClick={() => handleDelete(s.id)}>Удалить</button>
+                    <div className="action-buttons">
+                      <button className="btn" onClick={() => handleEdit(s)}>Редактировать</button>
+                      <button className="btn btn-danger" onClick={() => handleDelete(s.id)}>Удалить</button>
+                    </div>
                   </td>
                 </tr>
               ))}

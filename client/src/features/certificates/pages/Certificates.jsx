@@ -178,8 +178,10 @@ export default function Certificates() {
                     {cert.file_path && (
                       <a href={cert.file_path} target="_blank" rel="noreferrer">Открыть файл</a>
                     )}
-                    <button className={`btn ${styles.smallButton}`} onClick={() => handleEdit(cert)}>Редактировать</button>
-                    <button className="btn btn-danger" onClick={() => handleDelete(cert.id)}>Удалить</button>
+                    <div className="action-buttons">
+                      <button className="btn" onClick={() => handleEdit(cert)}>Редактировать</button>
+                      <button className="btn btn-danger" onClick={() => handleDelete(cert.id)}>Удалить</button>
+                    </div>
                   </td>
                 </tr>
               ))}

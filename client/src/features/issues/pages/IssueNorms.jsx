@@ -109,6 +109,7 @@ export default function IssueNorms() {
                     <th>Наименование</th>
                     <th>Периодичность</th>
                     <th>Кол-во</th>
+                    <th>Действия</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -117,10 +118,12 @@ export default function IssueNorms() {
                       <td>{norm.item_type_name}</td>
                       <td>{norm.period_months} мес</td>
                       <td>{norm.quantity}</td>
-                      <td>
-                        <button className={`btn ${styles.smallButton}`} onClick={() => handleEdit(norm)}>Редактировать</button>
-                        <button className="btn btn-danger" onClick={() => handleDelete(norm.id)}>Удалить</button>
-                      </td>
+                  <td>
+                    <div className="action-buttons">
+                      <button className="btn" onClick={() => handleEdit(norm)}>Редактировать</button>
+                      <button className="btn btn-danger" onClick={() => handleDelete(norm.id)}>Удалить</button>
+                    </div>
+                  </td>
                     </tr>
                   ))}
                 </tbody>
