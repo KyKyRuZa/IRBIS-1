@@ -8,27 +8,28 @@
   padding: 20px;
 }
 
-.container {
-  max-width: 1500px;
-  margin: 0 auto;
-}
-
-.pageHeader {
+.brandInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 
+.logo {
+  max-height: 140px;
+}
 
-.pageHeader h1 {
-  margin: 0;
+.brandTitle {
+  margin: 16px 0 6px;
   font-size: 28px;
   color: var(--dark);
 }
 
-.content {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.brandTagline {
+  margin: 0;
+  color: var(--secondary);
+  font-size: 14px;
 }
 
 .card {
@@ -40,23 +41,18 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.title {
-  margin: 0 0 8px;
-  font-size: 24px;
-  color: var(--dark);
-}
-
-.subtitle {
-  margin: 0 0 24px;
-  color: var(--secondary);
-  font-size: 14px;
-}
-
 .heading {
   text-align: center;
   color: var(--primary);
   margin-bottom: 20px;
   font-size: 20px;
+}
+
+.cardSubtitle {
+  text-align: center;
+  color: var(--secondary);
+  font-size: 14px;
+  margin-bottom: 20px;
 }
 
 .error {
@@ -66,13 +62,8 @@
   text-align: center;
 }
 
-.formGrid {
-  display: grid;
-  gap: 12px;
-}
-
 .field {
-  margin-bottom: 0;
+  margin-bottom: 16px;
 }
 
 .field label {
@@ -80,35 +71,64 @@
   margin-bottom: 5px;
   font-weight: 500;
   font-size: 14px;
+  color: var(--dark);
 }
 
 .field input {
   width: 100%;
-  padding: 8px 12px;
+  padding: 10px 40px 10px 12px;
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 14px;
+  box-sizing: border-box;
 }
 
 .field input:focus {
   outline: none;
-  border-color: var(--border);
+  border-color: var(--primary);
+}
+
+.passwordWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.passwordInput {
+  padding-right: 44px;
+}
+
+.togglePassword {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+
+.togglePassword:hover {
+  color: var(--primary);
 }
 
 .submitButton {
   width: 100%;
-}
-
-.actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 16px;
+  padding: 10px;
+  font-size: 15px;
 }
 
 .footer {
   text-align: center;
-  margin-top: 15px;
+  margin-top: 16px;
   font-size: 14px;
+  color: var(--secondary);
 }
 
 .linkButton {
@@ -121,52 +141,20 @@
   font-size: 14px;
 }
 
-.brandInner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
 }
 
-.brandTitle {
-  margin: 16px 0 8px;
-  font-size: 32px;
-  color: var(--dark);
-}
-
-.brandTagline {
-  margin: 0;
-  color: var(--secondary);
-  font-size: 16px;
-}
-
-.passwordWrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.passwordInput {
-  padding-right: 40px;
-}
-
-.togglePassword {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  color: var(--secondary);
-  cursor: pointer;
-  padding: 4px;
-  font-size: 16px;
-  line-height: 1;
-}
-
-.togglePassword:hover {
-  color: var(--primary);
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
