@@ -4,12 +4,14 @@ import { itemsService } from '@/lib/services/items.service.js';
 import { sitesService } from '@/lib/services/sites.service.js';
 import { ITEM_CATEGORIES } from '@/lib/constants/item-categories.js';
 import { useResource } from '@/hooks/useResource.js';
+import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
 import Modal from '@/components/ui/Modal.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
 import LoadingState from '@/components/ui/LoadingState.jsx';
 import ErrorState from '@/components/ui/ErrorState.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
+import SortableTh from '@/components/ui/SortableTh.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClipboardList } from '@fortawesome/free-solid-svg-icons';
 import styles from '@styles/IssueNorms.module.css';
@@ -35,6 +37,19 @@ export default function IssueNorms() {
 
   const { data: norms, loading, error, refetch } = useResource(normsService.list);
 
+  const {
+    search,
+    setSearch,
+    filters,
+    setFilter,
+    sort,
+    toggleSort,
+    resetFilters
+  } = useTableControls({
+    filters: { item_type_id: '', site_id: '', gender: '' },
+    sort: { key: 'item_type_name', dir: 'asc' }
+  });
+
   useEffect(() => {
     itemsService.list().then(setItems);
     sitesService.list().then(setSites);
@@ -42,7 +57,7 @@ export default function IssueNorms() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [norms]);
+  }, [search, filters, sort, norms]);
 
   // Blank select/number inputs must not be sent: the API columns are integers
   // and an empty string is rejected by the database.
@@ -106,8 +121,19 @@ export default function IssueNorms() {
     setFormData({ item_type_id: '', period_months: '', quantity: 1, gender: '', position: '', site_id: '' });
   };
 
+  const filteredNorms = useFilteredList(norms, {
+    search,
+    filters: { item_type_id: filters.item_type_id, site_id: filters.site_id, gender: filters.gender },
+    sort,
+    searchFields: ['item_type_name', 'position']
+  });
+
+  const totalItems = filteredNorms.length;
   const startIndex = (currentPage - 1) * 10;
-  const paginatedNorms = norms.slice(startIndex, startIndex + 10);
+  const paginatedNorms = filteredNorms.slice(startIndex, startIndex + 10);
+
+  const hasActiveFilters = Boolean(search) ||
+    filters.item_type_id !== '' || filters.site_id !== '' || filters.gender !== '';
 
   return (
     <div className={styles.pageWrapper}>
@@ -124,14 +150,57 @@ export default function IssueNorms() {
       </div>
       <div className={styles.container}>
         <div className="card">
+          <div className="table-controls">
+            <div className="search-box">
+              <input
+                type="text"
+                name="search"
+                placeholder="Поиск по наименованию или должности..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="filter-field">
+              <label>Наименование</label>
+              <select value={filters.item_type_id} onChange={(e) => setFilter('item_type_id', e.target.value)}>
+                <option value="">Все</option>
+                {items.map((item) => (
+                  <option key={item.id} value={item.id}>{item.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="filter-field">
+              <label>Объект</label>
+              <select value={filters.site_id} onChange={(e) => setFilter('site_id', e.target.value)}>
+                <option value="">Все</option>
+                {sites.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="filter-field">
+              <label>Пол</label>
+              <select value={filters.gender} onChange={(e) => setFilter('gender', e.target.value)}>
+                <option value="">Все</option>
+                <option value="male">Мужской</option>
+                <option value="female">Женский</option>
+              </select>
+            </div>
+            {hasActiveFilters && (
+              <button className="btn btn-secondary filter-reset" onClick={resetFilters}>
+                Сбросить
+              </button>
+            )}
+          </div>
+
           {loading && <LoadingState label="Загрузка норм..." />}
           {!loading && error && <ErrorState message={error} onRetry={refetch} />}
           {!loading && !error && (
-            norms.length === 0 ? (
+            filteredNorms.length === 0 ? (
               <EmptyState
                 icon={<FontAwesomeIcon icon={faClipboardList} />}
                 title="Нормы не найдены"
-                description="Пока не добавлено ни одной нормы выдачи."
+                description={hasActiveFilters ? 'По заданным фильтрам ничего не найдено.' : 'Пока не добавлено ни одной нормы выдачи.'}
                 action={<button className="btn" onClick={() => setShowModal(true)}>Добавить норму</button>}
               />
             ) : (
@@ -139,9 +208,9 @@ export default function IssueNorms() {
                 <table className={`table ${styles.tableWrapper}`}>
                 <thead>
                   <tr>
-                    <th>Наименование</th>
-                    <th>Периодичность</th>
-                    <th>Кол-во</th>
+                    <SortableTh label="Наименование" sortKey="item_type_name" sort={sort} onSort={toggleSort} />
+                    <SortableTh label="Периодичность" sortKey="period_months" sort={sort} onSort={toggleSort} />
+                    <SortableTh label="Кол-во" sortKey="quantity" sort={sort} onSort={toggleSort} />
                     <th>Действия</th>
                   </tr>
                 </thead>
@@ -162,7 +231,7 @@ export default function IssueNorms() {
                 </tbody>
               </table>
               <Pagination
-                totalItems={norms.length}
+                totalItems={totalItems}
                 itemsPerPage={10}
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}

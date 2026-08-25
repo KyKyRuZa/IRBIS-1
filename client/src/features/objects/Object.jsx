@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { sitesService } from '@lib/services/sites.service.js';
+import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
 import Modal from '@components/ui/Modal.jsx';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
 import LoadingState from '@/components/ui/LoadingState.jsx';
 import ErrorState from '@/components/ui/ErrorState.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
+import SortableTh from '@/components/ui/SortableTh.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBuilding } from '@fortawesome/free-solid-svg-icons';
 import styles from '@styles/Object.module.css';
@@ -23,6 +25,14 @@ export default function Object() {
   });
   const [currentPage, setCurrentPage] = useState(1);
 
+  const {
+    search,
+    setSearch,
+    sort,
+    toggleSort,
+    resetFilters
+  } = useTableControls({ sort: { key: 'name', dir: 'asc' } });
+
   const fetchSites = async () => {
     setLoading(true);
     setError('');
@@ -39,6 +49,10 @@ export default function Object() {
   useEffect(() => {
     fetchSites();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, sort, sites]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -76,9 +90,18 @@ export default function Object() {
     setFormData({ name: '', responsible_person: '' });
   };
 
-  const totalItems = sites.length;
+  const filteredSites = useFilteredList(sites, {
+    search,
+    filters: {},
+    sort,
+    searchFields: ['name', 'responsible_person']
+  });
+
+  const totalItems = filteredSites.length;
   const startIndex = (currentPage - 1) * 10;
-  const paginatedSites = sites.slice(startIndex, startIndex + 10);
+  const paginatedSites = filteredSites.slice(startIndex, startIndex + 10);
+
+  const hasActiveFilters = Boolean(search);
 
   return (
     <div className={styles.pageWrapper}>
@@ -95,14 +118,31 @@ export default function Object() {
       </div>
       <div className={styles.container}>
         <div className="card">
+          <div className="table-controls">
+            <div className="search-box">
+              <input
+                type="text"
+                name="search"
+                placeholder="Поиск по названию или ответственному..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            {hasActiveFilters && (
+              <button className="btn btn-secondary filter-reset" onClick={resetFilters}>
+                Сбросить
+              </button>
+            )}
+          </div>
+
           {loading && <LoadingState label="Загрузка объектов..." />}
           {!loading && error && <ErrorState message={error} onRetry={fetchSites} />}
           {!loading && !error && (
-            sites.length === 0 ? (
+            filteredSites.length === 0 ? (
               <EmptyState
                 icon={<FontAwesomeIcon icon={faBuilding} />}
                 title="Объекты не найдены"
-                description="Пока не добавлено ни одного объекта."
+                description={hasActiveFilters ? 'По заданным фильтрам ничего не найдено.' : 'Пока не добавлено ни одного объекта.'}
                 action={<button className="btn" onClick={() => { setEditingSite(null); setFormData({ name: '', responsible_person: '' }); setShowModal(true); }}>Добавить объект</button>}
               />
             ) : (
@@ -110,8 +150,8 @@ export default function Object() {
                 <table className="table">
                   <thead>
                     <tr>
-                      <th>Название</th>
-                      <th>Ответственный</th>
+                      <SortableTh label="Название" sortKey="name" sort={sort} onSort={toggleSort} />
+                      <SortableTh label="Ответственный" sortKey="responsible_person" sort={sort} onSort={toggleSort} />
                       <th>Действия</th>
                     </tr>
                   </thead>

@@ -2,14 +2,16 @@ import { useState, useEffect } from 'react';
 import { certificatesService } from '@lib/services/certificates.service.js';
 import { itemsService } from '@/lib/services/items.service.js';
 import { uploadService } from '@/lib/services/upload.service.js';
-import { CERTIFICATE_STATUSES, CERTIFICATE_STATUS_LABELS } from '@/lib/constants/certificate-statuses.js';
+import { CERTIFICATE_STATUSES, CERTIFICATE_STATUS_LABELS } from '@lib/constants/certificate-statuses.js';
 import { formatDate } from '@/lib/utils/date.js';
-import Modal from '@/components/ui/Modal.jsx';
+import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
+import Modal from '@components/ui/Modal.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
 import LoadingState from '@/components/ui/LoadingState.jsx';
 import ErrorState from '@/components/ui/ErrorState.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
+import SortableTh from '@/components/ui/SortableTh.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileLines } from '@fortawesome/free-solid-svg-icons';
 import styles from '@styles/Certificates.module.css';
@@ -33,6 +35,19 @@ export default function Certificates() {
   const [certificateFile, setCertificateFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+
+  const {
+    search,
+    setSearch,
+    filters,
+    setFilter,
+    sort,
+    toggleSort,
+    resetFilters
+  } = useTableControls({
+    filters: { status: '' },
+    sort: { key: 'issue_date', dir: 'desc' }
+  });
 
   useEffect(() => {
     fetchCertificates();
@@ -131,13 +146,20 @@ export default function Certificates() {
     setCertificateFile(null);
   };
 
-  const filteredCerts = showExpired
+  const baseCerts = showExpired
     ? certificates
     : certificates.filter(c => c.status !== CERTIFICATE_STATUSES.expired);
 
+  const filteredCerts = useFilteredList(baseCerts, {
+    search,
+    filters: { status: filters.status },
+    sort,
+    searchFields: ['product_name', 'certificate_number']
+  });
+
   useEffect(() => {
     setCurrentPage(1);
-  }, [showExpired, certificates]);
+  }, [showExpired, search, filters, sort, certificates]);
 
   const startIndex = (currentPage - 1) * 10;
   const paginatedCerts = filteredCerts.slice(startIndex, startIndex + 10);
@@ -157,7 +179,25 @@ export default function Certificates() {
       </div>
       <div className={styles.container}>
         <div className="card">
-          <div className={styles.tableWrapper}>
+          <div className="table-controls">
+            <div className="search-box">
+              <input
+                type="text"
+                name="search"
+                placeholder="Поиск по продукции или номеру..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="filter-field">
+              <label>Статус</label>
+              <select value={filters.status} onChange={(e) => setFilter('status', e.target.value)}>
+                <option value="">Все</option>
+                <option value={CERTIFICATE_STATUSES.active}>{CERTIFICATE_STATUS_LABELS.active}</option>
+                <option value={CERTIFICATE_STATUSES.expiring}>{CERTIFICATE_STATUS_LABELS.expiring}</option>
+                <option value={CERTIFICATE_STATUSES.expired}>{CERTIFICATE_STATUS_LABELS.expired}</option>
+              </select>
+            </div>
             <label className={styles.checkboxLabel}>
               <input
                 type="checkbox"
@@ -165,6 +205,11 @@ export default function Certificates() {
                 onChange={(e) => setShowExpired(e.target.checked)}
               /> Показать просроченные
             </label>
+            {(Boolean(search) || filters.status !== '' || showExpired) && (
+              <button className="btn btn-secondary filter-reset" onClick={() => { resetFilters(); setShowExpired(false); }}>
+                Сбросить
+              </button>
+            )}
           </div>
 
           {loading && <LoadingState label="Загрузка сертификатов..." />}
@@ -174,7 +219,7 @@ export default function Certificates() {
               <EmptyState
                 icon={<FontAwesomeIcon icon={faFileLines} />}
                 title="Сертификаты не найдены"
-                description={showExpired ? 'Сертификаты отсутствуют.' : 'Нет активных сертификатов. Добавьте первый.'}
+                description={(showExpired || Boolean(search) || filters.status !== '') ? 'По заданным фильтрам ничего не найдено.' : 'Нет активных сертификатов. Добавьте первый.'}
                 action={<button className="btn" onClick={() => setShowModal(true)}>Добавить сертификат</button>}
               />
             ) : (
@@ -182,11 +227,11 @@ export default function Certificates() {
                 <table className={`table ${styles.tableWrapper}`}>
                   <thead>
                     <tr>
-                      <th>Продукция</th>
-                      <th>Номер</th>
-                      <th>Дата выдачи</th>
-                      <th>Срок действия</th>
-                      <th>Статус</th>
+                      <SortableTh label="Продукция" sortKey="product_name" sort={sort} onSort={toggleSort} />
+                      <SortableTh label="Номер" sortKey="certificate_number" sort={sort} onSort={toggleSort} />
+                      <SortableTh label="Дата выдачи" sortKey="issue_date" sort={sort} onSort={toggleSort} />
+                      <SortableTh label="Срок действия" sortKey="expiry_date" sort={sort} onSort={toggleSort} />
+                      <SortableTh label="Статус" sortKey="status" sort={sort} onSort={toggleSort} />
                       <th>Файл</th>
                       <th>Действия</th>
                     </tr>

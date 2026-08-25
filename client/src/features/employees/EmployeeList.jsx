@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { employeesService } from '@/lib/services/employees.service.js';
 import { sitesService } from '@/lib/services/sites.service.js';
 import { useAuth } from '@/hooks/useAuth.js';
 import { useResource } from '@/hooks/useResource.js';
+import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
 import { EMPLOYEE_STATUSES } from '@/lib/constants/employee-statuses.js';
 import Modal from '@/components/ui/Modal.jsx';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
@@ -11,15 +12,13 @@ import Pagination from '@/components/ui/Pagination.jsx';
 import LoadingState from '@/components/ui/LoadingState.jsx';
 import ErrorState from '@/components/ui/ErrorState.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
+import SortableTh from '@/components/ui/SortableTh.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUsers } from '@fortawesome/free-solid-svg-icons';
 import styles from '@styles/EmployeeList.module.css';
 
 export default function EmployeeList() {
   const { user } = useAuth();
-  const [search, setSearch] = useState('');
-  const [searchInput, setSearchInput] = useState('');
-  const debounceRef = useRef(null);
   const [showModal, setShowModal] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [formData, setFormData] = useState({
@@ -43,8 +42,21 @@ export default function EmployeeList() {
   const [currentPage, setCurrentPage] = useState(1);
 
   const { data: employees, loading, error, refetch: refetchEmployees } = useResource(
-    useCallback(() => employeesService.list({ search }), [search])
+    useCallback(() => employeesService.list(), [])
   );
+
+  const {
+    search,
+    setSearch,
+    filters,
+    setFilter,
+    sort,
+    toggleSort,
+    resetFilters
+  } = useTableControls({
+    filters: { status: '', site_id: '' },
+    sort: { key: 'full_name', dir: 'asc' }
+  });
 
   useEffect(() => {
     sitesService.list().then(setSites);
@@ -52,15 +64,7 @@ export default function EmployeeList() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, employees]);
-
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      setSearch(searchInput);
-    }, 300);
-    return () => clearTimeout(debounceRef.current);
-  }, [searchInput]);
+  }, [search, filters, employees]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -115,9 +119,18 @@ export default function EmployeeList() {
     setFormData({ full_name: '', position: '', site_id: '', gender: '', hire_date: '', clothing_size: '', shoe_size: '', personnel_number: '', hat_size: '', respirator_size: '', gloves_size: '', height: '', position_change_date: '' });
   };
 
-  const totalItems = employees?.length || 0;
+  const filteredEmployees = useFilteredList(employees, {
+    search,
+    filters,
+    sort,
+    searchFields: ['full_name', 'personnel_number', 'position', 'site_name']
+  });
+
+  const totalItems = filteredEmployees.length;
   const startIndex = (currentPage - 1) * 10;
-  const paginatedEmployees = employees?.slice(startIndex, startIndex + 10) || [];
+  const paginatedEmployees = filteredEmployees.slice(startIndex, startIndex + 10);
+
+  const hasActiveFilters = Boolean(search) || filters.status !== '' || filters.site_id !== '';
 
   return (
     <div className={styles.pageWrapper}>
@@ -134,26 +147,48 @@ export default function EmployeeList() {
       </div>
       <div className={styles.container}>
         <div className="card">
-          <div className="search-box">
-            <input
-              type="text"
-              name="search"
-              placeholder="Поиск по ФИО..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-            />
+          <div className="table-controls">
+            <div className="search-box">
+              <input
+                type="text"
+                name="search"
+                placeholder="Поиск по ФИО, табельному №, должности, объекту..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="filter-field">
+              <label>Статус</label>
+              <select value={filters.status} onChange={(e) => setFilter('status', e.target.value)}>
+                <option value="">Все</option>
+                <option value={EMPLOYEE_STATUSES.active}>Активные</option>
+                <option value={EMPLOYEE_STATUSES.terminated}>Уволенные</option>
+              </select>
+            </div>
+            <div className="filter-field">
+              <label>Объект</label>
+              <select value={filters.site_id} onChange={(e) => setFilter('site_id', e.target.value)}>
+                <option value="">Все</option>
+                {sites.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            </div>
+            {hasActiveFilters && (
+              <button className="btn btn-secondary filter-reset" onClick={resetFilters}>
+                Сбросить
+              </button>
+            )}
           </div>
-        </div>
 
-        <div className="card">
           {loading && <LoadingState label="Загрузка сотрудников..." />}
           {!loading && error && <ErrorState message={error} onRetry={refetchEmployees} />}
           {!loading && !error && (
-            employees.length === 0 ? (
+            filteredEmployees.length === 0 ? (
               <EmptyState
                 icon={<FontAwesomeIcon icon={faUsers} />}
                 title="Сотрудники не найдены"
-                description={search ? 'По вашему запросу ничего не найдено.' : 'В системе пока нет сотрудников. Добавьте первого.'}
+                description={hasActiveFilters ? 'По заданным фильтрам ничего не найдено.' : 'В системе пока нет сотрудников. Добавьте первого.'}
                 action={<button className="btn" onClick={() => setShowModal(true)}>Добавить сотрудника</button>}
               />
             ) : (
@@ -161,11 +196,11 @@ export default function EmployeeList() {
                 <table className="table">
                 <thead>
                   <tr>
-                    <th>ФИО</th>
-                    <th>Табельный №</th>
-                    <th>Должность</th>
-                    <th>Объект</th>
-                    <th>Статус</th>
+                    <SortableTh label="ФИО" sortKey="full_name" sort={sort} onSort={toggleSort} />
+                    <SortableTh label="Табельный №" sortKey="personnel_number" sort={sort} onSort={toggleSort} />
+                    <SortableTh label="Должность" sortKey="position" sort={sort} onSort={toggleSort} />
+                    <SortableTh label="Объект" sortKey="site_name" sort={sort} onSort={toggleSort} />
+                    <SortableTh label="Статус" sortKey="status" sort={sort} onSort={toggleSort} />
                     <th>Действия</th>
                   </tr>
                 </thead>

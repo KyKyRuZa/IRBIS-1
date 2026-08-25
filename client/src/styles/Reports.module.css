@@ -88,68 +88,11 @@
   color: #f57c00;
 }
 
-.toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  gap: 10px;
-}
+  .toolbarRight {
+    position: relative;
+  }
 
-.toolbarLeft {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.toolbarRight {
-  position: relative;
-}
-
-.toolbarBtn {
-  font-size: 13px;
-}
-
-.filtersRow {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  padding: 12px 15px;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-.filterGroup {
-  margin-bottom: 0;
-  min-width: 150px;
-}
-
-.filterGroup label {
-  display: block;
-  margin-bottom: 4px;
-  font-weight: 500;
-  font-size: 13px;
-  color: #555;
-}
-
-.filterGroup input,
-.filterGroup select {
-  width: 100%;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  font-size: 13px;
-}
-
-.filterGroup input:focus,
-.filterGroup select:focus {
-  outline: none;
-  border-color: var(--primary);
-}
-
-.exportMenu {
+  .exportMenu {
   position: absolute;
   right: 0;
   top: 100%;
@@ -257,10 +200,6 @@
     justify-content: center;
   }
 
-  .toolbar {
-    flex-wrap: wrap;
-  }
-
   .toolbarRight {
     margin-left: auto;
   }
@@ -284,19 +223,6 @@
     font-size: 13px;
   }
 
-  .toolbar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .toolbarLeft {
-    flex-wrap: wrap;
-  }
-
-  .toolbarLeft .btn {
-    flex: 1;
-  }
-
   .toolbarRight {
     margin-left: 0;
   }
@@ -314,14 +240,6 @@
   .tabs {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-  }
-
-  .filtersRow {
-    padding: 12px;
-  }
-
-  .filterGroup {
-    min-width: 100%;
   }
 }
 

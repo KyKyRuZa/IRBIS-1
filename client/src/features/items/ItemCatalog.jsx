@@ -5,12 +5,14 @@ import { ITEM_CATEGORIES } from '@lib/constants/item-categories.js';
 import { SEASONALITY } from '@lib/constants/seasonality.js';
 import { CERTIFICATE_STATUSES, CERTIFICATE_STATUS_LABELS } from '@lib/constants/certificate-statuses.js';
 import { formatDate } from '@/lib/utils/date.js';
+import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
 import Modal from '@components/ui/Modal.jsx';
-import ConfirmDialog from '@components/ui/ConfirmDialog.jsx';
+import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
 import LoadingState from '@/components/ui/LoadingState.jsx';
 import ErrorState from '@/components/ui/ErrorState.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
+import SortableTh from '@/components/ui/SortableTh.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBox } from '@fortawesome/free-solid-svg-icons';
 import styles from '@styles/ItemCatalog.module.css';
@@ -39,13 +41,21 @@ export default function ItemCatalog() {
     requires_certificate: false
   });
 
+  const {
+    search,
+    setSearch,
+    sort,
+    toggleSort,
+    resetFilters
+  } = useTableControls({ sort: { key: 'name', dir: 'asc' } });
+
   useEffect(() => {
     fetchItems();
   }, [category]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [category, items]);
+  }, [category, items, search, sort]);
 
   useEffect(() => {
     if (detailItem) {
@@ -71,8 +81,18 @@ export default function ItemCatalog() {
     }
   };
 
+  const filteredItems = useFilteredList(items, {
+    search,
+    filters: {},
+    sort,
+    searchFields: ['name']
+  });
+
+  const totalItems = filteredItems.length;
   const startIndex = (currentPage - 1) * 10;
-  const paginatedItems = items.slice(startIndex, startIndex + 10);
+  const paginatedItems = filteredItems.slice(startIndex, startIndex + 10);
+
+  const hasActiveFilters = Boolean(search);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -151,6 +171,22 @@ export default function ItemCatalog() {
       </div>
       <div className={styles.container}>
         <div className="card">
+          <div className="table-controls">
+            <div className="search-box">
+              <input
+                type="text"
+                name="search"
+                placeholder="Поиск по наименованию..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            {hasActiveFilters && (
+              <button className="btn btn-secondary filter-reset" onClick={resetFilters}>
+                Сбросить
+              </button>
+            )}
+          </div>
           <div className={styles.tabs}>
             <button
               className={!category ? styles.tabActive : styles.tab}
@@ -168,11 +204,11 @@ export default function ItemCatalog() {
           {loading && <LoadingState label="Загрузка номенклатуры..." />}
           {!loading && error && <ErrorState message={error} onRetry={fetchItems} />}
           {!loading && !error && (
-            items.length === 0 ? (
+            filteredItems.length === 0 ? (
               <EmptyState
                 icon={<FontAwesomeIcon icon={faBox} />}
                 title="Позиции не найдены"
-                description={category ? 'В выбранной категории пока нет позиций.' : 'Номенклатура пуста. Добавьте первую позицию.'}
+                description={hasActiveFilters ? 'По заданным фильтрам ничего не найдено.' : (category ? 'В выбранной категории пока нет позиций.' : 'Номенклатура пуста. Добавьте первую позицию.')}
                 action={<button className="btn" onClick={() => { setEditingItem(null); setFormData({ name: '', category: 'consumable', unit: 'шт', default_wear_time_months: '', seasonality: 'year_round', requires_certificate: false }); setShowModal(true); }}>Добавить позицию</button>}
               />
             ) : (
@@ -180,10 +216,10 @@ export default function ItemCatalog() {
                 <table className="table">
                   <thead>
                     <tr>
-                      <th>Наименование</th>
-                      <th>Категория</th>
-                      <th>Срок (мес)</th>
-                      <th>Сезон</th>
+                      <SortableTh label="Наименование" sortKey="name" sort={sort} onSort={toggleSort} />
+                      <SortableTh label="Категория" sortKey="category" sort={sort} onSort={toggleSort} />
+                      <SortableTh label="Срок (мес)" sortKey="default_wear_time_months" sort={sort} onSort={toggleSort} />
+                      <SortableTh label="Сезон" sortKey="seasonality" sort={sort} onSort={toggleSort} />
                       <th>Сертификат</th>
                       <th>Действия</th>
                     </tr>
@@ -214,7 +250,7 @@ export default function ItemCatalog() {
                   </tbody>
                 </table>
                 <Pagination
-                  totalItems={items.length}
+                  totalItems={totalItems}
                   itemsPerPage={10}
                   currentPage={currentPage}
                   onPageChange={setCurrentPage}

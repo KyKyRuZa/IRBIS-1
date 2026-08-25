@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { formsService } from '@lib/services/forms.service.js';
 import { employeesService } from '@/lib/services/employees.service.js';
+import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
 import Pagination from '@/components/ui/Pagination.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
+import SortableTh from '@/components/ui/SortableTh.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 import styles from '@styles/FormTracker.module.css';
@@ -24,6 +26,19 @@ export default function FormTracker() {
   const addModalRef = useRef(null);
   const takeModalRef = useRef(null);
 
+  const {
+    search,
+    setSearch,
+    filters,
+    setFilter,
+    sort,
+    toggleSort,
+    resetFilters
+  } = useTableControls({
+    filters: { date_from: '', date_to: '' },
+    sort: { key: 'taken_at', dir: 'desc' }
+  });
+
   useEffect(() => {
     fetchForms();
     fetchEmployees();
@@ -32,7 +47,7 @@ export default function FormTracker() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [records]);
+  }, [search, filters, sort, records]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -87,8 +102,25 @@ export default function FormTracker() {
     fetchRecords();
   };
 
+  const dateFilteredRecords = useMemo(() => records.filter((r) => {
+    const rDate = (r.taken_at || '').slice(0, 10);
+    if (filters.date_from && rDate && rDate < filters.date_from) return false;
+    if (filters.date_to && rDate && rDate > filters.date_to) return false;
+    return true;
+  }), [records, filters.date_from, filters.date_to]);
+
+  const filteredRecords = useFilteredList(dateFilteredRecords, {
+    search,
+    filters: {},
+    sort,
+    searchFields: ['full_name', 'position', 'form_name']
+  });
+
+  const totalItems = filteredRecords.length;
   const startIndex = (currentPage - 1) * 10;
-  const paginatedRecords = records.slice(startIndex, startIndex + 10);
+  const paginatedRecords = filteredRecords.slice(startIndex, startIndex + 10);
+
+  const hasActiveFilters = Boolean(search) || filters.date_from !== '' || filters.date_to !== '';
 
   return (
     <div className={styles.pageWrapper}>
@@ -108,18 +140,42 @@ export default function FormTracker() {
 
         <div className="card">
           <h2 className={styles.sectionTitle}>История взятия форм</h2>
-          {records.length === 0 ? (
-            <EmptyState icon={<FontAwesomeIcon icon={faPenToSquare} />} title="Нет записей" description="Формы ещё не отмечались как взятые." />
+          <div className="table-controls">
+            <div className="search-box">
+              <input
+                type="text"
+                name="search"
+                placeholder="Поиск по сотруднику, должности или форме..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="filter-field">
+              <label>Дата с</label>
+              <input type="date" value={filters.date_from} onChange={(e) => setFilter('date_from', e.target.value)} />
+            </div>
+            <div className="filter-field">
+              <label>Дата по</label>
+              <input type="date" value={filters.date_to} onChange={(e) => setFilter('date_to', e.target.value)} />
+            </div>
+            {hasActiveFilters && (
+              <button className="btn btn-secondary filter-reset" onClick={resetFilters}>
+                Сбросить
+              </button>
+            )}
+          </div>
+          {filteredRecords.length === 0 ? (
+            <EmptyState icon={<FontAwesomeIcon icon={faPenToSquare} />} title="Нет записей" description={hasActiveFilters ? 'По заданным фильтрам ничего не найдено.' : 'Формы ещё не отмечались как взятые.'} />
           ) : (
             <>
               <table className="table">
                 <thead>
                   <tr>
                     <th>ID</th>
-                    <th>Сотрудник (ФИО)</th>
-                    <th>Должность</th>
-                    <th>Форма</th>
-                    <th>Дата</th>
+                    <SortableTh label="Сотрудник (ФИО)" sortKey="full_name" sort={sort} onSort={toggleSort} />
+                    <SortableTh label="Должность" sortKey="position" sort={sort} onSort={toggleSort} />
+                    <SortableTh label="Форма" sortKey="form_name" sort={sort} onSort={toggleSort} />
+                    <SortableTh label="Дата" sortKey="taken_at" sort={sort} onSort={toggleSort} />
                   </tr>
                 </thead>
                 <tbody>
@@ -135,7 +191,7 @@ export default function FormTracker() {
                 </tbody>
               </table>
               <Pagination
-                totalItems={records.length}
+                totalItems={totalItems}
                 itemsPerPage={10}
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { employeesService } from '@/lib/services/employees.service.js';
 import { itemsService } from '@/lib/services/items.service.js';
 import { sitesService } from '@/lib/services/sites.service.js';
@@ -8,12 +8,14 @@ import { uploadService } from '@/lib/services/upload.service.js';
 import { ISSUE_STATUSES, ISSUE_STATUS_LABELS } from '@/lib/constants/issue-statuses.js';
 import { useResource } from '@/hooks/useResource.js';
 import { useFormState } from '@/hooks/useFormState.js';
+import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
 import Modal from '@/components/ui/Modal.jsx';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
 import LoadingState from '@/components/ui/LoadingState.jsx';
 import ErrorState from '@/components/ui/ErrorState.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
+import SortableTh from '@/components/ui/SortableTh.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTruckRampBox } from '@fortawesome/free-solid-svg-icons';
 import styles from '@styles/IssueForm.module.css';
@@ -48,6 +50,43 @@ export default function IssueForm() {
   const form = useFormState(formInitialState);
   const { data: records, loading, error, refetch: refetchRecords } = useResource(issuesService.list);
 
+  const {
+    search,
+    setSearch,
+    filters,
+    setFilter,
+    sort,
+    toggleSort,
+    resetFilters
+  } = useTableControls({
+    filters: { employee_id: '', site_id: '', item_type_id: '', status: '', date_from: '', date_to: '' },
+    sort: { key: 'issue_date', dir: 'desc' }
+  });
+
+  const dateFilteredRecords = useMemo(() => records.filter((r) => {
+    const rDate = (r.issue_date || '').slice(0, 10);
+    if (filters.date_from && rDate && rDate < filters.date_from) return false;
+    if (filters.date_to && rDate && rDate > filters.date_to) return false;
+    return true;
+  }), [records, filters.date_from, filters.date_to]);
+
+  const filteredRecords = useFilteredList(dateFilteredRecords, {
+    search,
+    filters: {
+      employee_id: filters.employee_id,
+      site_id: filters.site_id,
+      item_type_id: filters.item_type_id,
+      status: filters.status
+    },
+    sort,
+    searchFields: ['full_name', 'item_type_name']
+  });
+
+  const hasActiveFilters = Boolean(search) ||
+    filters.employee_id !== '' || filters.site_id !== '' ||
+    filters.item_type_id !== '' || filters.status !== '' ||
+    filters.date_from !== '' || filters.date_to !== '';
+
   useEffect(() => {
     // Load all employees (any status) so an issue can be reassigned to anyone,
     // not just the currently active ones.
@@ -58,7 +97,7 @@ export default function IssueForm() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [records]);
+  }, [search, filters, sort, records]);
 
   const handleItemChange = async (itemId) => {
     form.setMany({ item_type_id: itemId });
@@ -195,8 +234,9 @@ export default function IssueForm() {
     setSelectedSite('');
   };
 
+  const totalItems = filteredRecords.length;
   const startIndex = (currentPage - 1) * 10;
-  const paginatedRecords = records.slice(startIndex, startIndex + 10);
+  const paginatedRecords = filteredRecords.slice(startIndex, startIndex + 10);
 
   return (
     <div className={styles.pageWrapper}>
@@ -213,14 +253,78 @@ export default function IssueForm() {
       </div>
       <div className={styles.container}>
         <div className="card">
+          <div className="table-controls">
+            <div className="search-box">
+              <input
+                type="text"
+                name="search"
+                placeholder="Поиск по сотруднику или наименованию..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="filter-field">
+              <label>Сотрудник</label>
+              <select value={filters.employee_id} onChange={(e) => setFilter('employee_id', e.target.value)}>
+                <option value="">Все</option>
+                {employees.map((emp) => (
+                  <option key={emp.id} value={emp.id}>{emp.full_name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="filter-field">
+              <label>Объект</label>
+              <select value={filters.site_id} onChange={(e) => setFilter('site_id', e.target.value)}>
+                <option value="">Все</option>
+                {sites.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="filter-field">
+              <label>Наименование</label>
+              <select value={filters.item_type_id} onChange={(e) => setFilter('item_type_id', e.target.value)}>
+                <option value="">Все</option>
+                {items.map((item) => (
+                  <option key={item.id} value={item.id}>{item.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="filter-field">
+              <label>Статус</label>
+              <select value={filters.status} onChange={(e) => setFilter('status', e.target.value)}>
+                <option value="">Все</option>
+                <option value={ISSUE_STATUSES.issued}>{ISSUE_STATUS_LABELS.issued}</option>
+                <option value={ISSUE_STATUSES.disposed}>{ISSUE_STATUS_LABELS.disposed}</option>
+                <option value={ISSUE_STATUSES.returned}>{ISSUE_STATUS_LABELS.returned}</option>
+                <option value={ISSUE_STATUSES.due_for_disposal}>{ISSUE_STATUS_LABELS.due_for_disposal}</option>
+              </select>
+            </div>
+            <div className="filter-field">
+              <label>Дата с</label>
+              <input type="date" value={filters.date_from} onChange={(e) => setFilter('date_from', e.target.value)} />
+            </div>
+            <div className="filter-field">
+              <label>Дата по</label>
+              <input type="date" value={filters.date_to} onChange={(e) => setFilter('date_to', e.target.value)} />
+            </div>
+            {hasActiveFilters && (
+              <button className="btn btn-secondary filter-reset" onClick={resetFilters}>
+                Сбросить
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="card">
           {loading && <LoadingState label="Загрузка выдач..." />}
           {!loading && error && <ErrorState message={error} onRetry={refetchRecords} />}
           {!loading && !error && (
-            records.length === 0 ? (
+            filteredRecords.length === 0 ? (
               <EmptyState
                 icon={<FontAwesomeIcon icon={faTruckRampBox} />}
                 title="Выдач пока нет"
-                description="Зарегистрируйте первую выдачу спецодежды или СИЗ."
+                description={hasActiveFilters ? 'По заданным фильтрам ничего не найдено.' : 'Зарегистрируйте первую выдачу спецодежды или СИЗ.'}
                 action={<button className="btn" onClick={() => setShowModal(true)}>Новая выдача</button>}
               />
             ) : (
@@ -228,12 +332,12 @@ export default function IssueForm() {
                 <table className="table">
                   <thead>
                     <tr>
-                      <th>Дата</th>
-                      <th>Сотрудник</th>
-                      <th>Наименование</th>
-                      <th>Кол-во</th>
-                      <th>Срок годности</th>
-                      <th>Статус</th>
+                      <SortableTh label="Дата" sortKey="issue_date" sort={sort} onSort={toggleSort} />
+                      <SortableTh label="Сотрудник" sortKey="full_name" sort={sort} onSort={toggleSort} />
+                      <SortableTh label="Наименование" sortKey="item_type_name" sort={sort} onSort={toggleSort} />
+                      <SortableTh label="Кол-во" sortKey="quantity" sort={sort} onSort={toggleSort} />
+                      <SortableTh label="Срок годности" sortKey="expiry_date" sort={sort} onSort={toggleSort} />
+                      <SortableTh label="Статус" sortKey="status" sort={sort} onSort={toggleSort} />
                       <th>Действия</th>
                     </tr>
                   </thead>
@@ -272,7 +376,7 @@ export default function IssueForm() {
                   </tbody>
                 </table>
                 <Pagination
-                  totalItems={records.length}
+                  totalItems={totalItems}
                   itemsPerPage={10}
                   currentPage={currentPage}
                   onPageChange={setCurrentPage}

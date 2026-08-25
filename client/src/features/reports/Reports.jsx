@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { sitesService } from '@lib/services/sites.service.js';
 import { itemsService } from '@/lib/services/items.service.js';
 import { issuesService } from '@/lib/services/issues.service.js';
@@ -6,8 +6,10 @@ import { reportsService } from '@/lib/services/reports.service.js';
 import { exportsService } from '@/lib/services/exports.service.js';
 import { adminService } from '@/lib/services/admin.service.js';
 import { useExport } from '@hooks/useExport.js';
+import { useTableControls, filterAndSort } from '@/hooks/useTableControls.js';
 import Pagination from '@/components/ui/Pagination.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
+import SortableTh from '@/components/ui/SortableTh.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChartBar, faClipboardList, faHourglassHalf } from '@fortawesome/free-solid-svg-icons';
 import styles from '@styles/Reports.module.css';
@@ -38,9 +40,16 @@ export default function Reports() {
   const [expiringPage, setExpiringPage] = useState(1);
   const [recordsPage, setRecordsPage] = useState(1);
   const [showExportMenu, setShowExportMenu] = useState(false);
-  const [showFilters, setShowFilters] = useState(true);
   const exportMenuRef = useRef(null);
   const { download } = useExport();
+
+  const {
+    search,
+    setSearch,
+    sort,
+    toggleSort,
+    resetFilters: resetTableControls
+  } = useTableControls({ sort: null });
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -173,14 +182,28 @@ export default function Reports() {
     download(() => adminService.backupDatabase(), `Резервная копия БД ${new Date().toISOString().replace(/[:.]/g, '-')}.sql`);
   };
 
+  const sortedDemand = useMemo(() => filterAndSort(demand, {
+    search, filters: {}, sort, searchFields: ['item_name', 'category']
+  }), [demand, search, sort]);
+
+  const sortedRecords = useMemo(() => filterAndSort(records, {
+    search, filters: {}, sort, searchFields: ['full_name', 'position', 'item_type_name']
+  }), [records, search, sort]);
+
+  const sortedExpiring = useMemo(() => filterAndSort(expiring, {
+    search, filters: {}, sort, searchFields: ['full_name', 'item_type_name']
+  }), [expiring, search, sort]);
+
   const demandStart = (currentPage - 1) * 10;
-  const paginatedDemand = demand.slice(demandStart, demandStart + 10);
+  const paginatedDemand = sortedDemand.slice(demandStart, demandStart + 10);
 
   const recordsStart = (recordsPage - 1) * 10;
-  const paginatedRecords = records.slice(recordsStart, recordsStart + 10);
+  const paginatedRecords = sortedRecords.slice(recordsStart, recordsStart + 10);
 
   const expiringStart = (expiringPage - 1) * 10;
-  const paginatedExpiring = expiring.slice(expiringStart, expiringStart + 10);
+  const paginatedExpiring = sortedExpiring.slice(expiringStart, expiringStart + 10);
+
+  const hasActiveFilters = Boolean(search) || Boolean(filters.site_id) || Boolean(filters.item_type_id) || Boolean(filters.date_from) || Boolean(filters.date_to) || Boolean(filters.status);
 
   const dangerCount = notifications.filter(n => n.severity === 'danger').length;
 
@@ -238,64 +261,43 @@ export default function Reports() {
       )}
 
       <div className={styles.container}>
-        <div className={styles.toolbar}>
-          <div className={styles.toolbarLeft}>
-            <button
-              className={`btn btn-secondary ${styles.toolbarBtn}`}
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              {showFilters ? '▼' : '▶'} Фильтры
-            </button>
-            {showFilters && (
-              <button className="btn btn-secondary" onClick={resetFilters}>Сбросить</button>
-            )}
-          </div>
-          <div className={styles.toolbarRight} ref={exportMenuRef}>
-            <button
-              className="btn"
-              onClick={() => setShowExportMenu(!showExportMenu)}
-            >
-              Экспорт
-            </button>
-            {showExportMenu && (
-              <div className={styles.exportMenu}>
-                {exportMenuItems.map((item, i) => (
-                  <button key={i} className={styles.exportMenuItem} onClick={item.onClick}>
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        <div className="card">
+          <div className="table-controls">
+            <div className="search-box">
+              <input
+                type="text"
+                name="search"
+                placeholder="Поиск по таблице..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
 
-        {showFilters && (
-          <div className={styles.filtersRow}>
-            <div className={`form-group ${styles.filterGroup}`}>
+            <div className="filter-field">
               <label>Объект</label>
-              <select className="form-control" name="site_id" value={filters.site_id} onChange={handleFilterChange}>
+              <select name="site_id" value={filters.site_id} onChange={handleFilterChange}>
                 <option value="">Все</option>
                 {sites.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
-            <div className={`form-group ${styles.filterGroup}`}>
+            <div className="filter-field">
               <label>Вид СИЗ</label>
-              <select className="form-control" name="item_type_id" value={filters.item_type_id} onChange={handleFilterChange}>
+              <select name="item_type_id" value={filters.item_type_id} onChange={handleFilterChange}>
                 <option value="">Все</option>
                 {items.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
               </select>
             </div>
-            <div className={`form-group ${styles.filterGroup}`}>
+            <div className="filter-field">
               <label>С даты</label>
-              <input type="date" className="form-control" name="date_from" value={filters.date_from} onChange={handleFilterChange} />
+              <input type="date" name="date_from" value={filters.date_from} onChange={handleFilterChange} />
             </div>
-            <div className={`form-group ${styles.filterGroup}`}>
+            <div className="filter-field">
               <label>По дату</label>
-              <input type="date" className="form-control" name="date_to" value={filters.date_to} onChange={handleFilterChange} />
+              <input type="date" name="date_to" value={filters.date_to} onChange={handleFilterChange} />
             </div>
-            <div className={`form-group ${styles.filterGroup}`}>
+            <div className="filter-field">
               <label>Статус</label>
-              <select className="form-control" name="status" value={filters.status} onChange={handleFilterChange}>
+              <select name="status" value={filters.status} onChange={handleFilterChange}>
                 <option value="">Все</option>
                 <option value="issued">Выдано</option>
                 <option value="disposed">Списано</option>
@@ -303,39 +305,58 @@ export default function Reports() {
                 <option value="due_for_disposal">Подлежит списанию</option>
               </select>
             </div>
-          </div>
-        )}
 
-        <div className={styles.tabs}>
-          {TABS.map(tab => (
-            <button
-              key={tab.id}
-              className={`${styles.tab} ${activeTab === tab.id ? styles.tabActive : ''}`}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              {tab.label}
-              {tab.id === 'expiring' && expiring.length > 0 && (
-                <span className={styles.tabBadge}>{expiring.length}</span>
+            <div className={styles.toolbarRight} ref={exportMenuRef}>
+              <button className="btn" onClick={() => setShowExportMenu(!showExportMenu)}>
+                Экспорт
+              </button>
+              {showExportMenu && (
+                <div className={styles.exportMenu}>
+                  {exportMenuItems.map((item, i) => (
+                    <button key={i} className={styles.exportMenuItem} onClick={item.onClick}>
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
               )}
-            </button>
-          ))}
-        </div>
+            </div>
 
-        <div className="card">
+            {hasActiveFilters && (
+              <button className="btn btn-secondary filter-reset" onClick={() => { resetFilters(); resetTableControls(); }}>
+                Сбросить
+              </button>
+            )}
+          </div>
+
+          <div className={styles.tabs}>
+            {TABS.map(tab => (
+              <button
+                key={tab.id}
+                className={`${styles.tab} ${activeTab === tab.id ? styles.tabActive : ''}`}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                {tab.label}
+                {tab.id === 'expiring' && expiring.length > 0 && (
+                  <span className={styles.tabBadge}>{expiring.length}</span>
+                )}
+              </button>
+            ))}
+          </div>
+
           {activeTab === 'demand' && (
             <>
-              {demand.length === 0 ? (
-                <EmptyState icon={<FontAwesomeIcon icon={faChartBar} />} title="Нет данных о потребности" description="Добавьте сотрудников, нормы и выдачи, чтобы увидеть потребность в СИЗ." />
+              {sortedDemand.length === 0 ? (
+                <EmptyState icon={<FontAwesomeIcon icon={faChartBar} />} title="Нет данных о потребности" description={Boolean(search) ? 'По поиску ничего не найдено.' : 'Добавьте сотрудников, нормы и выдачи, чтобы увидеть потребность в СИЗ.'} />
               ) : (
                 <>
                   <table className="table">
                     <thead>
                       <tr>
-                        <th>Наименование</th>
-                        <th>Категория</th>
-                        <th>Используется (шт)</th>
-                        <th>Норма (шт)</th>
-                        <th>Потребность (шт)</th>
+                        <SortableTh label="Наименование" sortKey="item_name" sort={sort} onSort={toggleSort} />
+                        <SortableTh label="Категория" sortKey="category" sort={sort} onSort={toggleSort} />
+                        <SortableTh label="Используется (шт)" sortKey="in_use_qty" sort={sort} onSort={toggleSort} />
+                        <SortableTh label="Норма (шт)" sortKey="norm_qty" sort={sort} onSort={toggleSort} />
+                        <SortableTh label="Потребность (шт)" sortKey="demand_qty" sort={sort} onSort={toggleSort} />
                       </tr>
                     </thead>
                     <tbody>
@@ -350,7 +371,7 @@ export default function Reports() {
                       ))}
                     </tbody>
                   </table>
-                  <Pagination totalItems={demand.length} itemsPerPage={10} currentPage={currentPage} onPageChange={setCurrentPage} />
+                  <Pagination totalItems={sortedDemand.length} itemsPerPage={10} currentPage={currentPage} onPageChange={setCurrentPage} />
                 </>
               )}
             </>
@@ -358,18 +379,18 @@ export default function Reports() {
 
           {activeTab === 'records' && (
             <>
-              {records.length === 0 ? (
-                <EmptyState icon={<FontAwesomeIcon icon={faClipboardList} />} title="Нет записей о выдачах" description="Выдачи сотрудникам ещё не зарегистрированы." />
+              {sortedRecords.length === 0 ? (
+                <EmptyState icon={<FontAwesomeIcon icon={faClipboardList} />} title="Нет записей о выдачах" description={Boolean(search) ? 'По поиску ничего не найдено.' : 'Выдачи сотрудникам ещё не зарегистрированы.'} />
               ) : (
                 <>
                   <table className="table">
                     <thead>
                       <tr>
-                        <th>Сотрудник</th>
-                        <th>Должность</th>
-                        <th>Наименование</th>
-                        <th>Дата выдачи</th>
-                        <th>Срок годности</th>
+                        <SortableTh label="Сотрудник" sortKey="full_name" sort={sort} onSort={toggleSort} />
+                        <SortableTh label="Должность" sortKey="position" sort={sort} onSort={toggleSort} />
+                        <SortableTh label="Наименование" sortKey="item_type_name" sort={sort} onSort={toggleSort} />
+                        <SortableTh label="Дата выдачи" sortKey="issue_date" sort={sort} onSort={toggleSort} />
+                        <SortableTh label="Срок годности" sortKey="expiry_date" sort={sort} onSort={toggleSort} />
                       </tr>
                     </thead>
                     <tbody>
@@ -384,7 +405,7 @@ export default function Reports() {
                       ))}
                     </tbody>
                   </table>
-                  <Pagination totalItems={records.length} itemsPerPage={10} currentPage={recordsPage} onPageChange={setRecordsPage} />
+                  <Pagination totalItems={sortedRecords.length} itemsPerPage={10} currentPage={recordsPage} onPageChange={setRecordsPage} />
                 </>
               )}
             </>
@@ -392,18 +413,18 @@ export default function Reports() {
 
           {activeTab === 'expiring' && (
             <>
-              {expiring.length === 0 ? (
-                <EmptyState icon={<FontAwesomeIcon icon={faHourglassHalf} />} title="Нет истекающих сроков" description="В ближайшие 2 месяца сроки годности не истекают." />
+              {sortedExpiring.length === 0 ? (
+                <EmptyState icon={<FontAwesomeIcon icon={faHourglassHalf} />} title="Нет истекающих сроков" description={Boolean(search) ? 'По поиску ничего не найдено.' : 'В ближайшие 2 месяца сроки годности не истекают.'} />
               ) : (
                 <>
                   <p className={styles.sectionSubtitle}>Истекающие сроки годности (в течение 2 месяцев)</p>
                   <table className="table">
                     <thead>
                       <tr>
-                        <th>Сотрудник</th>
-                        <th>Наименование</th>
-                        <th>Дата выдачи</th>
-                        <th>Срок годности</th>
+                        <SortableTh label="Сотрудник" sortKey="full_name" sort={sort} onSort={toggleSort} />
+                        <SortableTh label="Наименование" sortKey="item_type_name" sort={sort} onSort={toggleSort} />
+                        <SortableTh label="Дата выдачи" sortKey="issue_date" sort={sort} onSort={toggleSort} />
+                        <SortableTh label="Срок годности" sortKey="expiry_date" sort={sort} onSort={toggleSort} />
                       </tr>
                     </thead>
                     <tbody>
@@ -417,7 +438,7 @@ export default function Reports() {
                       ))}
                     </tbody>
                   </table>
-                  <Pagination totalItems={expiring.length} itemsPerPage={10} currentPage={expiringPage} onPageChange={setExpiringPage} />
+                  <Pagination totalItems={sortedExpiring.length} itemsPerPage={10} currentPage={expiringPage} onPageChange={setExpiringPage} />
                 </>
               )}
             </>

@@ -196,6 +196,74 @@ body {
   border-radius: 4px;
 }
 
+.table-controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-bottom: 20px;
+}
+
+.table-controls .search-box {
+  flex: 1;
+  min-width: 220px;
+  margin-bottom: 0;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+}
+
+.filter-field label {
+  font-weight: 500;
+  font-size: 13px;
+  color: #555;
+}
+
+.filter-field select,
+.filter-field input {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+}
+
+.filter-field select:focus,
+.filter-field input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.filter-reset {
+  align-self: flex-end;
+}
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.sortable:hover {
+  color: var(--primary);
+}
+
+.sort-indicator {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.sort-indicator.active {
+  opacity: 1;
+  color: var(--primary);
+}
+
 .tabs {
   display: flex;
   border-bottom: 1px solid var(--border);
