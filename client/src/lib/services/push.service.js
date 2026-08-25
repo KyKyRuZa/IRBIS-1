@@ -10,4 +10,13 @@ export const pushService = {
 
   unsubscribe: (endpoint) =>
     api.post('/api/push/unsubscribe', { endpoint }).then(r => r.data),
+
+  getPreferences: () =>
+    api.get('/api/push/preferences').then(r => r.data),
+
+  updatePreferences: (enabled) =>
+    api.patch('/api/push/preferences', { enabled }).then(r => r.data),
+
+  sendTest: () =>
+    api.post('/api/push/test').then(r => r.data),
 };

@@ -118,6 +118,7 @@ model User {
   username     String    @unique @db.VarChar(255)
   passwordHash String    @map("password_hash") @db.VarChar(255)
   role         String?   @default("user") @db.VarChar(50)
+  pushEnabled  Boolean?  @default(true) @map("push_enabled")
   createdAt    DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
 
   @@map("users")

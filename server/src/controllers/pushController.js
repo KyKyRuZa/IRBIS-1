@@ -143,6 +143,69 @@ export async function sendPushToAll(req, res, next) {
   }
 }
 
+export async function sendTestPush(req, res, next) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    const result = await pool.query(
+      'SELECT id, endpoint, p256dh, auth FROM push_subscriptions WHERE employee_id = $1',
+      [userId]
+    );
+    const subscriptions = result.rows;
+    if (subscriptions.length === 0) {
+      return res.status(404).json({ error: 'Нет активной подписки на push-уведомления' });
+    }
+    const payload = JSON.stringify({
+      title: 'Тест push-уведомления',
+      body: 'Если вы видите это сообщение — push работает корректно.',
+    });
+    const promises = subscriptions.map((sub) => {
+      const pushSubscription = {
+        endpoint: sub.endpoint,
+        keys: { p256dh: sub.p256dh, auth: sub.auth },
+      };
+      return webpush.sendNotification(pushSubscription, payload).catch(async (err) => {
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          await pool.query('DELETE FROM push_subscriptions WHERE id = $1', [sub.id]);
+        }
+        console.error('Push test send error', err?.statusCode ?? err?.message, err?.body);
+        return null;
+      });
+    });
+    await Promise.all(promises);
+    res.json({ message: 'Тестовое push-уведомление отправлено' });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getPushPreferences(req, res, next) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    const result = await pool.query('SELECT push_enabled FROM users WHERE id = $1', [userId]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+    res.json({ enabled: Boolean(result.rows[0].push_enabled) });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updatePushPreferences(req, res, next) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    const { enabled } = req.body;
+    if (typeof enabled !== 'boolean') {
+      return res.status(400).json({ error: 'enabled boolean is required' });
+    }
+    await pool.query('UPDATE users SET push_enabled = $1 WHERE id = $2', [enabled, userId]);
+    res.json({ enabled });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export function getVapidPublicKey(req, res) {
   res.json({ publicKey: VAPID_PUBLIC_KEY });
 }

@@ -21,7 +21,7 @@ export async function login(req, res, next) {
       process.env.JWT_SECRET,
       { expiresIn: '8h' }
     );
-    res.json({ id: user.id, username: user.username, role: user.role, token });
+    res.json({ id: user.id, username: user.username, role: user.role, push_enabled: Boolean(user.push_enabled), token });
   } catch (error) {
     next(error);
   }

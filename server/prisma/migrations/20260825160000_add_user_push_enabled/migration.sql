@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "push_enabled" BOOLEAN NOT NULL DEFAULT TRUE;

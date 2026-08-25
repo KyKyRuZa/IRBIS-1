@@ -71,7 +71,7 @@ export async function getDemandReport(req, res, next) {
 export async function getNotifications(req, res, next) {
   try {
     const result = await pool.query(`
-      SELECT notification_id as id, type, severity, message, employee_id, site_id, date
+      SELECT notification_id as id, type, severity, message, employee_id, site_id, date, read
       FROM notifications
       ORDER BY date DESC
     `);
@@ -82,9 +82,32 @@ export async function getNotifications(req, res, next) {
       message: row.message,
       employee_id: row.employee_id,
       site_id: row.site_id,
-      date: row.date
+      date: row.date,
+      read: row.read
     }));
     res.json(notifications);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function markNotificationRead(req, res, next) {
+  try {
+    const { id } = req.params;
+    await pool.query(
+      `UPDATE notifications SET read = true WHERE notification_id = $1`,
+      [id]
+    );
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function markAllNotificationsRead(req, res, next) {
+  try {
+    await pool.query(`UPDATE notifications SET read = true WHERE read = false`);
+    res.json({ success: true });
   } catch (error) {
     next(error);
   }
