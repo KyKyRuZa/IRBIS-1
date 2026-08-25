@@ -7,7 +7,7 @@ import { useAuth } from '@hooks/useAuth.js';
 import Login from '@features/auth/Login.jsx';
 
 vi.mock('@/lib/services/auth.service.js', () => {
-  const authService = { login: vi.fn(), register: vi.fn(), changePassword: vi.fn() };
+  const authService = { login: vi.fn(), register: vi.fn(), changePassword: vi.fn(), me: vi.fn().mockResolvedValue(null), logout: vi.fn() };
   return { authService };
 });
 
@@ -47,7 +47,6 @@ describe('App routes', () => {
   });
 
   it('allows access to protected routes when authenticated', () => {
-    localStorage.setItem('token', 't');
     localStorage.setItem('user', JSON.stringify({ username: 'admin', role: 'admin' }));
     renderAt('/');
     expect(screen.getByText('secret content')).toBeInTheDocument();

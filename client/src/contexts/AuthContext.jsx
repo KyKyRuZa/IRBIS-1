@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { authService } from '@lib/services/auth.service.js';
 
 const AuthContext = createContext(null);
 
@@ -11,39 +12,40 @@ function useAuthState() {
       return null;
     }
   });
-
-  const [token, setToken] = useState(() => localStorage.getItem('token'));
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const handleStorage = (e) => {
-      if (e.key === 'user') {
-        setUser(e.newValue ? JSON.parse(e.newValue) : null);
-      }
-      if (e.key === 'token') {
-        setToken(e.newValue);
-      }
+    let active = true;
+    authService
+      .me()
+      .then((data) => active && setUser(data))
+      .catch((err) => {
+        if (err?.response?.status === 401) active && setUser(null);
+      })
+      .finally(() => active && setReady(true));
+    return () => {
+      active = false;
     };
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
-  const login = useCallback((newToken, userData) => {
-    localStorage.setItem('token', newToken);
+  const login = useCallback((userData) => {
     localStorage.setItem('user', JSON.stringify(userData));
-    setToken(newToken);
     setUser(userData);
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('token');
+  const logout = useCallback(async () => {
+    try {
+      await authService.logout();
+    } catch {
+      /* ignore network errors on logout */
+    }
     localStorage.removeItem('user');
-    setToken(null);
     setUser(null);
   }, []);
 
-  const isAuthenticated = Boolean(token && user);
+  const isAuthenticated = Boolean(user);
 
-  return { user, token, login, logout, isAuthenticated };
+  return { user, login, logout, isAuthenticated, ready };
 }
 
 export function AuthProvider({ children }) {

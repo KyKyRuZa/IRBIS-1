@@ -1,7 +1,18 @@
+import crypto from 'crypto';
 import pool from '../models/db.js';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import { LoginSchema, RegisterSchema, ChangePasswordSchema } from '../validation/index.js';
+import {
+  signAccessToken,
+  createRefreshToken,
+  persistRefreshToken,
+  revokeRefreshToken,
+  findValidRefreshToken,
+  buildCookieOptions,
+  ACCESS_COOKIE,
+  REFRESH_COOKIE,
+  publicUser,
+} from '../utils/tokens.js';
 
 export async function login(req, res, next) {
   try {
@@ -16,12 +27,75 @@ export async function login(req, res, next) {
     if (!valid) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    const token = jwt.sign(
-      { id: user.id, username: user.username, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '8h' }
-    );
-    res.json({ id: user.id, username: user.username, role: user.role, push_enabled: Boolean(user.push_enabled), token });
+
+    const accessToken = signAccessToken(user);
+    const { raw, tokenHash, expiresAt } = createRefreshToken();
+    await persistRefreshToken(user.id, tokenHash, expiresAt);
+
+    res.cookie(ACCESS_COOKIE, accessToken, { ...buildCookieOptions(), maxAge: 15 * 60 * 1000 });
+    res.cookie(REFRESH_COOKIE, raw, { ...buildCookieOptions(), maxAge: 7 * 24 * 60 * 60 * 1000 });
+
+    res.json(publicUser(user));
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function refresh(req, res, next) {
+  try {
+    const raw = req.cookies?.[REFRESH_COOKIE];
+    if (!raw) {
+      return res.status(401).json({ error: 'Refresh token required' });
+    }
+    const tokenHash = crypto.createHash('sha256').update(raw).digest('hex');
+    const record = await findValidRefreshToken(tokenHash);
+    if (!record) {
+      return res.status(401).json({ error: 'Invalid or expired refresh token' });
+    }
+
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [record.userId]);
+    const user = result.rows[0];
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+
+    const accessToken = signAccessToken(user);
+    const nextRefresh = createRefreshToken();
+    await revokeRefreshToken(tokenHash);
+    await persistRefreshToken(user.id, nextRefresh.tokenHash, nextRefresh.expiresAt);
+
+    res.cookie(ACCESS_COOKIE, accessToken, { ...buildCookieOptions(), maxAge: 15 * 60 * 1000 });
+    res.cookie(REFRESH_COOKIE, nextRefresh.raw, { ...buildCookieOptions(), maxAge: 7 * 24 * 60 * 60 * 1000 });
+
+    res.json(publicUser(user));
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function logout(req, res, next) {
+  try {
+    const raw = req.cookies?.[REFRESH_COOKIE];
+    if (raw) {
+      const tokenHash = crypto.createHash('sha256').update(raw).digest('hex');
+      await revokeRefreshToken(tokenHash);
+    }
+    res.clearCookie(ACCESS_COOKIE, buildCookieOptions());
+    res.clearCookie(REFRESH_COOKIE, buildCookieOptions());
+    res.json({ message: 'Logged out' });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function me(req, res, next) {
+  try {
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
+    const user = result.rows[0];
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+    res.json(publicUser(user));
   } catch (error) {
     next(error);
   }

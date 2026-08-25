@@ -9,4 +9,10 @@ export const authService = {
 
   changePassword: (oldPassword, newPassword) =>
     api.post('/api/auth/change-password', { oldPassword, newPassword }).then(r => r.data),
+
+  me: () =>
+    api.get('/api/auth/me').then(r => r.data),
+
+  logout: () =>
+    api.post('/api/auth/logout').then(r => r.data),
 };

@@ -1,16 +1,15 @@
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { AuthProvider, useAuth } from '@contexts/AuthContext.jsx';
 
 function Probe() {
-  const { user, token, isAuthenticated, login, logout } = useAuth();
+  const { user, isAuthenticated, login, logout } = useAuth();
   return (
     <div>
       <span data-testid="auth">{String(isAuthenticated)}</span>
       <span data-testid="user">{user ? user.username : 'none'}</span>
-      <span data-testid="token">{token || 'none'}</span>
-      <button onClick={() => login('tok', { username: 'alice', role: 'admin' })}>login</button>
+      <button onClick={() => login({ username: 'alice', role: 'admin' })}>login</button>
       <button onClick={() => logout()}>logout</button>
     </div>
   );
@@ -29,7 +28,7 @@ describe('AuthContext', () => {
     expect(screen.getByTestId('user').textContent).toBe('none');
   });
 
-  it('login sets user/token and persists them', () => {
+  it('login sets user and persists it', () => {
     render(
       <AuthProvider>
         <Probe />
@@ -38,12 +37,10 @@ describe('AuthContext', () => {
     fireEvent.click(screen.getByText('login'));
     expect(screen.getByTestId('auth').textContent).toBe('true');
     expect(screen.getByTestId('user').textContent).toBe('alice');
-    expect(localStorage.getItem('token')).toBe('tok');
     expect(JSON.parse(localStorage.getItem('user')).username).toBe('alice');
   });
 
-  it('logout clears state and storage', () => {
-    localStorage.setItem('token', 't');
+  it('logout clears state and storage', async () => {
     localStorage.setItem('user', JSON.stringify({ username: 'bob' }));
     render(
       <AuthProvider>
@@ -51,8 +48,7 @@ describe('AuthContext', () => {
       </AuthProvider>
     );
     fireEvent.click(screen.getByText('logout'));
-    expect(screen.getByTestId('auth').textContent).toBe('false');
-    expect(localStorage.getItem('token')).toBeNull();
+    await waitFor(() => expect(screen.getByTestId('auth').textContent).toBe('false'));
     expect(localStorage.getItem('user')).toBeNull();
   });
 

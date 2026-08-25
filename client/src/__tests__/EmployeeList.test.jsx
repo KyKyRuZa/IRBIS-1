@@ -28,7 +28,6 @@ vi.mock('@/lib/services/sites.service.js', () => {
 
 function renderWithRouter(ui, role = 'admin') {
   localStorage.setItem('user', JSON.stringify({ username: 'u', role }));
-  localStorage.setItem('token', 't');
   window.history.pushState({}, 'Test', '/');
   return render(
     <AuthProvider>

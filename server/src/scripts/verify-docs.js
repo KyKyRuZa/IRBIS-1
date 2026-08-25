@@ -14,13 +14,14 @@ async function login() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username: 'admin', password: 'admin' }),
   });
-  const data = await res.json();
-  return data.token;
+  await res.json();
+  const setCookies = res.headers.getSetCookie ? res.headers.getSetCookie() : [];
+  return setCookies.map((c) => c.split(';')[0]).join('; ');
 }
 
-async function download(filePath, token) {
+async function download(filePath, cookie) {
   const res = await fetch(`${BASE}${filePath}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Cookie: cookie },
   });
   const buffer = Buffer.from(await res.arrayBuffer());
   const rawName = filePath.split('/').pop().split('?')[0] || 'file';
@@ -41,8 +42,8 @@ async function unzipDocx(docxPath) {
 }
 
 async function main() {
-  const token = await login();
-  console.log('Token obtained');
+  const cookie = await login();
+  console.log('Session cookie obtained');
 
   const checks = [
     { name: 'Employee card', path: '/api/export/employee-card/12', expectText: 'Уварова' },
@@ -55,7 +56,7 @@ async function main() {
 
   for (const c of checks) {
     try {
-      const result = await download(c.path, token);
+      const result = await download(c.path, cookie);
       console.log(`✔ ${c.name}: status=${result.status}, size=${result.size}, type=${result.type}, saved=${pathModule.basename(result.filePath)}`);
 
       if (result.filePath.endsWith('.xlsx')) {

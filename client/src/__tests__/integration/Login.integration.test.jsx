@@ -11,6 +11,8 @@ vi.mock('@/lib/services/auth.service.js', () => {
     login: vi.fn(),
     register: vi.fn(),
     changePassword: vi.fn(),
+    me: vi.fn().mockResolvedValue(null),
+    logout: vi.fn(),
   };
   return { authService };
 });
@@ -32,7 +34,7 @@ describe('Login (integration)', () => {
   });
 
   it('logs in, stores the token and calls the API with credentials', async () => {
-    authService.login.mockResolvedValue({ token: 'tok123', username: 'admin', role: 'admin' });
+    authService.login.mockResolvedValue({ username: 'admin', role: 'admin' });
     renderLogin();
 
     fireEvent.change(screen.getByLabelText('Логин'), { target: { value: 'admin' } });
@@ -40,7 +42,6 @@ describe('Login (integration)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Войти' }));
 
     await waitFor(() => expect(authService.login).toHaveBeenCalledWith('admin', 'secret'));
-    expect(localStorage.getItem('token')).toBe('tok123');
     expect(JSON.parse(localStorage.getItem('user')).username).toBe('admin');
   });
 

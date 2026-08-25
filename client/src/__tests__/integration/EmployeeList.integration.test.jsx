@@ -28,7 +28,6 @@ vi.mock('@/lib/services/sites.service.js', () => {
 
 function renderList() {
   localStorage.setItem('user', JSON.stringify({ username: 'admin', role: 'admin' }));
-  localStorage.setItem('token', 't');
   return render(
     <AuthProvider>
       <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>

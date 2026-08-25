@@ -8,7 +8,17 @@ describe('api client', () => {
       Promise.resolve({ data: {}, status: 200, statusText: 'OK', headers: {}, config: {} });
   });
 
-  it('attaches a Bearer token from localStorage to outgoing requests', async () => {
+  it('sends credentials (cookies) with requests instead of a localStorage token', async () => {
+    let withCredentials;
+    api.interceptors.request.use((c) => {
+      withCredentials = c.withCredentials;
+      return c;
+    });
+    await api.get('/whatever');
+    expect(withCredentials).toBe(true);
+  });
+
+  it('does not attach an Authorization header from localStorage', async () => {
     localStorage.setItem('token', 'xyz');
     let headers;
     api.interceptors.request.use((c) => {
@@ -16,29 +26,7 @@ describe('api client', () => {
       return c;
     });
     await api.get('/whatever');
-    expect(headers.Authorization).toBe('Bearer xyz');
-  });
-
-  it('does not attach Authorization when no token is stored', async () => {
-    localStorage.removeItem('token');
-    let headers;
-    api.interceptors.request.use((c) => {
-      headers = c.headers;
-      return c;
-    });
-    await api.get('/whatever');
     expect(headers.Authorization).toBeUndefined();
-  });
-
-  it('does not double-prefix an existing Bearer token', async () => {
-    localStorage.setItem('token', 'Bearer existing');
-    let headers;
-    api.interceptors.request.use((c) => {
-      headers = c.headers;
-      return c;
-    });
-    await api.get('/whatever');
-    expect(headers.Authorization).toBe('Bearer existing');
   });
 
   it('downloadBlob requests with responseType blob', async () => {

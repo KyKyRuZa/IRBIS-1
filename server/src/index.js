@@ -18,6 +18,7 @@ import uploadRoutes from './routes/uploadRoutes.js';
 import { logger } from './utils/logger.js';
 import { initDB } from './models/db.js';
 import { aggregateNotifications } from './services/notificationService.js';
+import { cookiesMiddleware } from './middleware/auth.js';
 
 import rateLimit from 'express-rate-limit';
 
@@ -29,6 +30,7 @@ const loginLimiter = rateLimit({
 
 const app = express();
 app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') || false, credentials: true }));
+app.use(cookiesMiddleware);
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 app.use('/certs', express.static('certs'));

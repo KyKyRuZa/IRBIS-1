@@ -31,10 +31,10 @@ export default function Login() {
       if (isRegister) {
         await authService.register(username, password, 'admin');
         const res = await authService.login(username, password);
-        login(res.token, { username: res.username, role: res.role });
+        login({ username: res.username, role: res.role });
       } else {
         const res = await authService.login(username, password);
-        login(res.token, { username: res.username, role: res.role });
+        login({ username: res.username, role: res.role });
       }
       navigate('/');
     } catch (err) {

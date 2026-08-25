@@ -28,7 +28,7 @@ export function usePushNotifications() {
   const [subscribed, setSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { token } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     setSupported('serviceWorker' in navigator && 'PushManager' in window);
@@ -65,7 +65,7 @@ export function usePushNotifications() {
   // and reconcile the actual browser subscription with that preference.
   const initialized = useRef(false);
   useEffect(() => {
-    if (!token || !supported || initialized.current) return;
+    if (!isAuthenticated || !supported || initialized.current) return;
     initialized.current = true;
     (async () => {
       let prefEnabled = false;
@@ -88,10 +88,10 @@ export function usePushNotifications() {
         console.error('Failed to sync push subscription state', e);
       }
     })();
-  }, [token, supported]);
+  }, [isAuthenticated, supported]);
 
   const subscribe = async () => {
-    if (!token) {
+    if (!isAuthenticated) {
       setError('Требуется авторизация');
       return;
     }
@@ -110,7 +110,7 @@ export function usePushNotifications() {
   };
 
   const unsubscribe = async () => {
-    if (!token) return;
+    if (!isAuthenticated) return;
     setLoading(true);
     setError('');
     try {
