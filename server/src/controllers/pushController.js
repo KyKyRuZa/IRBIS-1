@@ -39,14 +39,20 @@ export async function subscribePush(req, res, next) {
       }
     }
     const userAgent = req.headers['user-agent'] || undefined;
+    // One active subscription per user: upsert on user_id replaces any
+    // previous (stale) endpoint, so re-subscribing can never leave
+    // duplicate / zombie rows behind.
     await pool.query(`
-      INSERT INTO push_subscriptions (employee_id, endpoint, p256dh, auth, user_agent)
-      VALUES ($1, $2, $3, $4, $5)
-      ON CONFLICT (employee_id, endpoint) DO UPDATE SET
+      INSERT INTO push_subscriptions (user_id, employee_id, endpoint, p256dh, auth, user_agent)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      ON CONFLICT (user_id) DO UPDATE SET
+        employee_id = EXCLUDED.employee_id,
+        endpoint = EXCLUDED.endpoint,
         p256dh = EXCLUDED.p256dh,
         auth = EXCLUDED.auth,
-        user_agent = EXCLUDED.user_agent
-    `, [effectiveEmployeeId, endpoint, keys.p256dh, keys.auth, userAgent]);
+        user_agent = EXCLUDED.user_agent,
+        created_at = CURRENT_TIMESTAMP
+    `, [userId, effectiveEmployeeId, endpoint, keys.p256dh, keys.auth, userAgent]);
     res.status(201).json({ message: 'Subscription saved', employee_id: effectiveEmployeeId });
   } catch (error) {
     next(error);
@@ -55,15 +61,15 @@ export async function subscribePush(req, res, next) {
 
 export async function unsubscribePush(req, res, next) {
   try {
-    const employeeId = req.user?.id;
-    if (!employeeId) {
+    const userId = req.user?.id;
+    if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
     const { endpoint } = req.body;
     if (!endpoint) {
       return res.status(400).json({ error: 'endpoint is required' });
     }
-    await pool.query('DELETE FROM push_subscriptions WHERE employee_id = $1 AND endpoint = $2', [employeeId, endpoint]);
+    await pool.query('DELETE FROM push_subscriptions WHERE user_id = $1 AND endpoint = $2', [userId, endpoint]);
     res.json({ message: 'Subscription removed' });
   } catch (error) {
     next(error);
@@ -148,7 +154,7 @@ export async function sendTestPush(req, res, next) {
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
     const result = await pool.query(
-      'SELECT id, endpoint, p256dh, auth FROM push_subscriptions WHERE employee_id = $1',
+      'SELECT id, endpoint, p256dh, auth FROM push_subscriptions WHERE user_id = $1',
       [userId]
     );
     const subscriptions = result.rows;

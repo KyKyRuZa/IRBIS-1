@@ -210,8 +210,8 @@ const seedPushSubscriptions = async (employees) => {
   const subscriptions = [];
   for (const emp of employees.slice(0, 5)) {
     const r = await pool.query(
-      'INSERT INTO push_subscriptions (employee_id, endpoint, p256dh, auth, user_agent) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [emp.id, `https://fcm.googleapis.com/fcm/send/${emp.id}`, `p256dh_${emp.id}`, `auth_${emp.id}`, 'Mozilla/5.0']
+      'INSERT INTO push_subscriptions (user_id, employee_id, endpoint, p256dh, auth, user_agent) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [emp.id, emp.id, `https://fcm.googleapis.com/fcm/send/${emp.id}`, `p256dh_${emp.id}`, `auth_${emp.id}`, 'Mozilla/5.0']
     );
     subscriptions.push(r.rows[0]);
   }
