@@ -3,7 +3,8 @@ import { itemsService } from '@lib/services/items.service.js';
 import { certificatesService } from '@lib/services/certificates.service.js';
 import { ITEM_CATEGORIES } from '@lib/constants/item-categories.js';
 import { SEASONALITY } from '@lib/constants/seasonality.js';
-import { CERTIFICATE_STATUSES } from '@lib/constants/certificate-statuses.js';
+import { CERTIFICATE_STATUSES, CERTIFICATE_STATUS_LABELS } from '@lib/constants/certificate-statuses.js';
+import { formatDate } from '@/lib/utils/date.js';
 import Modal from '@components/ui/Modal.jsx';
 import ConfirmDialog from '@components/ui/ConfirmDialog.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
@@ -244,12 +245,12 @@ export default function ItemCatalog() {
                       {detailItem.certificates.map((cert) => (
                         <tr key={cert.id}>
                           <td>{cert.certificate_number}</td>
-                          <td>{cert.issue_date}</td>
-                          <td>{cert.expiry_date}</td>
+                           <td>{formatDate(cert.issue_date)}</td>
+                           <td>{formatDate(cert.expiry_date)}</td>
                           <td>
-                            {cert.status === CERTIFICATE_STATUSES.active && <span className="badge badge-success">{CERTIFICATE_STATUSES.active}</span>}
-                            {cert.status === CERTIFICATE_STATUSES.expiring && <span className="badge badge-warning">{CERTIFICATE_STATUSES.expiring}</span>}
-                            {cert.status === CERTIFICATE_STATUSES.expired && <span className="badge badge-danger">{CERTIFICATE_STATUSES.expired}</span>}
+                            {cert.status === CERTIFICATE_STATUSES.active && <span className="badge badge-success">{CERTIFICATE_STATUS_LABELS.active}</span>}
+                            {cert.status === CERTIFICATE_STATUSES.expiring && <span className="badge badge-warning">{CERTIFICATE_STATUS_LABELS.expiring}</span>}
+                            {cert.status === CERTIFICATE_STATUSES.expired && <span className="badge badge-danger">{CERTIFICATE_STATUS_LABELS.expired}</span>}
                           </td>
                         </tr>
                       ))}
@@ -323,13 +324,14 @@ export default function ItemCatalog() {
               </select>
             </div>
             <div className={`form-group ${styles.field}`}>
-              <label>
+              <div className={styles.checkboxRow}>
+                <span>Требуется сертификат</span>
                 <input
                   type="checkbox"
                   checked={formData.requires_certificate}
                   onChange={(e) => setFormData({...formData, requires_certificate: e.target.checked})}
-                /> Требуется сертификат
-              </label>
+                />
+              </div>
             </div>
           </div>
           <div className={styles.actionButtons}>

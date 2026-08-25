@@ -148,7 +148,6 @@ export default function EmployeeList() {
                     <th>Табельный №</th>
                     <th>Должность</th>
                     <th>Объект</th>
-                    <th>Размеры</th>
                     <th>Статус</th>
                     <th>Действия</th>
                   </tr>
@@ -161,7 +160,6 @@ export default function EmployeeList() {
                       <td>{emp.personnel_number || '-'}</td>
                       <td>{emp.position}</td>
                       <td>{emp.site_name || '-'}</td>
-                      <td>{emp.clothing_size} / {emp.shoe_size} / {emp.hat_size || '-'} / {emp.respirator_size || '-'} / {emp.gloves_size || '-'}</td>
                       <td className={emp.status === EMPLOYEE_STATUSES.active ? styles.statusActive : styles.statusTerminated}>
                         {emp.status === EMPLOYEE_STATUSES.active ? EMPLOYEE_STATUSES.active : EMPLOYEE_STATUSES.terminated}
                       </td>
@@ -217,6 +215,8 @@ export default function EmployeeList() {
                 required
               />
             </div>
+          </div>
+          <div className={styles.formRow}>
             <div className={`form-group ${styles.field}`}>
               <label>Объект</label>
               <select
@@ -230,6 +230,17 @@ export default function EmployeeList() {
                 ))}
               </select>
             </div>
+            <div className={`form-group ${styles.field}`}>
+              <label>Табельный номер</label>
+              <input
+                type="text"
+                className="form-control"
+                value={formData.personnel_number}
+                onChange={(e) => setFormData({...formData, personnel_number: e.target.value})}
+              />
+            </div>
+          </div>
+          <div className={styles.formRow}>
             <div className={`form-group ${styles.field}`}>
               <label>Размер одежды</label>
               <input
@@ -248,15 +259,8 @@ export default function EmployeeList() {
                 onChange={(e) => setFormData({...formData, shoe_size: e.target.value})}
               />
             </div>
-            <div className={`form-group ${styles.field}`}>
-              <label>Табельный номер</label>
-              <input
-                type="text"
-                className="form-control"
-                value={formData.personnel_number}
-                onChange={(e) => setFormData({...formData, personnel_number: e.target.value})}
-              />
-            </div>
+          </div>
+          <div className={styles.formRow}>
             <div className={`form-group ${styles.field}`}>
               <label>Рост</label>
               <input
@@ -275,6 +279,8 @@ export default function EmployeeList() {
                 onChange={(e) => setFormData({...formData, hat_size: e.target.value})}
               />
             </div>
+          </div>
+          <div className={styles.formRow}>
             <div className={`form-group ${styles.field}`}>
               <label>Размер СИЗОД (дыхания)</label>
               <input
@@ -293,6 +299,8 @@ export default function EmployeeList() {
                 onChange={(e) => setFormData({...formData, gloves_size: e.target.value})}
               />
             </div>
+          </div>
+          <div className={styles.formRow}>
             <div className={`form-group ${styles.field}`}>
               <label>Дата изменения профессии/подразделения</label>
               <input

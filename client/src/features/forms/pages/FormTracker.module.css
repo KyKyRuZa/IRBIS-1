@@ -33,19 +33,16 @@
   margin-top: 5px;
 }
 
-.formSection {
-  margin-bottom: 20px;
+.content {
+  padding: 0 20px 20px;
+  max-width: 1500px;
+  margin: 0 auto;
 }
 
-.formsRow {
+.toolbar {
   display: flex;
-  gap: 20px;
-  align-items: flex-start;
-}
-
-.formsRow form {
-  flex: 1;
-  min-width: 0;
+  gap: 10px;
+  margin-bottom: 15px;
 }
 
 .sectionTitle {
@@ -55,25 +52,82 @@
   font-weight: 600;
 }
 
-.formGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 12px;
+.emptyState {
+  padding: 40px 20px;
+  text-align: center;
+  color: #888;
+  font-size: 14px;
 }
 
-.field {
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--primary);
+}
+
+.modalClose {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #888;
+  line-height: 1;
+}
+
+.modalClose:hover {
+  color: var(--dark);
+}
+
+.modalBody {
+  padding: 20px;
+}
+
+.modalBody .form-group {
+  margin-bottom: 15px;
+}
+
+.modalBody .form-group:last-child {
   margin-bottom: 0;
 }
 
-.field label {
+.modalBody label {
   display: block;
   margin-bottom: 5px;
   font-weight: 500;
   font-size: 14px;
 }
 
-.field input,
-.field select {
+.modalBody input,
+.modalBody select {
   width: 100%;
   padding: 8px 12px;
   border: 1px solid var(--border);
@@ -81,12 +135,10 @@
   font-size: 14px;
 }
 
-.field input:focus,
-.field select:focus {
-  outline: none;
-  border-color: var(--border);
-}
-
-.error {
-  color: red;
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
 }

@@ -33,21 +33,28 @@
   margin-top: 5px;
 }
 
-.headerRow {
+.headerActions {
   display: flex;
-  justify-content: space-between;
+  gap: 10px;
   align-items: center;
-  margin-bottom: 20px;
-}
-
-.headerTitle {
-  color: var(--primary);
-  margin: 0;
 }
 
 .notificationsToggle {
   padding: 6px 12px;
   font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+.badge {
+  background: #d32f2f;
+  color: white;
+  border-radius: 10px;
+  padding: 1px 6px;
+  font-size: 11px;
+  font-weight: bold;
 }
 
 .notificationsPanel {
@@ -81,12 +88,37 @@
   color: #f57c00;
 }
 
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  gap: 10px;
+}
+
+.toolbarLeft {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.toolbarRight {
+  position: relative;
+}
+
+.toolbarBtn {
+  font-size: 13px;
+}
+
 .filtersRow {
   display: flex;
   gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   flex-wrap: wrap;
   align-items: flex-end;
+  padding: 12px 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
 }
 
 .filterGroup {
@@ -96,38 +128,104 @@
 
 .filterGroup label {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
   font-weight: 500;
-  font-size: 14px;
+  font-size: 13px;
+  color: #555;
 }
 
 .filterGroup input,
 .filterGroup select {
   width: 100%;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border: 1px solid var(--border);
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .filterGroup input:focus,
 .filterGroup select:focus {
   outline: none;
-  border-color: var(--border);
+  border-color: var(--primary);
 }
 
-.actionsRow {
+.exportMenu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 100;
+  min-width: 240px;
+  overflow: hidden;
+}
+
+.exportMenuItem {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  text-align: left;
+  background: none;
+  border: none;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.exportMenuItem:hover {
+  background: #f0f0f0;
+}
+
+.tabs {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
+  gap: 2px;
+  margin-bottom: 0;
+  border-bottom: 2px solid var(--border);
 }
 
-.sectionTitle {
+.tab {
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tab:hover {
+  color: var(--dark);
+  background: #f8f9fa;
+}
+
+.tabActive {
   color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.tabBadge {
+  background: #d32f2f;
+  color: white;
+  border-radius: 10px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.sectionSubtitle {
+  color: #d32f2f;
+  font-weight: 500;
   margin: 0 0 15px;
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 14px;
 }
 
 .demandValue {
@@ -135,6 +233,9 @@
   color: var(--primary);
 }
 
-.error {
-  color: red;
+.emptyState {
+  padding: 40px 20px;
+  text-align: center;
+  color: #888;
+  font-size: 14px;
 }

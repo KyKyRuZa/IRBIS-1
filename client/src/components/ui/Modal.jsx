@@ -17,6 +17,9 @@ export default function Modal({ isOpen, onClose, title, children }) {
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.content} onClick={(e) => e.stopPropagation()}>
         {title && <h3 className={styles.header}>{title}</h3>}
+        <button className={styles.closeButton} onClick={onClose} aria-label="Close">
+          &times;
+        </button>
         {children}
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { formsService } from '@lib/services/forms.service.js';
 import { employeesService } from '@/lib/services/employees.service.js';
 import Pagination from '@/components/ui/Pagination.jsx';
@@ -7,12 +7,19 @@ import styles from './FormTracker.module.css';
 export default function FormTracker() {
   const [forms, setForms] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [records, setRecords] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showTakeModal, setShowTakeModal] = useState(false);
+
   const [formName, setFormName] = useState('');
   const [formDesc, setFormDesc] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState('');
   const [selectedForm, setSelectedForm] = useState('');
-  const [records, setRecords] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
+
+  const addModalRef = useRef(null);
+  const takeModalRef = useRef(null);
 
   useEffect(() => {
     fetchForms();
@@ -23,6 +30,21 @@ export default function FormTracker() {
   useEffect(() => {
     setCurrentPage(1);
   }, [records]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (addModalRef.current && !addModalRef.current.contains(e.target)) {
+        setShowAddModal(false);
+      }
+      if (takeModalRef.current && !takeModalRef.current.contains(e.target)) {
+        setShowTakeModal(false);
+      }
+    };
+    if (showAddModal || showTakeModal) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showAddModal, showTakeModal]);
 
   const fetchForms = async () => {
     const res = await formsService.list();
@@ -45,6 +67,7 @@ export default function FormTracker() {
     await formsService.create({ name: formName, description: formDesc });
     setFormName('');
     setFormDesc('');
+    setShowAddModal(false);
     fetchForms();
   };
 
@@ -57,6 +80,7 @@ export default function FormTracker() {
     });
     setSelectedEmployee('');
     setSelectedForm('');
+    setShowTakeModal(false);
     fetchRecords();
   };
 
@@ -74,12 +98,60 @@ export default function FormTracker() {
         </div>
       </div>
       <div className={styles.content}>
+        <div className={styles.toolbar}>
+          <button className="btn" onClick={() => setShowAddModal(true)}>+ Добавить форму</button>
+          <button className="btn btn-secondary" onClick={() => setShowTakeModal(true)}>Отметить форму взятой</button>
+        </div>
+
         <div className="card">
-          <div className={styles.formsRow}>
-            <form onSubmit={handleAddForm} className={styles.formSection}>
-              <h3 className={styles.sectionTitle}>Добавить форму</h3>
-              <div className={styles.formGrid}>
-                <div className={`form-group ${styles.field}`}>
+          <h2 className={styles.sectionTitle}>История взятия форм</h2>
+          {records.length === 0 ? (
+            <div className={styles.emptyState}>Нет записей</div>
+          ) : (
+            <>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Сотрудник (ФИО)</th>
+                    <th>Должность</th>
+                    <th>Форма</th>
+                    <th>Дата</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedRecords.map((r) => (
+                    <tr key={r.id}>
+                      <td>{r.id}</td>
+                      <td>{r.full_name}</td>
+                      <td>{r.position}</td>
+                      <td>{r.form_name}</td>
+                      <td>{new Date(r.taken_at).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <Pagination
+                totalItems={records.length}
+                itemsPerPage={10}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+              />
+            </>
+          )}
+        </div>
+      </div>
+
+      {showAddModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal} ref={addModalRef}>
+            <div className={styles.modalHeader}>
+              <h3>Добавить форму</h3>
+              <button className={styles.modalClose} onClick={() => setShowAddModal(false)}>×</button>
+            </div>
+            <form onSubmit={handleAddForm}>
+              <div className={styles.modalBody}>
+                <div className="form-group">
                   <label>Название формы</label>
                   <input
                     type="text"
@@ -90,7 +162,7 @@ export default function FormTracker() {
                     required
                   />
                 </div>
-                <div className={`form-group ${styles.field}`}>
+                <div className="form-group">
                   <label>Описание</label>
                   <input
                     type="text"
@@ -101,13 +173,25 @@ export default function FormTracker() {
                   />
                 </div>
               </div>
-              <button type="submit" className="btn">Добавить форму</button>
+              <div className={styles.modalFooter}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>Отмена</button>
+                <button type="submit" className="btn">Добавить</button>
+              </div>
             </form>
+          </div>
+        </div>
+      )}
 
-            <form onSubmit={handleTakeForm} className={styles.formSection}>
-              <h3 className={styles.sectionTitle}>Отметить форму взятой</h3>
-              <div className={styles.formGrid}>
-                <div className={`form-group ${styles.field}`}>
+      {showTakeModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal} ref={takeModalRef}>
+            <div className={styles.modalHeader}>
+              <h3>Отметить форму взятой</h3>
+              <button className={styles.modalClose} onClick={() => setShowTakeModal(false)}>×</button>
+            </div>
+            <form onSubmit={handleTakeForm}>
+              <div className={styles.modalBody}>
+                <div className="form-group">
                   <label>Сотрудник</label>
                   <select
                     className="form-control"
@@ -123,7 +207,7 @@ export default function FormTracker() {
                     ))}
                   </select>
                 </div>
-                <div className={`form-group ${styles.field}`}>
+                <div className="form-group">
                   <label>Форма</label>
                   <select
                     className="form-control"
@@ -140,43 +224,14 @@ export default function FormTracker() {
                   </select>
                 </div>
               </div>
-              <button type="submit" className="btn">Отметить</button>
+              <div className={styles.modalFooter}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowTakeModal(false)}>Отмена</button>
+                <button type="submit" className="btn">Отметить</button>
+              </div>
             </form>
           </div>
         </div>
-
-        <div className="card">
-          <h2 className={styles.sectionTitle}>История взятия форм</h2>
-          <table className="table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Сотрудник (ФИО)</th>
-                <th>Должность</th>
-                <th>Форма</th>
-                <th>Дата</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedRecords.map((r) => (
-                <tr key={r.id}>
-                  <td>{r.id}</td>
-                  <td>{r.full_name}</td>
-                  <td>{r.position}</td>
-                  <td>{r.form_name}</td>
-                  <td>{new Date(r.taken_at).toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <Pagination
-            totalItems={records.length}
-            itemsPerPage={10}
-            currentPage={currentPage}
-            onPageChange={setCurrentPage}
-          />
-        </div>
-      </div>
+      )}
     </div>
   );
 }

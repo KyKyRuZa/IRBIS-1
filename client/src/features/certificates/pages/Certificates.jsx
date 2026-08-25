@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { certificatesService } from '@lib/services/certificates.service.js';
 import { itemsService } from '@/lib/services/items.service.js';
 import { uploadService } from '@/lib/services/upload.service.js';
-import { CERTIFICATE_STATUSES } from '@/lib/constants/certificate-statuses.js';
+import { CERTIFICATE_STATUSES, CERTIFICATE_STATUS_LABELS } from '@/lib/constants/certificate-statuses.js';
+import { formatDate } from '@/lib/utils/date.js';
 import Modal from '@/components/ui/Modal.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
@@ -160,6 +161,7 @@ export default function Certificates() {
                 <th>Срок действия</th>
                 <th>Статус</th>
                 <th>Файл</th>
+                <th>Действия</th>
               </tr>
             </thead>
             <tbody>
@@ -167,17 +169,19 @@ export default function Certificates() {
                 <tr key={cert.id}>
                   <td>{cert.product_name}</td>
                   <td>{cert.certificate_number}</td>
-                  <td>{cert.issue_date}</td>
-                  <td>{cert.expiry_date}</td>
+                  <td>{formatDate(cert.issue_date)}</td>
+                  <td>{formatDate(cert.expiry_date)}</td>
                   <td>
-                    {cert.status === CERTIFICATE_STATUSES.active && <span className="badge badge-success">{CERTIFICATE_STATUSES.active}</span>}
-                    {cert.status === CERTIFICATE_STATUSES.expiring && <span className="badge badge-warning">{CERTIFICATE_STATUSES.expiring}</span>}
-                    {cert.status === CERTIFICATE_STATUSES.expired && <span className="badge badge-danger">{CERTIFICATE_STATUSES.expired}</span>}
+                    {cert.status === CERTIFICATE_STATUSES.active && <span className="badge badge-success">{CERTIFICATE_STATUS_LABELS.active}</span>}
+                    {cert.status === CERTIFICATE_STATUSES.expiring && <span className="badge badge-warning">{CERTIFICATE_STATUS_LABELS.expiring}</span>}
+                    {cert.status === CERTIFICATE_STATUSES.expired && <span className="badge badge-danger">{CERTIFICATE_STATUS_LABELS.expired}</span>}
                   </td>
                   <td>
                     {cert.file_path && (
                       <a href={cert.file_path} target="_blank" rel="noreferrer">Открыть файл</a>
                     )}
+                    </td>
+                    <td>
                     <div className="action-buttons">
                       <button className="btn" onClick={() => handleEdit(cert)}>Редактировать</button>
                       <button className="btn btn-danger" onClick={() => handleDelete(cert.id)}>Удалить</button>
