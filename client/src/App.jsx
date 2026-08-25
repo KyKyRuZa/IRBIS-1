@@ -13,11 +13,11 @@ const IssueNorms = lazy(() => import('@features/issues/IssueNorms.jsx'));
 const IssueForm = lazy(() => import('@features/issues/IssueForm.jsx'));
 const Certificates = lazy(() => import('@features/certificates/Certificates.jsx'));
 const Reports = lazy(() => import('@features/reports/Reports.jsx'));
-const SitesPage = lazy(() => import('@features/sites/SitesPage.jsx'));
+const Object = lazy(() => import('@features/objects/Object.jsx'));
 const Login = lazy(() => import('@features/auth/Login.jsx'));
 const FormTracker = lazy(() => import('@features/forms/FormTracker.jsx'));
 const DesignSystem = lazy(() => import('@/dev/DesignSystem.jsx'));
-const NotFoundPage = lazy(() => import('@/pages/NotFoundPage.jsx'));
+const NotFoundPage = lazy(() => import('@/layouts/NotFoundPage.jsx'));
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth();
@@ -40,7 +40,7 @@ function AppContent() {
           <Route element={<MainLayout />}>
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<ProtectedRoute><EmployeeList /></ProtectedRoute>} />
-            <Route path="/objects" element={<ProtectedRoute><SitesPage /></ProtectedRoute>} />
+            <Route path="/objects" element={<ProtectedRoute><Object /></ProtectedRoute>} />
             <Route path="/employees/:id" element={<ProtectedRoute><EmployeeCard /></ProtectedRoute>} />
             <Route path="/items" element={<ProtectedRoute><ItemCatalog /></ProtectedRoute>} />
             <Route path="/norms" element={<ProtectedRoute><IssueNorms /></ProtectedRoute>} />

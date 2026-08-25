@@ -7,7 +7,7 @@ export function validate(schema) {
       next();
     } catch (err) {
       if (err instanceof z.ZodError) {
-        return res.status(400).json({ error: err.errors.map(e => e.message).join(', ') });
+        return res.status(400).json({ error: err.issues.map(e => e.message).join(', ') });
       }
       return res.status(400).json({ error: 'Validation failed' });
     }

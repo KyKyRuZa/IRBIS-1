@@ -235,6 +235,29 @@ export default function EmployeeList() {
           </div>
           <div className={styles.formRow}>
             <div className={`form-group ${styles.field}`}>
+              <label>Пол</label>
+              <select
+                className="form-control"
+                value={formData.gender}
+                onChange={(e) => setFormData({...formData, gender: e.target.value})}
+              >
+                <option value="">Выберите пол</option>
+                <option value="male">Мужской</option>
+                <option value="female">Женский</option>
+              </select>
+            </div>
+            <div className={`form-group ${styles.field}`}>
+              <label>Дата приёма</label>
+              <input
+                type="date"
+                className="form-control"
+                value={formData.hire_date}
+                onChange={(e) => setFormData({...formData, hire_date: e.target.value})}
+              />
+            </div>
+          </div>
+          <div className={styles.formRow}>
+            <div className={`form-group ${styles.field}`}>
               <label>Объект</label>
               <select
                 className="form-control"
