@@ -1,7 +1,9 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { usePushNotifications } from '@hooks/usePushNotifications.js';
 import { useAuth } from '@hooks/useAuth.js';
+import { adminService } from '@/lib/services/admin.service.js';
+import { pushService } from '@/lib/services/push.service.js';
 import Icon from '@components/ui/Icon.jsx';
 import styles from '@styles/Header.module.css';
 
@@ -30,32 +32,146 @@ const NavItem = ({ to, label, isActive, onClick }) => (
   </Link>
 );
 
-// Блок пользователя
-const UserBlock = ({ user, onLogout }) => (
-  <div className={styles.userBlock}>
-    <span className={styles.userInfo}>
-      <Icon name="user" size={16} className={styles.userIcon} />
-      {user.username} ({user.role === 'admin' ? 'Админ' : 'Пользователь'})
-    </span>
-    <button className={styles.logoutBtn} onClick={onLogout}>
-      <Icon name="logout" size={16} />
-      Выйти
-    </button>
-  </div>
-);
-
-// Кнопка управления уведомлениями
-const NotificationToggle = ({ supported, subscribed, loading, onSubscribe, onUnsubscribe }) => {
+// Кнопка управления push-уведомлениями
+const NotificationToggle = ({ supported, subscribed, loading, onSubscribe, onUnsubscribe, onTestPush, testLoading, testMsg, testError }) => {
   if (!supported) return null;
   return (
-    <button
-      className={`${styles.notifBtn} ${subscribed ? styles.subscribed : ''}`}
-      onClick={subscribed ? onUnsubscribe : onSubscribe}
-      disabled={loading}
-    >
-      <Icon name={subscribed ? 'bellDot' : 'bell'} size={16} />
-      {loading ? 'Загрузка...' : subscribed ? 'Отключить уведомления' : 'Включить уведомления'}
-    </button>
+    <div className={styles.notifToggleWrap}>
+      <button
+        className={`${styles.notifBtn} ${subscribed ? styles.subscribed : ''}`}
+        onClick={subscribed ? onUnsubscribe : onSubscribe}
+        disabled={loading}
+      >
+        <Icon name={subscribed ? 'bellDot' : 'bell'} size={16} />
+        {loading ? 'Загрузка...' : subscribed ? 'Отключить push-уведомления' : 'Включить push-уведомления'}
+      </button>
+      <button
+        type="button"
+        className={styles.testPushBtn}
+        onClick={onTestPush}
+        disabled={!subscribed || testLoading}
+        title={subscribed ? 'Отправить тестовое push-уведомление' : 'Сначала включите push-уведомления'}
+      >
+        {testLoading ? 'Отправка...' : 'Проверить push'}
+      </button>
+      {testMsg && (
+        <span className={`${styles.testPushMsg} ${testError ? styles.testPushError : ''}`}>{testMsg}</span>
+      )}
+    </div>
+  );
+};
+
+const NOTIFICATION_TYPE_LABELS = {
+  expiring_item: 'Истекает срок',
+  expired_item: 'Просрочено',
+  expiring_certificate: 'Сертификат истекает',
+  expired_certificate: 'Сертификат просрочен',
+  reorder: 'Заказ партии',
+};
+
+const notificationTypeLabel = (type) => NOTIFICATION_TYPE_LABELS[type] || type;
+
+// Выпадающий блок профиля: уведомления + выход
+const ProfileDropdown = ({ user, notifications, unreadCount, onLogout, pushProps, onMarkAllRead, onMarkRead }) => {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    const handleKey = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [open]);
+
+  return (
+    <div className={styles.profileContainer} ref={containerRef}>
+      <button
+        type="button"
+        className={styles.profileBtn}
+        onClick={() => setOpen((prev) => !prev)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
+        <Icon name="user" size={16} className={styles.profileIcon} />
+        <span className={styles.profileName}>{user.username}</span>
+        {unreadCount > 0 && <span className={styles.profileBadge}>{unreadCount}</span>}
+        <Icon name="chevronDown" size={14} className={styles.profileChevron} />
+      </button>
+
+      {open && (
+        <div className={styles.dropdown} role="menu">
+          <div className={styles.dropdownUser}>
+            <div className={styles.dropdownName}>{user.username}</div>
+            <div className={styles.dropdownRole}>
+              {user.role === 'admin' ? 'Администратор' : 'Пользователь'}
+            </div>
+          </div>
+
+          <div className={styles.dropdownSection}>
+            <div className={styles.dropdownSectionTitle}>
+              Уведомления
+              {unreadCount > 0 && <span className={styles.profileBadge}>{unreadCount}</span>}
+            </div>
+            {notifications.length === 0 ? (
+              <p className={styles.dropdownEmpty}>Нет новых уведомлений</p>
+            ) : (
+              <ul className={styles.dropdownNotifications}>
+                {notifications.map((n) => (
+                  <li
+                    key={n.id}
+                    className={`${styles.dropdownNotifItem} ${
+                      n.severity === 'danger' ? styles.notifDanger :
+                      n.severity === 'warning' ? styles.notifWarning :
+                      styles.notifInfo
+                    }`}
+                    onClick={() => onMarkRead(n.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onMarkRead(n.id);
+                      }
+                    }}
+                    title="Отметить прочитанным"
+                  >
+                    <span className={styles.dropdownNotifType}>{notificationTypeLabel(n.type)}:</span>{' '}
+                    <span className={styles.dropdownNotifMsg}>{n.message}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {unreadCount > 0 && (
+              <button type="button" className={styles.dropdownMarkAll} onClick={onMarkAllRead}>
+                Прочитать всё
+              </button>
+            )}
+          </div>
+
+          <div className={styles.dropdownDivider} />
+
+          <div className={styles.dropdownPush}>
+            <NotificationToggle {...pushProps} />
+          </div>
+
+          <button type="button" className={styles.dropdownLogout} onClick={onLogout} role="menuitem">
+            <Icon name="logout" size={16} />
+            Выйти
+          </button>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -72,6 +188,26 @@ function Header() {
   } = usePushNotifications();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [pushTest, setPushTest] = useState({ loading: false, msg: '', error: false });
+
+  useEffect(() => {
+    let mounted = true;
+    const loadNotifications = async () => {
+      setNotifLoading(true);
+      try {
+        const res = await adminService.getNotifications();
+        if (mounted) setNotifications(Array.isArray(res) ? res : []);
+      } catch (e) {
+        console.error('Failed to load notifications', e);
+      } finally {
+        if (mounted) setNotifLoading(false);
+      }
+    };
+    if (user) loadNotifications();
+    return () => { mounted = false; };
+  }, [user]);
 
   const allLinks = useMemo(() => {
     const base = user?.role === 'admin' ? [...NAV_LINKS, ...ADMIN_LINKS] : NAV_LINKS;
@@ -92,20 +228,53 @@ function Header() {
     logout();
   }, [logout]);
 
+  const unread = notifications.filter((n) => !n.read);
+  const unreadCount = unread.length;
+
+  const handleMarkRead = useCallback(async (id) => {
+    try {
+      await adminService.markNotificationRead(id);
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    } catch (e) {
+      console.error('Failed to mark notification as read', e);
+    }
+  }, []);
+
+  const handleMarkAllRead = useCallback(async () => {
+    try {
+      await adminService.markAllNotificationsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    } catch (e) {
+      console.error('Failed to mark all notifications as read', e);
+    }
+  }, []);
+
+  const handleTestPush = useCallback(async () => {
+    setPushTest({ loading: true, msg: '', error: false });
+    try {
+      const res = await pushService.sendTest();
+      setPushTest({ loading: false, msg: res.message || 'Тест отправлен', error: false });
+    } catch (e) {
+      const msg = e?.response?.data?.error || 'Не удалось отправить тест';
+      setPushTest({ loading: false, msg, error: true });
+    } finally {
+      setTimeout(() => setPushTest((prev) => ({ ...prev, msg: '' })), 4000);
+    }
+  }, []);
+
   if (location.pathname === '/login') return null;
 
-  const actionsContent = (
-    <>
-      <NotificationToggle
-        supported={supported}
-        subscribed={subscribed}
-        loading={loading}
-        onSubscribe={handleSubscribe}
-        onUnsubscribe={handleUnsubscribe}
-      />
-      {user && <UserBlock user={user} onLogout={handleLogout} />}
-    </>
-  );
+  const pushProps = {
+    supported,
+    subscribed,
+    loading,
+    onSubscribe: handleSubscribe,
+    onUnsubscribe: handleUnsubscribe,
+    onTestPush: handleTestPush,
+    testLoading: pushTest.loading,
+    testMsg: pushTest.msg,
+    testError: pushTest.error,
+  };
 
   return (
     <header className={styles.header}>
@@ -139,15 +308,36 @@ function Header() {
             />
           ))}
 
-          {/* Уведомления и пользователь — внутри бургер-меню на мобильных */}
+          {/* Профиль (уведомления + выход) — внутри бургер-меню на мобильных */}
           <div className={styles.navActions}>
-            {actionsContent}
+            {user && (
+              <ProfileDropdown
+                user={user}
+                notifications={unread}
+                unreadCount={unreadCount}
+                onLogout={handleLogout}
+                pushProps={pushProps}
+                onMarkAllRead={handleMarkAllRead}
+                onMarkRead={handleMarkRead}
+              />
+            )}
           </div>
         </nav>
 
-        {/* Правая часть: уведомления + пользователь (только на десктопе) */}
+        {/* Правая часть: профиль (только на десктопе) */}
         <div className={styles.actions}>
-          {actionsContent}
+          {user && (
+            <ProfileDropdown
+              user={user}
+              notifications={unread}
+              unreadCount={unreadCount}
+              onLogout={handleLogout}
+              pushProps={pushProps}
+              onMarkAllRead={handleMarkAllRead}
+              onMarkRead={handleMarkRead}
+            />
+          )}
+          {notifLoading && <span className={styles.pushError}>Загрузка уведомлений...</span>}
           {pushError && <span className={styles.pushError} role="alert">{pushError}</span>}
         </div>
       </div>

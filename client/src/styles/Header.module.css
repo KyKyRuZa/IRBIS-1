@@ -133,59 +133,253 @@
   border-color: #3d9140;
 }
 
-/* Блок пользователя */
-.userBlock {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  font-size: 14px;
+/* Профиль: кнопка и выпадающий блок */
+.profileContainer {
+  position: relative;
 }
 
-.userInfo {
+.profileBtn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  color: #34495e;
-  font-weight: 400;
-}
-
-.userIcon {
-  opacity: 0.7;
-}
-
-.logoutBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: transparent;
+  gap: 8px;
+  background: #fafbfc;
   border: 1px solid #d0d7dd;
   color: #2c3e50;
-  padding: 5px 16px;
-  border-radius: 16px;
-  font-size: 13px;
+  padding: 7px 14px;
+  border-radius: 20px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s;
-  background-color: #fafbfc;
+  white-space: nowrap;
 }
 
-.logoutBtn:hover {
-  background-color: #f0f3f6;
+.profileBtn:hover {
+  background-color: #edf1f5;
   border-color: #b0bcc8;
 }
 
-/* Разделитель между кнопкой уведомлений и пользователем */
-.actions > *:not(:last-child)::after {
-  content: '';
-  display: inline-block;
-  width: 1px;
-  height: 24px;
-  background-color: #e0e6ec;
-  margin-left: 8px;
-  vertical-align: middle;
+.profileIcon {
+  opacity: 0.7;
 }
 
-/* Блок уведомлений/пользователя внутри бургер-меню (скрыт на десктопе) */
+.profileName {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profileChevron {
+  opacity: 0.6;
+  transition: transform 0.15s;
+}
+
+.profileBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background-color: #e53935;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* Выпадающее меню */
+.dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  background: #fff;
+  border: 1px solid #e0e6ec;
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+  z-index: 200;
+  overflow: hidden;
+}
+
+.dropdownUser {
+  padding: 14px 16px;
+  background: #f7f9fb;
+  border-bottom: 1px solid #eef2f5;
+}
+
+.dropdownName {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a2632;
+}
+
+.dropdownRole {
+  font-size: 12px;
+  color: #6b7785;
+  margin-top: 2px;
+}
+
+.dropdownSection {
+  padding: 12px 16px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.dropdownSectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #34495e;
+  margin-bottom: 8px;
+}
+
+.dropdownEmpty {
+  margin: 0;
+  font-size: 13px;
+  color: #8a97a3;
+}
+
+.dropdownNotifications {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dropdownNotifItem {
+  font-size: 13px;
+  line-height: 1.35;
+  color: #34495e;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+
+.dropdownNotifItem:hover {
+  filter: brightness(0.97);
+}
+
+.dropdownNotifType {
+  font-weight: 600;
+}
+
+.notifDanger {
+  background: #fdecea;
+  border-left-color: #e53935;
+}
+
+.notifWarning {
+  background: #fff8e1;
+  border-left-color: #f9a825;
+}
+
+.notifInfo {
+  background: #eef3f8;
+  border-left-color: #5b8def;
+}
+
+.dropdownMarkAll {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: transparent;
+  border: 1px solid #d0d7dd;
+  border-radius: 6px;
+  color: #34495e;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.dropdownMarkAll:hover {
+  background: #f0f3f6;
+}
+
+.dropdownDivider {
+  height: 1px;
+  background: #eef2f5;
+}
+
+.dropdownPush {
+  padding: 12px 16px;
+}
+
+.dropdownPush .notifBtn {
+  width: 100%;
+  justify-content: center;
+}
+
+.notifToggleWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.testPushBtn {
+  width: 100%;
+  padding: 8px 10px;
+  background: #eef3f8;
+  border: 1px solid #cfdcf0;
+  border-radius: 6px;
+  color: #2c5aa8;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.testPushBtn:hover:not(:disabled) {
+  background: #e0eaf7;
+}
+
+.testPushBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.testPushMsg {
+  font-size: 12px;
+  line-height: 1.3;
+  color: #2e7d32;
+}
+
+.testPushError {
+  color: #c0392b;
+}
+
+.dropdownLogout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  border-top: 1px solid #eef2f5;
+  color: #c0392b;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.dropdownLogout:hover {
+  background: #fdecea;
+}
+
+/* Блок уведомлений/профиля внутри бургер-меню (скрыт на десктопе) */
 .navActions {
   display: none;
 }
@@ -275,10 +469,17 @@
     border-top: 1px solid #f0f3f6;
   }
 
-  .navActions .notifBtn,
-  .navActions .logoutBtn {
+  .navActions .profileBtn {
     width: 100%;
     justify-content: center;
+  }
+
+  .navActions .dropdown {
+    position: static;
+    width: 100%;
+    box-shadow: none;
+    border: 1px solid #eef2f5;
+    margin-top: 8px;
   }
 
   /* Скрываем отдельный блок действий в шапке — он переехал в бургер */
