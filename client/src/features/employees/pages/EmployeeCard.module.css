@@ -41,6 +41,17 @@
   font-weight: 600;
 }
 
+.infoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 40px;
+}
+
+.infoCol p {
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
 .infoList {
   list-style: none;
   padding: 0;

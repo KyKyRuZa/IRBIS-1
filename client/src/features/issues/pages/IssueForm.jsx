@@ -5,7 +5,6 @@ import { sitesService } from '@/lib/services/sites.service.js';
 import { certificatesService } from '@/lib/services/certificates.service.js';
 import { issuesService } from '@/lib/services/issues.service.js';
 import { uploadService } from '@/lib/services/upload.service.js';
-import { EMPLOYEE_STATUSES } from '@/lib/constants/employee-statuses.js';
 import { ISSUE_STATUSES, ISSUE_STATUS_LABELS } from '@/lib/constants/issue-statuses.js';
 import { useResource } from '@/hooks/useResource.js';
 import { useFormState } from '@/hooks/useFormState.js';
@@ -30,12 +29,13 @@ export default function IssueForm() {
   const [sites, setSites] = useState([]);
   const [certificates, setCertificates] = useState([]);
   const [lastSignature, setLastSignature] = useState(null);
-  const [isGroup, setIsGroup] = useState(false);
+  const [isGroup, setIsGroup] = useState(true);
   const [selectedSite, setSelectedSite] = useState('');
   const [signatureFile, setSignatureFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [disposeId, setDisposeId] = useState(null);
   const [editingRecord, setEditingRecord] = useState(null);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -44,7 +44,9 @@ export default function IssueForm() {
   const { data: records, loading, error, refetch: refetchRecords } = useResource(issuesService.list);
 
   useEffect(() => {
-    employeesService.list({ status: EMPLOYEE_STATUSES.active }).then(setEmployees);
+    // Load all employees (any status) so an issue can be reassigned to anyone,
+    // not just the currently active ones.
+    employeesService.list().then(setEmployees);
     itemsService.list().then(setItems);
     sitesService.list().then(setSites);
   }, []);
@@ -60,6 +62,16 @@ export default function IssueForm() {
       setCertificates(certs);
     }
   };
+
+  const handleSiteChange = (siteId) => setSelectedSite(siteId);
+
+  // The edited employee may no longer be active (and thus absent from the
+  // loaded list), so always keep them selectable in the dropdown.
+  const visibleEmployees = selectedEmployee
+    ? [...employees, selectedEmployee].filter(
+        (emp, index, all) => all.findIndex((e) => e.id === emp.id) === index
+      )
+    : employees;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -112,6 +124,11 @@ export default function IssueForm() {
 
   const handleEdit = (record) => {
     setEditingRecord(record);
+    setSelectedEmployee(
+      record.employee_id
+        ? { id: record.employee_id, full_name: record.full_name, position: record.position }
+        : null
+    );
     form.setMany({
       employee_id: record.employee_id || '',
       item_type_id: record.item_type_id || '',
@@ -164,6 +181,7 @@ export default function IssueForm() {
   const handleClose = () => {
     setShowModal(false);
     setEditingRecord(null);
+    setSelectedEmployee(null);
     form.reset();
     setSignatureFile(null);
     setCertificates([]);
@@ -252,28 +270,41 @@ export default function IssueForm() {
         </div>
       </div>
 
-      <Modal isOpen={showModal} onClose={handleClose} title={editingRecord ? 'Редактировать выдачу' : 'Выдача спецодежды и СИЗ'}>
-        <form onSubmit={editingRecord ? handleUpdate : handleSubmit} className={styles.formSection}>
+      <Modal isOpen={showModal} onClose={handleClose} title={editingRecord && !isGroup ? 'Редактировать выдачу' : 'Выдача спецодежды и СИЗ'}>
+        <form onSubmit={editingRecord && !isGroup ? handleUpdate : handleSubmit} className={styles.formSection}>
           <div className={styles.radioGroup}>
             <label>
               <input
                 type="radio"
                 checked={!isGroup}
                 onChange={() => setIsGroup(false)}
-                disabled={Boolean(editingRecord)}
               /> Одиночная выдача
             </label>
             <label>
               <input
                 type="radio"
                 checked={isGroup}
-                onChange={() => setIsGroup(true)}
-                disabled={Boolean(editingRecord)}
+                onChange={() => {
+                  // Switching to group while editing a single record means we
+                  // create a new group issue; the original record is left as-is.
+                  if (editingRecord) {
+                    setEditingRecord(null);
+                    setSelectedEmployee(null);
+                  }
+                  setIsGroup(true);
+                }}
               /> Групповая выдача (всем сотрудникам объекта)
             </label>
           </div>
 
-          {!editingRecord && isGroup && (
+          {editingRecord && isGroup && (
+            <div className={styles.warning}>
+              Режим «Групповая выдача» создаст новую выдачу всем сотрудникам объекта на основе
+              выбранного наименования и количества. Текущая запись не будет изменена.
+            </div>
+          )}
+
+          {isGroup && (
             <div className={`form-group ${styles.field}`}>
               <label>Объект *</label>
               <select
@@ -290,7 +321,7 @@ export default function IssueForm() {
             </div>
           )}
 
-          {!editingRecord && !isGroup && (
+          {!isGroup && (
             <div className={`form-group ${styles.field}`}>
               <label>Сотрудник *</label>
               <select
@@ -300,24 +331,7 @@ export default function IssueForm() {
                 required
               >
                 <option value="">Выберите...</option>
-                {employees.map((emp) => (
-                  <option key={emp.id} value={emp.id}>{emp.full_name} ({emp.position})</option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {editingRecord && (
-            <div className={`form-group ${styles.field}`}>
-              <label>Сотрудник *</label>
-              <select
-                className="form-control"
-                value={form.values.employee_id}
-                onChange={(e) => form.setMany({ employee_id: e.target.value })}
-                required
-              >
-                <option value="">Выберите...</option>
-                {employees.map((emp) => (
+                {visibleEmployees.map((emp) => (
                   <option key={emp.id} value={emp.id}>{emp.full_name} ({emp.position})</option>
                 ))}
               </select>
@@ -395,7 +409,13 @@ export default function IssueForm() {
             />
           </div>
           <button type="submit" className="btn" disabled={uploading}>
-            {uploading ? 'Загрузка...' : (editingRecord ? 'Сохранить' : (isGroup ? `Выдать всем сотрудникам объекта (${selectedSite ? sites.find(s => s.id == selectedSite)?.name : 'объект не выбран'})` : 'Выдать'))}
+            {uploading
+              ? 'Загрузка...'
+              : (editingRecord
+                ? 'Сохранить'
+                : (isGroup
+                  ? `Выдать всем сотрудникам объекта (${selectedSite ? sites.find(s => s.id == selectedSite)?.name : 'объект не выбран'})`
+                  : 'Выдать'))}
           </button>
           {editingRecord && <button type="button" className="btn btn-secondary" onClick={handleClose}>Отмена</button>}
           {lastSignature && editingRecord && (

@@ -178,7 +178,7 @@ export default function Certificates() {
                   </td>
                   <td>
                     {cert.file_path && (
-                      <a href={cert.file_path} target="_blank" rel="noreferrer">Открыть файл</a>
+                      <a className={styles.fileLink} href={cert.file_path} target="_blank" rel="noreferrer">Открыть файл</a>
                     )}
                     </td>
                     <td>

@@ -18,6 +18,7 @@ export default function IssueNorms() {
   const [editingNorm, setEditingNorm] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [submitError, setSubmitError] = useState('');
   const [formData, setFormData] = useState({
     item_type_id: '',
     period_months: '',
@@ -38,21 +39,39 @@ export default function IssueNorms() {
     setCurrentPage(1);
   }, [norms]);
 
+  // Blank select/number inputs must not be sent: the API columns are integers
+  // and an empty string is rejected by the database.
+  const buildPayload = () => {
+    const payload = {};
+    Object.entries(formData).forEach(([key, value]) => {
+      if (value === '' || value === null || value === undefined) return;
+      payload[key] = value;
+    });
+    return payload;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (editingNorm) {
-      await normsService.update(editingNorm.id, formData);
-      setEditingNorm(null);
-    } else {
-      await normsService.create(formData);
+    setSubmitError('');
+    try {
+      const payload = buildPayload();
+      if (editingNorm) {
+        await normsService.update(editingNorm.id, payload);
+        setEditingNorm(null);
+      } else {
+        await normsService.create(payload);
+      }
+      setFormData({ item_type_id: '', period_months: '', quantity: 1, gender: '', position: '', site_id: '' });
+      setShowModal(false);
+      refetch();
+    } catch (err) {
+      setSubmitError(err.response?.data?.error || 'Не удалось сохранить норму');
     }
-    setFormData({ item_type_id: '', period_months: '', quantity: 1, gender: '', position: '', site_id: '' });
-    setShowModal(false);
-    refetch();
   };
 
   const handleEdit = (norm) => {
     setEditingNorm(norm);
+    setSubmitError('');
     setFormData({
       item_type_id: norm.item_type_id || '',
       period_months: norm.period_months || '',
@@ -78,6 +97,7 @@ export default function IssueNorms() {
   const handleClose = () => {
     setShowModal(false);
     setEditingNorm(null);
+    setSubmitError('');
     setFormData({ item_type_id: '', period_months: '', quantity: 1, gender: '', position: '', site_id: '' });
   };
 
@@ -92,7 +112,7 @@ export default function IssueNorms() {
             <h1>Нормы выдачи</h1>
             <div className={styles.subtitle}>Установленные нормы по должностям и периодичности</div>
           </div>
-          <button className="btn" onClick={() => setShowModal(true)}>
+          <button className="btn" onClick={() => { setSubmitError(''); setShowModal(true); }}>
             Добавить норму
           </button>
         </div>
@@ -141,6 +161,7 @@ export default function IssueNorms() {
 
       <Modal isOpen={showModal} onClose={handleClose} title={editingNorm ? 'Редактировать норму' : 'Добавить норму'}>
         <form onSubmit={handleSubmit} className={styles.formSection}>
+          {submitError && <div className={styles.error}>{submitError}</div>}
           <div className={styles.formGrid}>
             <div className={`form-group ${styles.field}`}>
               <label>Наименование *</label>

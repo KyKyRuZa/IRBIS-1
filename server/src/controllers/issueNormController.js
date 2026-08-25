@@ -9,11 +9,11 @@ import {
 
 export async function addNorm(req, res, next) {
   try {
-    const { item_type_id, period_months, quantity, gender, position, site_id, seasonality, etn_point, period_text } = req.body;
+    const { item_type_id, period_months } = req.body ?? {};
     if (!item_type_id || !period_months) {
       return res.status(400).json({ error: 'item_type_id and period_months are required' });
     }
-    const norm = await createIssueNorm(item_type_id, period_months, quantity, gender, position, site_id, seasonality, etn_point, period_text);
+    const norm = await createIssueNorm(req.body);
     res.status(201).json(norm);
   } catch (error) {
     next(error);

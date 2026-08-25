@@ -41,22 +41,28 @@ export default function EmployeeCard() {
           <div className="card">Загрузка...</div>
         ) : (
           <>
-            <div className="card">
-              <h2 className={styles.employeeName}>{employee.full_name}</h2>
-              <p><strong>Табельный номер:</strong> {employee.personnel_number || '-'}</p>
-              <p><strong>Должность:</strong> {employee.position}</p>
-              <p><strong>Объект:</strong> {employee.site_name || '-'}</p>
-              <p><strong>Дата приёма:</strong> {employee.hire_date ? new Date(employee.hire_date).toLocaleDateString() : '-'}</p>
-              <p><strong>Дата изменения профессии/подразделения:</strong> {employee.position_change_date ? new Date(employee.position_change_date).toLocaleDateString() : '-'}</p>
-              <p><strong>Пол:</strong> {employee.gender === 'male' ? 'Мужской' : employee.gender === 'female' ? 'Женский' : employee.gender || '-'}</p>
-              <p><strong>Рост:</strong> {employee.height || '-'} см</p>
-              <p><strong>Размер одежды:</strong> {employee.clothing_size || '-'}</p>
-              <p><strong>Размер обуви:</strong> {employee.shoe_size || '-'}</p>
-              <p><strong>Размер головного убора:</strong> {employee.hat_size || '-'}</p>
-              <p><strong>Размер СИЗОД:</strong> {employee.respirator_size || '-'}</p>
-              <p><strong>Размер СИЗ рук:</strong> {employee.gloves_size || '-'}</p>
-              <p><strong>Статус:</strong> {employee.status === EMPLOYEE_STATUSES.active ? EMPLOYEE_STATUSES.active : EMPLOYEE_STATUSES.terminated}</p>
-            </div>
+              <div className="card">
+                <h2 className={styles.employeeName}>{employee.full_name}</h2>
+                <div className={styles.infoGrid}>
+                  <div className={styles.infoCol}>
+                    <p><strong>Табельный номер:</strong> {employee.personnel_number || '-'}</p>
+                    <p><strong>Должность:</strong> {employee.position}</p>
+                    <p><strong>Объект:</strong> {employee.site_name || '-'}</p>
+                    <p><strong>Дата приёма:</strong> {employee.hire_date ? new Date(employee.hire_date).toLocaleDateString() : '-'}</p>
+                    <p><strong>Дата изменения профессии/подразделения:</strong> {employee.position_change_date ? new Date(employee.position_change_date).toLocaleDateString() : '-'}</p>
+                    <p><strong>Пол:</strong> {employee.gender === 'male' ? 'Мужской' : employee.gender === 'female' ? 'Женский' : employee.gender || '-'}</p>
+                    <p><strong>Рост:</strong> {employee.height || '-'} см</p>
+                  </div>
+                  <div className={styles.infoCol}>
+                    <p><strong>Размер одежды:</strong> {employee.clothing_size || '-'}</p>
+                    <p><strong>Размер обуви:</strong> {employee.shoe_size || '-'}</p>
+                    <p><strong>Размер головного убора:</strong> {employee.hat_size || '-'}</p>
+                    <p><strong>Размер СИЗОД:</strong> {employee.respirator_size || '-'}</p>
+                    <p><strong>Размер СИЗ рук:</strong> {employee.gloves_size || '-'}</p>
+                    <p><strong>Статус:</strong> {employee.status === EMPLOYEE_STATUSES.active ? EMPLOYEE_STATUSES.active : EMPLOYEE_STATUSES.terminated}</p>
+                  </div>
+                </div>
+              </div>
 
             <div className="card">
               <h3 className={styles.sectionTitle}>Экспорт документов</h3>

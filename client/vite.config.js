@@ -25,6 +25,10 @@ export default defineConfig({
         target: proxyTarget,
         changeOrigin: true,
       },
+      '/certs': {
+        target: proxyTarget,
+        changeOrigin: true,
+      },
     },
   },
   build: {

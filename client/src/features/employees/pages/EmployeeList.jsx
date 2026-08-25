@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { employeesService } from '@/lib/services/employees.service.js';
 import { sitesService } from '@/lib/services/sites.service.js';
@@ -13,6 +13,8 @@ import styles from './EmployeeList.module.css';
 export default function EmployeeList() {
   const { user } = useAuth();
   const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const debounceRef = useRef(null);
   const [showModal, setShowModal] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [formData, setFormData] = useState({
@@ -47,10 +49,13 @@ export default function EmployeeList() {
     setCurrentPage(1);
   }, [search, employees]);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    setSearch(e.target.elements.search.value);
-  };
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setSearch(searchInput);
+    }, 300);
+    return () => clearTimeout(debounceRef.current);
+  }, [searchInput]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -124,15 +129,15 @@ export default function EmployeeList() {
       </div>
       <div className={styles.container}>
         <div className="card">
-          <form className="search-box" onSubmit={handleSearch}>
+          <div className="search-box">
             <input
               type="text"
               name="search"
               placeholder="Поиск по ФИО..."
-              defaultValue={search}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
             />
-            <button type="submit" className="btn">Найти</button>
-          </form>
+          </div>
         </div>
 
         <div className="card">

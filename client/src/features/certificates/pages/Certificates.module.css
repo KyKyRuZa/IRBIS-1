@@ -92,6 +92,24 @@
   line-height: 1.2;
 }
 
+.fileLink {
+  display: inline-block;
+  padding: 6px 12px;
+  font-size: 13px;
+  line-height: 1.2;
+  color: #fff;
+  background: var(--primary);
+  border: none;
+  border-radius: 4px;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.fileLink:hover {
+  opacity: 0.9;
+}
+
 .actionButtons {
   margin-top: 10px;
   display: flex;

@@ -31,6 +31,7 @@ const app = express();
 app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') || false, credentials: true }));
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
+app.use('/certs', express.static('certs'));
 
 app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth', authRoutes);
