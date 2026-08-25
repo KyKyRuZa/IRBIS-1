@@ -1,6 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBoxOpen } from '@fortawesome/free-solid-svg-icons';
-import styles from './EmptyState.module.css';
+import styles from '@styles/EmptyState.module.css';
 
 export default function EmptyState({ icon, title, description, action }) {
   return (

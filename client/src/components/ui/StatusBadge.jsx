@@ -8,7 +8,7 @@ const STATUS_STYLES = {
   due_for_disposal: { className: 'warning', label: 'Подлежит списанию' },
 };
 
-import styles from './StatusBadge.module.css';
+import styles from '@styles/StatusBadge.module.css';
 
 export default function StatusBadge({ status }) {
   const style = STATUS_STYLES[status] || { className: '', label: status };

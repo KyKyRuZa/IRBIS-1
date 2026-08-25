@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import EmployeeList from '@/pages/EmployeeList.jsx';
+import EmployeeList from '@features/employees/EmployeeList.jsx';
 
 function renderWithRouter(ui, { route = '/' } = {}) {
   window.history.pushState({}, 'Test page', route);

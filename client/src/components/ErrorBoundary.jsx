@@ -1,7 +1,7 @@
 import { Component } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFaceFrown } from '@fortawesome/free-solid-svg-icons';
-import styles from './ErrorBoundary.module.css';
+import styles from '@styles/ErrorBoundary.module.css';
 
 export default class ErrorBoundary extends Component {
   constructor(props) {

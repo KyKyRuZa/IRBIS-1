@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Modal from '@components/ui/Modal.jsx';
-import styles from './ConfirmDialog.module.css';
+import styles from '@styles/ConfirmDialog.module.css';
 
 export default function ConfirmDialog({ isOpen, onClose, onConfirm, title, message, confirmText = 'Подтвердить', cancelText = 'Отмена' }) {
   const [loading, setLoading] = useState(false);

@@ -9,7 +9,7 @@ import StatusBadge from '@/components/ui/StatusBadge.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
 import Modal from '@/components/ui/Modal.jsx';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
-import styles from './DesignSystem.module.css';
+import styles from '@styles/DesignSystem.module.css';
 
 const TOKENS = [
   'primary', 'primary-light', 'primary-dark', 'secondary', 'success',

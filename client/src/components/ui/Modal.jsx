@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import styles from './Modal.module.css';
+import styles from '@styles/Modal.module.css';
 
 export default function Modal({ isOpen, onClose, title, children }) {
   useEffect(() => {

@@ -1,4 +1,4 @@
-import styles from './LoadingSpinner.module.css';
+import styles from '@styles/LoadingSpinner.module.css';
 
 export default function LoadingSpinner({ size = 40 }) {
   return (

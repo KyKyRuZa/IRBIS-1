@@ -1,6 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRightFromBracket, faBell } from '@fortawesome/free-solid-svg-icons';
-import styles from './Icon.module.css';
+import styles from '@styles/Icon.module.css';
 
 const ICONS = {
   bell: <FontAwesomeIcon icon={faBell} />,

@@ -12,7 +12,7 @@ import ErrorState from '@/components/ui/ErrorState.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileLines } from '@fortawesome/free-solid-svg-icons';
-import styles from './Certificates.module.css';
+import styles from '@styles/Certificates.module.css';
 
 export default function Certificates() {
   const [certificates, setCertificates] = useState([]);

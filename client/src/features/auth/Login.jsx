@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { authService } from '@lib/services/auth.service.js';
 import { useAuth } from '@hooks/useAuth.js';
-import styles from './Login.module.css';
+import styles from '@styles/Login.module.css';
 
 export default function Login() {
   const [username, setUsername] = useState('');

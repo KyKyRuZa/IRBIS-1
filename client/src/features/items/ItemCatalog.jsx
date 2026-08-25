@@ -13,7 +13,7 @@ import ErrorState from '@/components/ui/ErrorState.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBox } from '@fortawesome/free-solid-svg-icons';
-import styles from './ItemCatalog.module.css';
+import styles from '@styles/ItemCatalog.module.css';
 
 const categories = ITEM_CATEGORIES;
 

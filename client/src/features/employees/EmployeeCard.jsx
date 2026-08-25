@@ -11,7 +11,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClipboardList, faBox } from '@fortawesome/free-solid-svg-icons';
 import { exportsService } from '@/lib/services/exports.service.js';
 import { useExport } from '@hooks/useExport.js';
-import styles from './EmployeeCard.module.css';
+import styles from '@styles/EmployeeCard.module.css';
 
 export default function EmployeeCard() {
   const { id } = useParams();

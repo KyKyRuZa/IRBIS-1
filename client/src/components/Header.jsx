@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { usePushNotifications } from '@hooks/usePushNotifications.js';
 import { useAuth } from '@hooks/useAuth.js';
 import Icon from '@components/ui/Icon.jsx';
-import styles from './Header.module.css';
+import styles from '@styles/Header.module.css';
 
 // Список навигационных ссылок для всех пользователей
 const NAV_LINKS = [

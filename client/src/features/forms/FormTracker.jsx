@@ -5,7 +5,7 @@ import Pagination from '@/components/ui/Pagination.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
-import styles from './FormTracker.module.css';
+import styles from '@styles/FormTracker.module.css';
 
 export default function FormTracker() {
   const [forms, setForms] = useState([]);

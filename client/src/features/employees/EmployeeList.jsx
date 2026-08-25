@@ -13,7 +13,7 @@ import ErrorState from '@/components/ui/ErrorState.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUsers } from '@fortawesome/free-solid-svg-icons';
-import styles from './EmployeeList.module.css';
+import styles from '@styles/EmployeeList.module.css';
 
 export default function EmployeeList() {
   const { user } = useAuth();

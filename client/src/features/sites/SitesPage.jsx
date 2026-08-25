@@ -8,7 +8,7 @@ import ErrorState from '@/components/ui/ErrorState.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBuilding } from '@fortawesome/free-solid-svg-icons';
-import styles from './SitesPage.module.css';
+import styles from '@styles/SitesPage.module.css';
 
 export default function SitesPage() {
   const [sites, setSites] = useState([]);

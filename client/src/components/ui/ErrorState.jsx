@@ -1,6 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
-import styles from './ErrorState.module.css';
+import styles from '@styles/ErrorState.module.css';
 
 export default function ErrorState({ title = 'Произошла ошибка', message, onRetry, retryLabel = 'Повторить' }) {
   return (

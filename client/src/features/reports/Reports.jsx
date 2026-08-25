@@ -10,7 +10,7 @@ import Pagination from '@/components/ui/Pagination.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChartBar, faClipboardList, faHourglassHalf } from '@fortawesome/free-solid-svg-icons';
-import styles from './Reports.module.css';
+import styles from '@styles/Reports.module.css';
 
 const TABS = [
   { id: 'demand', label: 'Потребность в СИЗ' },

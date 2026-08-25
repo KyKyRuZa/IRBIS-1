@@ -16,7 +16,7 @@ import ErrorState from '@/components/ui/ErrorState.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTruckRampBox } from '@fortawesome/free-solid-svg-icons';
-import styles from './IssueForm.module.css';
+import styles from '@styles/IssueForm.module.css';
 
 const formInitialState = {
   employee_id: '',

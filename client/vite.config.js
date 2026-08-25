@@ -9,6 +9,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, './src'),
+      '@styles': path.resolve(import.meta.dirname, './src/styles'),
       '@components': path.resolve(import.meta.dirname, './src/components'),
       '@pages': path.resolve(import.meta.dirname, './src/pages'),
       '@hooks': path.resolve(import.meta.dirname, './src/hooks'),

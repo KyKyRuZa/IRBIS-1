@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { employeesService } from '@/lib/services/employees.service.js';
 import Pagination from '@/components/ui/Pagination.jsx';
-import styles from './EmployeeRegistration.module.css';
+import styles from '@styles/EmployeeRegistration.module.css';
 
 export default function EmployeeRegistration() {
   const [employees, setEmployees] = useState([]);

@@ -1,6 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
-import styles from './Pagination.module.css';
+import styles from '@styles/Pagination.module.css';
 
 export default function Pagination({ totalItems, itemsPerPage = 10, currentPage, onPageChange }) {
   if (totalItems <= itemsPerPage) return null;
