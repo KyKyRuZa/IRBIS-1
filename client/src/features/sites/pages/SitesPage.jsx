@@ -3,10 +3,17 @@ import { sitesService } from '@lib/services/sites.service.js';
 import Modal from '@components/ui/Modal.jsx';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
+import LoadingState from '@/components/ui/LoadingState.jsx';
+import ErrorState from '@/components/ui/ErrorState.jsx';
+import EmptyState from '@/components/ui/EmptyState.jsx';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBuilding } from '@fortawesome/free-solid-svg-icons';
 import styles from './SitesPage.module.css';
 
 export default function SitesPage() {
   const [sites, setSites] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingSite, setEditingSite] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
@@ -16,18 +23,22 @@ export default function SitesPage() {
   });
   const [currentPage, setCurrentPage] = useState(1);
 
+  const fetchSites = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await sitesService.list();
+      setSites(res);
+    } catch (e) {
+      setError(e.message || 'Ошибка загрузки объектов');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchSites();
   }, []);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [sites]);
-
-  const fetchSites = async () => {
-    const res = await sitesService.list();
-    setSites(res);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -84,37 +95,50 @@ export default function SitesPage() {
       </div>
       <div className={styles.container}>
         <div className="card">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Название</th>
-                <th>Ответственный</th>
-                <th>Действия</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedSites.map((s) => (
-                <tr key={s.id}>
-                  <td>{s.id}</td>
-                  <td>{s.name}</td>
-                  <td>{s.responsible_person}</td>
-                  <td>
-                    <div className="action-buttons">
-                      <button className="btn" onClick={() => handleEdit(s)}>Редактировать</button>
-                      <button className="btn btn-danger" onClick={() => handleDelete(s.id)}>Удалить</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <Pagination
-            totalItems={totalItems}
-            itemsPerPage={10}
-            currentPage={currentPage}
-            onPageChange={setCurrentPage}
-          />
+          {loading && <LoadingState label="Загрузка объектов..." />}
+          {!loading && error && <ErrorState message={error} onRetry={fetchSites} />}
+          {!loading && !error && (
+            sites.length === 0 ? (
+              <EmptyState
+                icon={<FontAwesomeIcon icon={faBuilding} />}
+                title="Объекты не найдены"
+                description="Пока не добавлено ни одного объекта."
+                action={<button className="btn" onClick={() => { setEditingSite(null); setFormData({ name: '', responsible_person: '' }); setShowModal(true); }}>Добавить объект</button>}
+              />
+            ) : (
+              <>
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Название</th>
+                      <th>Ответственный</th>
+                      <th>Действия</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedSites.map((s) => (
+                      <tr key={s.id}>
+                        <td>{s.name}</td>
+                        <td>{s.responsible_person}</td>
+                        <td>
+                          <div className="action-buttons">
+                            <button className="btn" onClick={() => handleEdit(s)}>Редактировать</button>
+                            <button className="btn btn-danger" onClick={() => handleDelete(s.id)}>Удалить</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <Pagination
+                  totalItems={totalItems}
+                  itemsPerPage={10}
+                  currentPage={currentPage}
+                  onPageChange={setCurrentPage}
+                />
+              </>
+            )
+          )}
         </div>
       </div>
 

@@ -106,3 +106,59 @@
 .dataTable tr:hover {
   background: var(--light);
 }
+
+/* ===== АДАПТИВНОСТЬ ===== */
+@media (max-width: 992px) {
+  .pageHeaderContent {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 12px;
+  }
+
+  .pageHeader {
+    padding: 20px 0;
+    margin-bottom: 16px;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+  }
+
+  .employeeName {
+    font-size: 19px;
+  }
+
+  .infoGrid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .exportActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .exportActions .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 20px;
+  }
+
+  .infoCol p {
+    font-size: 13px;
+  }
+}

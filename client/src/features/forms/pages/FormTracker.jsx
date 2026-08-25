@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { formsService } from '@lib/services/forms.service.js';
 import { employeesService } from '@/lib/services/employees.service.js';
 import Pagination from '@/components/ui/Pagination.jsx';
+import EmptyState from '@/components/ui/EmptyState.jsx';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 import styles from './FormTracker.module.css';
 
 export default function FormTracker() {
@@ -106,7 +109,7 @@ export default function FormTracker() {
         <div className="card">
           <h2 className={styles.sectionTitle}>История взятия форм</h2>
           {records.length === 0 ? (
-            <div className={styles.emptyState}>Нет записей</div>
+            <EmptyState icon={<FontAwesomeIcon icon={faPenToSquare} />} title="Нет записей" description="Формы ещё не отмечались как взятые." />
           ) : (
             <>
               <table className="table">

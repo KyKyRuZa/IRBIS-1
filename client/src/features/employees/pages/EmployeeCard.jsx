@@ -5,8 +5,12 @@ import { EMPLOYEE_STATUSES } from '@/lib/constants/employee-statuses.js';
 import { ISSUE_STATUSES, ISSUE_STATUS_LABELS } from '@/lib/constants/issue-statuses.js';
 import StatusBadge from '@/components/ui/StatusBadge.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
+import LoadingState from '@/components/ui/LoadingState.jsx';
+import EmptyState from '@/components/ui/EmptyState.jsx';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faClipboardList, faBox } from '@fortawesome/free-solid-svg-icons';
 import { exportsService } from '@/lib/services/exports.service.js';
-import { useExport } from '@/hooks/useExport.js';
+import { useExport } from '@hooks/useExport.js';
 import styles from './EmployeeCard.module.css';
 
 export default function EmployeeCard() {
@@ -25,7 +29,7 @@ export default function EmployeeCard() {
     setCurrentPageNorms(1);
   }, [employee]);
 
-  if (!employee) return <div className="card">Загрузка...</div>;
+  if (!employee) return <LoadingState label="Загрузка карточки..." />;
 
   return (
     <div className={styles.pageWrapper}>
@@ -37,10 +41,7 @@ export default function EmployeeCard() {
         </div>
       </div>
       <div className={styles.container}>
-        {!employee ? (
-          <div className="card">Загрузка...</div>
-        ) : (
-          <>
+        <>
               <div className="card">
                 <h2 className={styles.employeeName}>{employee.full_name}</h2>
                 <div className={styles.infoGrid}>
@@ -75,77 +76,88 @@ export default function EmployeeCard() {
 
             <div className="card">
               <h3 className={styles.sectionTitle}>Нормы выдачи</h3>
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Наименование</th>
-                    <th>Периодичность</th>
-                    <th>Кол-во</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {employee.norms?.slice((currentPageNorms - 1) * 10, currentPageNorms * 10).map((norm) => (
-                    <tr key={norm.id}>
-                      <td>{norm.item_type_name}</td>
-                      <td>{norm.period_months} мес</td>
-                      <td>{norm.quantity}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <Pagination
-                totalItems={employee.norms?.length || 0}
-                itemsPerPage={10}
-                currentPage={currentPageNorms}
-                onPageChange={setCurrentPageNorms}
-              />
+              {(employee.norms?.length || 0) === 0 ? (
+                <EmptyState icon={<FontAwesomeIcon icon={faClipboardList} />} title="Нормы не заданы" description="Для этого сотрудника пока не установлены нормы выдачи." />
+              ) : (
+                <>
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>Наименование</th>
+                        <th>Периодичность</th>
+                        <th>Кол-во</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {employee.norms?.slice((currentPageNorms - 1) * 10, currentPageNorms * 10).map((norm) => (
+                        <tr key={norm.id}>
+                          <td>{norm.item_type_name}</td>
+                          <td>{norm.period_months} мес</td>
+                          <td>{norm.quantity}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <Pagination
+                    totalItems={employee.norms?.length || 0}
+                    itemsPerPage={10}
+                    currentPage={currentPageNorms}
+                    onPageChange={setCurrentPageNorms}
+                  />
+                </>
+              )}
             </div>
 
             <div className="card">
               <h3 className={styles.sectionTitle}>История выдач</h3>
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Дата</th>
-                    <th>Наименование</th>
-                    <th>Кол-во</th>
-                    <th>Срок годности</th>
-                    <th>Статус</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {employee.history?.slice((currentPage - 1) * 10, currentPage * 10).map((record) => (
-                    <tr key={record.id}>
-                      <td>{new Date(record.issue_date).toLocaleDateString()}</td>
-                      <td>{record.item_type_name}</td>
-                      <td>{record.quantity}</td>
-                      <td>{record.expiry_date ? new Date(record.expiry_date).toLocaleDateString() : '-'}</td>
-                        <td>
-                         {record.status === ISSUE_STATUSES.issued ? (
-                           <StatusBadge status={ISSUE_STATUSES.issued} />
-                         ) : record.status === ISSUE_STATUSES.disposed ? (
-                           <StatusBadge status={ISSUE_STATUSES.disposed} />
-                         ) : record.status === ISSUE_STATUSES.returned ? (
-                           <StatusBadge status={ISSUE_STATUSES.returned} />
-                         ) : record.status === ISSUE_STATUSES.due_for_disposal ? (
-                           <StatusBadge status={ISSUE_STATUSES.due_for_disposal} />
-                         ) : (
-                           <span className="badge">{record.status}</span>
-                         )}
-                       </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <Pagination
-                totalItems={employee.history?.length || 0}
-                itemsPerPage={10}
-                currentPage={currentPage}
-                onPageChange={setCurrentPage}
-              />
+              {(employee.history?.length || 0) === 0 ? (
+                <EmptyState icon={<FontAwesomeIcon icon={faBox} />} title="История выдач пуста" description="Сотруднику ещё не выдавались СИЗ." />
+              ) : (
+                <>
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>Дата</th>
+                        <th>Наименование</th>
+                        <th>Кол-во</th>
+                        <th>Срок годности</th>
+                        <th>Статус</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {employee.history?.slice((currentPage - 1) * 10, currentPage * 10).map((record) => (
+                        <tr key={record.id}>
+                          <td>{new Date(record.issue_date).toLocaleDateString()}</td>
+                          <td>{record.item_type_name}</td>
+                          <td>{record.quantity}</td>
+                          <td>{record.expiry_date ? new Date(record.expiry_date).toLocaleDateString() : '-'}</td>
+                            <td>
+                             {record.status === ISSUE_STATUSES.issued ? (
+                               <StatusBadge status={ISSUE_STATUSES.issued} />
+                             ) : record.status === ISSUE_STATUSES.disposed ? (
+                               <StatusBadge status={ISSUE_STATUSES.disposed} />
+                             ) : record.status === ISSUE_STATUSES.returned ? (
+                               <StatusBadge status={ISSUE_STATUSES.returned} />
+                             ) : record.status === ISSUE_STATUSES.due_for_disposal ? (
+                               <StatusBadge status={ISSUE_STATUSES.due_for_disposal} />
+                             ) : (
+                               <span className="badge">{record.status}</span>
+                             )}
+                           </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <Pagination
+                    totalItems={employee.history?.length || 0}
+                    itemsPerPage={10}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
+                  />
+                </>
+              )}
             </div>
           </>
-        )}
       </div>
     </div>
   );

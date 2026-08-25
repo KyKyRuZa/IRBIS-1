@@ -8,6 +8,11 @@ import { formatDate } from '@/lib/utils/date.js';
 import Modal from '@components/ui/Modal.jsx';
 import ConfirmDialog from '@components/ui/ConfirmDialog.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
+import LoadingState from '@/components/ui/LoadingState.jsx';
+import ErrorState from '@/components/ui/ErrorState.jsx';
+import EmptyState from '@/components/ui/EmptyState.jsx';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBox } from '@fortawesome/free-solid-svg-icons';
 import styles from './ItemCatalog.module.css';
 
 const categories = ITEM_CATEGORIES;
@@ -16,6 +21,8 @@ const seasonality = SEASONALITY;
 
 export default function ItemCatalog() {
   const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [category, setCategory] = useState('');
   const [editingItem, setEditingItem] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -52,8 +59,16 @@ export default function ItemCatalog() {
   }, [detailItem]);
 
   const fetchItems = async () => {
-    const res = await itemsService.list(category);
-    setItems(res);
+    setLoading(true);
+    setError('');
+    try {
+      const res = await itemsService.list(category);
+      setItems(res);
+    } catch (e) {
+      setError(e.message || 'Ошибка загрузки номенклатуры');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const startIndex = (currentPage - 1) * 10;
@@ -150,48 +165,63 @@ export default function ItemCatalog() {
             ))}
           </div>
 
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Наименование</th>
-                <th>Категория</th>
-                <th>Срок (мес)</th>
-                <th>Сезон</th>
-                <th>Сертификат</th>
-                <th>Действия</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedItems.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.name}</td>
-                  <td>{categories[item.category]}</td>
-                  <td>{item.default_wear_time_months || '-'}</td>
-                  <td>{seasonality[item.seasonality] || '-'}</td>
-                  <td>
-                    {item.requires_certificate ? (
-                      <span className="badge badge-warning">Требуется</span>
-                    ) : (
-                      <span className="badge badge-success">Не требуется</span>
-                    )}
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      <button className="btn" onClick={() => showDetails(item)}>Подробнее</button>
-                      <button className="btn" onClick={() => handleEdit(item)}>Редактировать</button>
-                      <button className="btn btn-danger" onClick={() => handleDelete(item.id)}>Удалить</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <Pagination
-            totalItems={items.length}
-            itemsPerPage={10}
-            currentPage={currentPage}
-            onPageChange={setCurrentPage}
-          />
+          {loading && <LoadingState label="Загрузка номенклатуры..." />}
+          {!loading && error && <ErrorState message={error} onRetry={fetchItems} />}
+          {!loading && !error && (
+            items.length === 0 ? (
+              <EmptyState
+                icon={<FontAwesomeIcon icon={faBox} />}
+                title="Позиции не найдены"
+                description={category ? 'В выбранной категории пока нет позиций.' : 'Номенклатура пуста. Добавьте первую позицию.'}
+                action={<button className="btn" onClick={() => { setEditingItem(null); setFormData({ name: '', category: 'consumable', unit: 'шт', default_wear_time_months: '', seasonality: 'year_round', requires_certificate: false }); setShowModal(true); }}>Добавить позицию</button>}
+              />
+            ) : (
+              <>
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Наименование</th>
+                      <th>Категория</th>
+                      <th>Срок (мес)</th>
+                      <th>Сезон</th>
+                      <th>Сертификат</th>
+                      <th>Действия</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedItems.map((item) => (
+                      <tr key={item.id}>
+                        <td>{item.name}</td>
+                        <td>{categories[item.category]}</td>
+                        <td>{item.default_wear_time_months || '-'}</td>
+                        <td>{seasonality[item.seasonality] || '-'}</td>
+                        <td>
+                          {item.requires_certificate ? (
+                            <span className="badge badge-warning">Требуется</span>
+                          ) : (
+                            <span className="badge badge-success">Не требуется</span>
+                          )}
+                        </td>
+                        <td>
+                          <div className="action-buttons">
+                            <button className="btn" onClick={() => showDetails(item)}>Подробнее</button>
+                            <button className="btn" onClick={() => handleEdit(item)}>Редактировать</button>
+                            <button className="btn btn-danger" onClick={() => handleDelete(item.id)}>Удалить</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <Pagination
+                  totalItems={items.length}
+                  itemsPerPage={10}
+                  currentPage={currentPage}
+                  onPageChange={setCurrentPage}
+                />
+              </>
+            )
+          )}
         </div>
 
         <div id="detail-panel" className={`${styles.detailPanel} ${detailItem && !isLoadingDetails ? styles.detailPanelOpen : ''}`}>

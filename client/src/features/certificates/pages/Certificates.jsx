@@ -7,10 +7,17 @@ import { formatDate } from '@/lib/utils/date.js';
 import Modal from '@/components/ui/Modal.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
+import LoadingState from '@/components/ui/LoadingState.jsx';
+import ErrorState from '@/components/ui/ErrorState.jsx';
+import EmptyState from '@/components/ui/EmptyState.jsx';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFileLines } from '@fortawesome/free-solid-svg-icons';
 import styles from './Certificates.module.css';
 
 export default function Certificates() {
   const [certificates, setCertificates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [items, setItems] = useState([]);
   const [showExpired, setShowExpired] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -33,8 +40,16 @@ export default function Certificates() {
   }, []);
 
   const fetchCertificates = async () => {
-    const res = await certificatesService.list();
-    setCertificates(res);
+    setLoading(true);
+    setError('');
+    try {
+      const res = await certificatesService.list();
+      setCertificates(res);
+    } catch (e) {
+      setError(e.message || 'Ошибка загрузки сертификатов');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchItems = async () => {
@@ -152,51 +167,66 @@ export default function Certificates() {
             </label>
           </div>
 
-          <table className={`table ${styles.tableWrapper}`}>
-            <thead>
-              <tr>
-                <th>Продукция</th>
-                <th>Номер</th>
-                <th>Дата выдачи</th>
-                <th>Срок действия</th>
-                <th>Статус</th>
-                <th>Файл</th>
-                <th>Действия</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedCerts.map((cert) => (
-                <tr key={cert.id}>
-                  <td>{cert.product_name}</td>
-                  <td>{cert.certificate_number}</td>
-                  <td>{formatDate(cert.issue_date)}</td>
-                  <td>{formatDate(cert.expiry_date)}</td>
-                  <td>
-                    {cert.status === CERTIFICATE_STATUSES.active && <span className="badge badge-success">{CERTIFICATE_STATUS_LABELS.active}</span>}
-                    {cert.status === CERTIFICATE_STATUSES.expiring && <span className="badge badge-warning">{CERTIFICATE_STATUS_LABELS.expiring}</span>}
-                    {cert.status === CERTIFICATE_STATUSES.expired && <span className="badge badge-danger">{CERTIFICATE_STATUS_LABELS.expired}</span>}
-                  </td>
-                  <td>
-                    {cert.file_path && (
-                      <a className={styles.fileLink} href={cert.file_path} target="_blank" rel="noreferrer">Открыть файл</a>
-                    )}
-                    </td>
-                    <td>
-                    <div className="action-buttons">
-                      <button className="btn" onClick={() => handleEdit(cert)}>Редактировать</button>
-                      <button className="btn btn-danger" onClick={() => handleDelete(cert.id)}>Удалить</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <Pagination
-            totalItems={filteredCerts.length}
-            itemsPerPage={10}
-            currentPage={currentPage}
-            onPageChange={setCurrentPage}
-          />
+          {loading && <LoadingState label="Загрузка сертификатов..." />}
+          {!loading && error && <ErrorState message={error} onRetry={fetchCertificates} />}
+          {!loading && !error && (
+            filteredCerts.length === 0 ? (
+              <EmptyState
+                icon={<FontAwesomeIcon icon={faFileLines} />}
+                title="Сертификаты не найдены"
+                description={showExpired ? 'Сертификаты отсутствуют.' : 'Нет активных сертификатов. Добавьте первый.'}
+                action={<button className="btn" onClick={() => setShowModal(true)}>Добавить сертификат</button>}
+              />
+            ) : (
+              <>
+                <table className={`table ${styles.tableWrapper}`}>
+                  <thead>
+                    <tr>
+                      <th>Продукция</th>
+                      <th>Номер</th>
+                      <th>Дата выдачи</th>
+                      <th>Срок действия</th>
+                      <th>Статус</th>
+                      <th>Файл</th>
+                      <th>Действия</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedCerts.map((cert) => (
+                      <tr key={cert.id}>
+                        <td>{cert.product_name}</td>
+                        <td>{cert.certificate_number}</td>
+                        <td>{formatDate(cert.issue_date)}</td>
+                        <td>{formatDate(cert.expiry_date)}</td>
+                        <td>
+                          {cert.status === CERTIFICATE_STATUSES.active && <span className="badge badge-success">{CERTIFICATE_STATUS_LABELS.active}</span>}
+                          {cert.status === CERTIFICATE_STATUSES.expiring && <span className="badge badge-warning">{CERTIFICATE_STATUS_LABELS.expiring}</span>}
+                          {cert.status === CERTIFICATE_STATUSES.expired && <span className="badge badge-danger">{CERTIFICATE_STATUS_LABELS.expired}</span>}
+                        </td>
+                        <td>
+                          {cert.file_path && (
+                            <a className={styles.fileLink} href={cert.file_path} target="_blank" rel="noreferrer">Открыть файл</a>
+                          )}
+                          </td>
+                          <td>
+                          <div className="action-buttons">
+                            <button className="btn" onClick={() => handleEdit(cert)}>Редактировать</button>
+                            <button className="btn btn-danger" onClick={() => handleDelete(cert.id)}>Удалить</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <Pagination
+                  totalItems={filteredCerts.length}
+                  itemsPerPage={10}
+                  currentPage={currentPage}
+                  onPageChange={setCurrentPage}
+                />
+              </>
+            )
+          )}
         </div>
       </div>
 

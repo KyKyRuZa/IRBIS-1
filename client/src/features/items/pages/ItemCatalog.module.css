@@ -329,3 +329,79 @@
   gap: 10px;
   justify-content: flex-end;
 }
+
+/* ===== АДАПТИВНОСТЬ ===== */
+@media (max-width: 992px) {
+  .pageHeaderContent {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .pageHeaderContent .btn {
+    width: 100%;
+  }
+
+  .actionButtons {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 12px;
+  }
+
+  .pageHeader {
+    padding: 20px 0;
+    margin-bottom: 16px;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .certificatesTable {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .detailCard {
+    padding: 18px;
+  }
+
+  .detailsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 20px;
+  }
+
+  .detailCard {
+    padding: 14px;
+  }
+
+  .detailPanel,
+  .detailPanelOpen {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}

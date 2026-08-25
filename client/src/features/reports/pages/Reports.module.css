@@ -239,3 +239,99 @@
   color: #888;
   font-size: 14px;
 }
+
+/* ===== АДАПТИВНОСТЬ ===== */
+@media (max-width: 992px) {
+  .pageHeaderContent {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .headerActions {
+    width: 100%;
+  }
+
+  .headerActions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .toolbar {
+    flex-wrap: wrap;
+  }
+
+  .toolbarRight {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 12px;
+  }
+
+  .pageHeader {
+    padding: 20px 0;
+    margin-bottom: 16px;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbarLeft {
+    flex-wrap: wrap;
+  }
+
+  .toolbarLeft .btn {
+    flex: 1;
+  }
+
+  .toolbarRight {
+    margin-left: 0;
+  }
+
+  .toolbarRight .btn {
+    width: 100%;
+  }
+
+  .exportMenu {
+    position: static;
+    margin-top: 8px;
+    width: 100%;
+  }
+
+  .tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .filtersRow {
+    padding: 12px;
+  }
+
+  .filterGroup {
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 20px;
+  }
+
+  .exportMenuItem,
+  .tab {
+    font-size: 12px;
+  }
+}

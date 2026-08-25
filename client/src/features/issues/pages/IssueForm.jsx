@@ -11,6 +11,11 @@ import { useFormState } from '@/hooks/useFormState.js';
 import Modal from '@/components/ui/Modal.jsx';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
+import LoadingState from '@/components/ui/LoadingState.jsx';
+import ErrorState from '@/components/ui/ErrorState.jsx';
+import EmptyState from '@/components/ui/EmptyState.jsx';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTruckRampBox } from '@fortawesome/free-solid-svg-icons';
 import styles from './IssueForm.module.css';
 
 const formInitialState = {
@@ -208,64 +213,72 @@ export default function IssueForm() {
       </div>
       <div className={styles.container}>
         <div className="card">
-          <h3 className={styles.title}>Последние выдачи</h3>
-          {loading && <div className="card">Загрузка...</div>}
-          {error && <div className={`card ${styles.error}`}>{error}</div>}
+          {loading && <LoadingState label="Загрузка выдач..." />}
+          {!loading && error && <ErrorState message={error} onRetry={refetchRecords} />}
           {!loading && !error && (
-            <>
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Дата</th>
-                    <th>Сотрудник</th>
-                    <th>Наименование</th>
-                    <th>Кол-во</th>
-                    <th>Срок годности</th>
-                    <th>Статус</th>
-                    <th>Действия</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedRecords.map((record) => (
-                    <tr key={record.id}>
-                      <td>{new Date(record.issue_date).toLocaleDateString()}</td>
-                      <td>{record.full_name}</td>
-                      <td>{record.item_type_name}</td>
-                      <td>{record.quantity}</td>
-                      <td>{record.expiry_date ? new Date(record.expiry_date).toLocaleDateString() : '-'}</td>
-                       <td>
-                         {record.status === ISSUE_STATUSES.issued ? (
-                           <span className="badge badge-success">{ISSUE_STATUS_LABELS.issued}</span>
-                         ) : record.status === ISSUE_STATUSES.disposed ? (
-                           <span className="badge badge-danger">{ISSUE_STATUS_LABELS.disposed}</span>
-                         ) : record.status === ISSUE_STATUSES.returned ? (
-                           <span className="badge badge-info">{ISSUE_STATUS_LABELS.returned}</span>
-                         ) : record.status === ISSUE_STATUSES.due_for_disposal ? (
-                           <span className="badge badge-warning">{ISSUE_STATUS_LABELS.due_for_disposal}</span>
-                         ) : (
-                           <span className="badge">{record.status}</span>
-                         )}
-                       </td>
-                      <td>
-                        {record.status === ISSUE_STATUSES.issued && (
-                          <div className="action-buttons">
-                            <button className="btn" onClick={() => handleEdit(record)}>Редактировать</button>
-                            <button className="btn btn-danger" onClick={() => setDeleteId(record.id)}>Удалить</button>
-                            <button className="btn btn-secondary" onClick={() => setDisposeId(record.id)}>Списать</button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <Pagination
-                totalItems={records.length}
-                itemsPerPage={10}
-                currentPage={currentPage}
-                onPageChange={setCurrentPage}
+            records.length === 0 ? (
+              <EmptyState
+                icon={<FontAwesomeIcon icon={faTruckRampBox} />}
+                title="Выдач пока нет"
+                description="Зарегистрируйте первую выдачу спецодежды или СИЗ."
+                action={<button className="btn" onClick={() => setShowModal(true)}>Новая выдача</button>}
               />
-            </>
+            ) : (
+              <>
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Дата</th>
+                      <th>Сотрудник</th>
+                      <th>Наименование</th>
+                      <th>Кол-во</th>
+                      <th>Срок годности</th>
+                      <th>Статус</th>
+                      <th>Действия</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedRecords.map((record) => (
+                      <tr key={record.id}>
+                        <td>{new Date(record.issue_date).toLocaleDateString()}</td>
+                        <td>{record.full_name}</td>
+                        <td>{record.item_type_name}</td>
+                        <td>{record.quantity}</td>
+                        <td>{record.expiry_date ? new Date(record.expiry_date).toLocaleDateString() : '-'}</td>
+                         <td>
+                           {record.status === ISSUE_STATUSES.issued ? (
+                             <span className="badge badge-success">{ISSUE_STATUS_LABELS.issued}</span>
+                           ) : record.status === ISSUE_STATUSES.disposed ? (
+                             <span className="badge badge-danger">{ISSUE_STATUS_LABELS.disposed}</span>
+                           ) : record.status === ISSUE_STATUSES.returned ? (
+                             <span className="badge badge-info">{ISSUE_STATUS_LABELS.returned}</span>
+                           ) : record.status === ISSUE_STATUSES.due_for_disposal ? (
+                             <span className="badge badge-warning">{ISSUE_STATUS_LABELS.due_for_disposal}</span>
+                           ) : (
+                             <span className="badge">{record.status}</span>
+                           )}
+                         </td>
+                        <td>
+                          {record.status === ISSUE_STATUSES.issued && (
+                            <div className="action-buttons">
+                              <button className="btn" onClick={() => handleEdit(record)}>Редактировать</button>
+                              <button className="btn btn-danger" onClick={() => setDeleteId(record.id)}>Удалить</button>
+                              <button className="btn btn-secondary" onClick={() => setDisposeId(record.id)}>Списать</button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <Pagination
+                  totalItems={records.length}
+                  itemsPerPage={10}
+                  currentPage={currentPage}
+                  onPageChange={setCurrentPage}
+                />
+              </>
+            )
           )}
         </div>
       </div>

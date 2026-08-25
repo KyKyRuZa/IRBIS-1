@@ -185,6 +185,11 @@
   vertical-align: middle;
 }
 
+/* Блок уведомлений/пользователя внутри бургер-меню (скрыт на десктопе) */
+.navActions {
+  display: none;
+}
+
 /* ===== АДАПТИВНОСТЬ ===== */
 
 /* Планшеты и ноутбуки с небольшим экраном */
@@ -257,8 +262,28 @@
   }
 
   .navLink.active {
-    box-shadow: inset 0 -2px 0 #2c6b9e;
     background-color: #f5f8fa;
+  }
+
+  /* Уведомления и пользователь внутри выпадающего меню */
+  .navActions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 8px;
+    padding-top: 14px;
+    border-top: 1px solid #f0f3f6;
+  }
+
+  .navActions .notifBtn,
+  .navActions .logoutBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Скрываем отдельный блок действий в шапке — он переехал в бургер */
+  .actions {
+    display: none;
   }
 
   .actions {

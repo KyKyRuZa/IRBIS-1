@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense, lazy } from 'react';
 import { useAuth } from '@hooks/useAuth.js';
 import Header from '@components/Header.jsx';
 import LoadingSpinner from '@components/ui/LoadingSpinner.jsx';
+import ErrorBoundary from '@components/ErrorBoundary.jsx';
 import './index.css';
 import styles from './App.module.css';
 
@@ -16,6 +17,8 @@ const Reports = lazy(() => import('@features/reports/pages/Reports.jsx'));
 const SitesPage = lazy(() => import('@features/sites/pages/SitesPage.jsx'));
 const Login = lazy(() => import('@features/auth/pages/Login.jsx'));
 const FormTracker = lazy(() => import('@features/forms/pages/FormTracker.jsx'));
+const DesignSystem = lazy(() => import('@/dev/DesignSystem.jsx'));
+const NotFoundPage = lazy(() => import('@pages/NotFoundPage.jsx'));
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth();
@@ -40,6 +43,7 @@ function AppContent() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const pageClass = getPageClass(location.pathname);
+  const hideChrome = location.pathname === '/dev/design-system';
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -49,22 +53,26 @@ function AppContent() {
 
   return (
     <>
-      <Header />
+      {!hideChrome && <Header />}
       <main className={`${styles.container} ${pageClass}`}>
-        <Suspense fallback={<LoadingSpinner size={48} />}>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<ProtectedRoute><EmployeeList /></ProtectedRoute>} />
-            <Route path="/objects" element={<ProtectedRoute><SitesPage /></ProtectedRoute>} />
-            <Route path="/employees/:id" element={<ProtectedRoute><EmployeeCard /></ProtectedRoute>} />
-            <Route path="/items" element={<ProtectedRoute><ItemCatalog /></ProtectedRoute>} />
-            <Route path="/norms" element={<ProtectedRoute><IssueNorms /></ProtectedRoute>} />
-            <Route path="/issue" element={<ProtectedRoute><IssueForm /></ProtectedRoute>} />
-            <Route path="/certificates" element={<ProtectedRoute><Certificates /></ProtectedRoute>} />
-            <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-            {user?.role === 'admin' && <Route path="/forms" element={<ProtectedRoute><FormTracker /></ProtectedRoute>} />}
-          </Routes>
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingSpinner size={48} />}>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={<ProtectedRoute><EmployeeList /></ProtectedRoute>} />
+              <Route path="/objects" element={<ProtectedRoute><SitesPage /></ProtectedRoute>} />
+              <Route path="/employees/:id" element={<ProtectedRoute><EmployeeCard /></ProtectedRoute>} />
+              <Route path="/items" element={<ProtectedRoute><ItemCatalog /></ProtectedRoute>} />
+              <Route path="/norms" element={<ProtectedRoute><IssueNorms /></ProtectedRoute>} />
+              <Route path="/issue" element={<ProtectedRoute><IssueForm /></ProtectedRoute>} />
+              <Route path="/certificates" element={<ProtectedRoute><Certificates /></ProtectedRoute>} />
+              <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+              {user?.role === 'admin' && <Route path="/forms" element={<ProtectedRoute><FormTracker /></ProtectedRoute>} />}
+                {import.meta.env.DEV && <Route path="/dev/design-system" element={<DesignSystem />} />}
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
       </main>
     </>
   );

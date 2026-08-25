@@ -94,6 +94,19 @@ function Header() {
 
   if (location.pathname === '/login') return null;
 
+  const actionsContent = (
+    <>
+      <NotificationToggle
+        supported={supported}
+        subscribed={subscribed}
+        loading={loading}
+        onSubscribe={handleSubscribe}
+        onUnsubscribe={handleUnsubscribe}
+      />
+      {user && <UserBlock user={user} onLogout={handleLogout} />}
+    </>
+  );
+
   return (
     <header className={styles.header}>
       <div className={styles.container}>
@@ -125,19 +138,17 @@ function Header() {
               onClick={handleLinkClick}
             />
           ))}
+
+          {/* Уведомления и пользователь — внутри бургер-меню на мобильных */}
+          <div className={styles.navActions}>
+            {actionsContent}
+          </div>
         </nav>
 
-        {/* Правая часть: уведомления + пользователь */}
+        {/* Правая часть: уведомления + пользователь (только на десктопе) */}
         <div className={styles.actions}>
-          <NotificationToggle
-            supported={supported}
-            subscribed={subscribed}
-            loading={loading}
-            onSubscribe={handleSubscribe}
-            onUnsubscribe={handleUnsubscribe}
-          />
+          {actionsContent}
           {pushError && <span className={styles.pushError} role="alert">{pushError}</span>}
-          {user && <UserBlock user={user} onLogout={handleLogout} />}
         </div>
       </div>
     </header>

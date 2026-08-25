@@ -7,6 +7,11 @@ import { useResource } from '@/hooks/useResource.js';
 import Modal from '@/components/ui/Modal.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
+import LoadingState from '@/components/ui/LoadingState.jsx';
+import ErrorState from '@/components/ui/ErrorState.jsx';
+import EmptyState from '@/components/ui/EmptyState.jsx';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faClipboardList } from '@fortawesome/free-solid-svg-icons';
 import styles from './IssueNorms.module.css';
 
 const categories = ITEM_CATEGORIES;
@@ -119,11 +124,19 @@ export default function IssueNorms() {
       </div>
       <div className={styles.container}>
         <div className="card">
-          {loading && <div className="card">Загрузка...</div>}
-          {error && <div className={`card ${styles.error}`}>{error}</div>}
+          {loading && <LoadingState label="Загрузка норм..." />}
+          {!loading && error && <ErrorState message={error} onRetry={refetch} />}
           {!loading && !error && (
-            <>
-              <table className={`table ${styles.tableWrapper}`}>
+            norms.length === 0 ? (
+              <EmptyState
+                icon={<FontAwesomeIcon icon={faClipboardList} />}
+                title="Нормы не найдены"
+                description="Пока не добавлено ни одной нормы выдачи."
+                action={<button className="btn" onClick={() => setShowModal(true)}>Добавить норму</button>}
+              />
+            ) : (
+              <>
+                <table className={`table ${styles.tableWrapper}`}>
                 <thead>
                   <tr>
                     <th>Наименование</th>
@@ -154,7 +167,8 @@ export default function IssueNorms() {
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}
               />
-            </>
+              </>
+            )
           )}
         </div>
       </div>

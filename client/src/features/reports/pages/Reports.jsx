@@ -7,6 +7,9 @@ import { exportsService } from '@/lib/services/exports.service.js';
 import { adminService } from '@/lib/services/admin.service.js';
 import { useExport } from '@hooks/useExport.js';
 import Pagination from '@/components/ui/Pagination.jsx';
+import EmptyState from '@/components/ui/EmptyState.jsx';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChartBar, faClipboardList, faHourglassHalf } from '@fortawesome/free-solid-svg-icons';
 import styles from './Reports.module.css';
 
 const TABS = [
@@ -322,7 +325,7 @@ export default function Reports() {
           {activeTab === 'demand' && (
             <>
               {demand.length === 0 ? (
-                <div className={styles.emptyState}>Нет данных о потребности</div>
+                <EmptyState icon={<FontAwesomeIcon icon={faChartBar} />} title="Нет данных о потребности" description="Добавьте сотрудников, нормы и выдачи, чтобы увидеть потребность в СИЗ." />
               ) : (
                 <>
                   <table className="table">
@@ -356,7 +359,7 @@ export default function Reports() {
           {activeTab === 'records' && (
             <>
               {records.length === 0 ? (
-                <div className={styles.emptyState}>Нет записей о выдачах</div>
+                <EmptyState icon={<FontAwesomeIcon icon={faClipboardList} />} title="Нет записей о выдачах" description="Выдачи сотрудникам ещё не зарегистрированы." />
               ) : (
                 <>
                   <table className="table">
@@ -390,7 +393,7 @@ export default function Reports() {
           {activeTab === 'expiring' && (
             <>
               {expiring.length === 0 ? (
-                <div className={styles.emptyState}>Нет истекающих сроков</div>
+                <EmptyState icon={<FontAwesomeIcon icon={faHourglassHalf} />} title="Нет истекающих сроков" description="В ближайшие 2 месяца сроки годности не истекают." />
               ) : (
                 <>
                   <p className={styles.sectionSubtitle}>Истекающие сроки годности (в течение 2 месяцев)</p>

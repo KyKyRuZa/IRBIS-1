@@ -8,6 +8,11 @@ import { EMPLOYEE_STATUSES } from '@/lib/constants/employee-statuses.js';
 import Modal from '@/components/ui/Modal.jsx';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
+import LoadingState from '@/components/ui/LoadingState.jsx';
+import ErrorState from '@/components/ui/ErrorState.jsx';
+import EmptyState from '@/components/ui/EmptyState.jsx';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUsers } from '@fortawesome/free-solid-svg-icons';
 import styles from './EmployeeList.module.css';
 
 export default function EmployeeList() {
@@ -141,14 +146,21 @@ export default function EmployeeList() {
         </div>
 
         <div className="card">
-          {loading && <div className="card">Загрузка...</div>}
-          {error && <div className={`card ${styles.error}`}>{error}</div>}
+          {loading && <LoadingState label="Загрузка сотрудников..." />}
+          {!loading && error && <ErrorState message={error} onRetry={refetchEmployees} />}
           {!loading && !error && (
-            <>
-              <table className="table">
+            employees.length === 0 ? (
+              <EmptyState
+                icon={<FontAwesomeIcon icon={faUsers} />}
+                title="Сотрудники не найдены"
+                description={search ? 'По вашему запросу ничего не найдено.' : 'В системе пока нет сотрудников. Добавьте первого.'}
+                action={<button className="btn" onClick={() => setShowModal(true)}>Добавить сотрудника</button>}
+              />
+            ) : (
+              <>
+                <table className="table">
                 <thead>
                   <tr>
-                    <th>ID</th>
                     <th>ФИО</th>
                     <th>Табельный №</th>
                     <th>Должность</th>
@@ -160,7 +172,6 @@ export default function EmployeeList() {
                 <tbody>
                   {paginatedEmployees.map((emp) => (
                     <tr key={emp.id}>
-                      <td>{emp.id}</td>
                       <td>{emp.full_name}</td>
                       <td>{emp.personnel_number || '-'}</td>
                       <td>{emp.position}</td>
@@ -192,7 +203,8 @@ export default function EmployeeList() {
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}
               />
-            </>
+              </>
+            )
           )}
         </div>
       </div>
