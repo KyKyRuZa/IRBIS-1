@@ -1,33 +1,55 @@
-import { describe, it, expect, vi } from 'vitest';
+import '@testing-library/jest-dom';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
-import App from '@/App.jsx';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from '@contexts/AuthContext.jsx';
+import { useAuth } from '@hooks/useAuth.js';
+import Login from '@features/auth/Login.jsx';
 
-vi.mock('axios', () => {
-  const mockAxios = {
-    get: vi.fn(() => Promise.resolve({ data: [] })),
-    post: vi.fn(() => Promise.resolve({})),
-    create: vi.fn(() => ({
-      get: vi.fn(() => Promise.resolve({ data: [] })),
-      post: vi.fn(() => Promise.resolve({})),
-      request: vi.fn(() => Promise.resolve({ data: [] })),
-      interceptors: {
-        request: { use: vi.fn() },
-        response: { use: vi.fn() }
-      }
-    }))
-  };
-  return { default: mockAxios };
+vi.mock('@/lib/services/auth.service.js', () => {
+  const authService = { login: vi.fn(), register: vi.fn(), changePassword: vi.fn() };
+  return { authService };
 });
 
-describe('App routes', () => {
-  it('renders login page when not authenticated', () => {
-    localStorage.removeItem('token');
-    render(
-      <BrowserRouter>
-        <App />
+function ProtectedRoute({ children }) {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
+}
+
+function renderAt(path) {
+  window.history.pushState({}, '', path);
+  return render(
+    <AuthProvider>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <div>secret content</div>
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
       </BrowserRouter>
-    );
-    expect(screen.getByText('АЗС ИРБИС — Вход')).toBeDefined();
+    </AuthProvider>
+  );
+}
+
+describe('App routes', () => {
+  beforeEach(() => localStorage.clear());
+
+  it('redirects unauthenticated users from protected routes to the login page', async () => {
+    renderAt('/');
+    expect(await screen.findByText('Вход в систему')).toBeInTheDocument();
+    expect(screen.queryByText('secret content')).toBeNull();
+  });
+
+  it('allows access to protected routes when authenticated', () => {
+    localStorage.setItem('token', 't');
+    localStorage.setItem('user', JSON.stringify({ username: 'admin', role: 'admin' }));
+    renderAt('/');
+    expect(screen.getByText('secret content')).toBeInTheDocument();
   });
 });
