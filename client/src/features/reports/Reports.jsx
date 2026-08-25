@@ -25,8 +25,6 @@ export default function Reports() {
   const [expiring, setExpiring] = useState([]);
   const [sites, setSites] = useState([]);
   const [items, setItems] = useState([]);
-  const [notifications, setNotifications] = useState([]);
-  const [showNotifications, setShowNotifications] = useState(false);
   const [demand, setDemand] = useState([]);
   const [filters, setFilters] = useState({
     site_id: '',
@@ -86,14 +84,6 @@ export default function Reports() {
       } catch (e) {
         console.error('Failed to load demand report', e);
         setDemand([]);
-      }
-      if (!mounted) return;
-      try {
-        const notifRes = await adminService.getNotifications();
-        setNotifications(Array.isArray(notifRes) ? notifRes : []);
-      } catch (e) {
-        console.error('Failed to load notifications', e);
-        setNotifications([]);
       }
     };
     load();
@@ -205,8 +195,6 @@ export default function Reports() {
 
   const hasActiveFilters = Boolean(search) || Boolean(filters.site_id) || Boolean(filters.item_type_id) || Boolean(filters.date_from) || Boolean(filters.date_to) || Boolean(filters.status);
 
-  const dangerCount = notifications.filter(n => n.severity === 'danger').length;
-
   const exportMenuItems = [
     { label: 'Экспорт в Excel', onClick: handleExcelExport },
     { label: 'Потребность в СИЗ (Excel)', onClick: handleDemandExport },
@@ -225,40 +213,8 @@ export default function Reports() {
             <h1>Отчёты</h1>
             <div className={styles.subtitle}>Аналитика, экспорт и сводные данные</div>
           </div>
-          <div className={styles.headerActions}>
-            <button
-              className={`btn btn-secondary ${styles.notificationsToggle}`}
-              onClick={() => setShowNotifications(!showNotifications)}
-            >
-              {dangerCount > 0 && <span className={styles.badge}>{dangerCount}</span>}
-              Уведомления
-            </button>
-          </div>
         </div>
       </div>
-
-      {showNotifications && (
-        <div className={styles.container}>
-          <div className={styles.notificationsPanel}>
-            <h4 className={styles.notificationsTitle}>Уведомления</h4>
-            {notifications.length === 0 ? (
-              <p>Нет уведомлений</p>
-            ) : (
-              <ul className={styles.notificationsList}>
-                {notifications.map((n) => (
-                  <li key={n.id} className={`${styles.notificationItem} ${n.severity === 'danger' ? styles.notificationItemDanger : styles.notificationItemWarning}`}>
-                    <strong>{n.type === 'expiring_item' ? '⚠️ Истекает срок' :
-                             n.type === 'expired_item' ? '❌ Просрочено' :
-                             n.type === 'expiring_certificate' ? '⚠️ Сертификат истекает' :
-                             n.type === 'expired_certificate' ? '❌ Сертификат просрочен' :
-                             n.type === 'reorder' ? '📦 Заказ партии' : n.type}:</strong> {n.message}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-      )}
 
       <div className={styles.container}>
         <div className="card">

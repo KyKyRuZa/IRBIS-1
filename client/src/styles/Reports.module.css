@@ -33,61 +33,6 @@
   margin-top: 5px;
 }
 
-.headerActions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.notificationsToggle {
-  padding: 6px 12px;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  position: relative;
-}
-
-.badge {
-  background: #d32f2f;
-  color: white;
-  border-radius: 10px;
-  padding: 1px 6px;
-  font-size: 11px;
-  font-weight: bold;
-}
-
-.notificationsPanel {
-  margin-bottom: 20px;
-  padding: 15px;
-  background: #fff3cd;
-  border-radius: 8px;
-  border: 1px solid #ffc107;
-}
-
-.notificationsTitle {
-  margin: 0 0 10px;
-  font-size: 16px;
-}
-
-.notificationsList {
-  padding-left: 20px;
-  margin: 0;
-}
-
-.notificationItem {
-  margin-bottom: 8px;
-  font-size: 14px;
-}
-
-.notificationItemDanger {
-  color: #d32f2f;
-}
-
-.notificationItemWarning {
-  color: #f57c00;
-}
-
   .toolbarRight {
     position: relative;
   }
@@ -189,15 +134,6 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
-  }
-
-  .headerActions {
-    width: 100%;
-  }
-
-  .headerActions .btn {
-    width: 100%;
-    justify-content: center;
   }
 
   .toolbarRight {
