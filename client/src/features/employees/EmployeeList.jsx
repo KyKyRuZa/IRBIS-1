@@ -288,12 +288,12 @@ export default function EmployeeList() {
               </select>
             </div>
             <div className={`form-group ${styles.field}`}>
-              <label>Дата приёма</label>
+              <label>Табельный номер</label>
               <input
-                type="date"
+                type="text"
                 className="form-control"
-                value={formData.hire_date}
-                onChange={(e) => setFormData({...formData, hire_date: e.target.value})}
+                value={formData.personnel_number}
+                onChange={(e) => setFormData({...formData, personnel_number: e.target.value})}
               />
             </div>
           </div>
@@ -311,87 +311,94 @@ export default function EmployeeList() {
                 ))}
               </select>
             </div>
-            <div className={`form-group ${styles.field}`}>
-              <label>Табельный номер</label>
-              <input
-                type="text"
-                className="form-control"
-                value={formData.personnel_number}
-                onChange={(e) => setFormData({...formData, personnel_number: e.target.value})}
-              />
-            </div>
           </div>
-          <div className={styles.formRow}>
-            <div className={`form-group ${styles.field}`}>
-              <label>Размер одежды</label>
-              <input
-                type="text"
-                className="form-control"
-                value={formData.clothing_size}
-                onChange={(e) => setFormData({...formData, clothing_size: e.target.value})}
-              />
+          <details className={styles.sizesGroup}>
+            <summary>Размеры СИЗ (одежда, обувь, средства защиты)</summary>
+            <div className={styles.formRow}>
+              <div className={`form-group ${styles.field}`}>
+                <label>Размер одежды</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={formData.clothing_size}
+                  onChange={(e) => setFormData({...formData, clothing_size: e.target.value})}
+                />
+              </div>
+              <div className={`form-group ${styles.field}`}>
+                <label>Размер обуви</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={formData.shoe_size}
+                  onChange={(e) => setFormData({...formData, shoe_size: e.target.value})}
+                />
+              </div>
             </div>
-            <div className={`form-group ${styles.field}`}>
-              <label>Размер обуви</label>
-              <input
-                type="text"
-                className="form-control"
-                value={formData.shoe_size}
-                onChange={(e) => setFormData({...formData, shoe_size: e.target.value})}
-              />
+            <div className={styles.formRow}>
+              <div className={`form-group ${styles.field}`}>
+                <label>Рост</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={formData.height}
+                  onChange={(e) => setFormData({...formData, height: e.target.value})}
+                />
+              </div>
+              <div className={`form-group ${styles.field}`}>
+                <label>Размер головного убора</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={formData.hat_size}
+                  onChange={(e) => setFormData({...formData, hat_size: e.target.value})}
+                />
+              </div>
             </div>
-          </div>
-          <div className={styles.formRow}>
-            <div className={`form-group ${styles.field}`}>
-              <label>Рост</label>
-              <input
-                type="number"
-                className="form-control"
-                value={formData.height}
-                onChange={(e) => setFormData({...formData, height: e.target.value})}
-              />
+            <div className={styles.formRow}>
+              <div className={`form-group ${styles.field}`}>
+                <label>Размер СИЗОД (дыхания)</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={formData.respirator_size}
+                  onChange={(e) => setFormData({...formData, respirator_size: e.target.value})}
+                />
+              </div>
+              <div className={`form-group ${styles.field}`}>
+                <label>Размер СИЗ рук</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={formData.gloves_size}
+                  onChange={(e) => setFormData({...formData, gloves_size: e.target.value})}
+                />
+              </div>
             </div>
-            <div className={`form-group ${styles.field}`}>
-              <label>Размер головного убора</label>
-              <input
-                type="text"
-                className="form-control"
-                value={formData.hat_size}
-                onChange={(e) => setFormData({...formData, hat_size: e.target.value})}
-              />
+          </details>
+
+          <details className={styles.sizesGroup}>
+            <summary>Даты (приём, изменение профессии)</summary>
+            <div className={styles.formRow}>
+              <div className={`form-group ${styles.field}`}>
+                <label>Дата приёма</label>
+                <input
+                  type="date"
+                  className="form-control"
+                  value={formData.hire_date}
+                  onChange={(e) => setFormData({...formData, hire_date: e.target.value})}
+                />
+              </div>
+              <div className={`form-group ${styles.field}`}>
+                <label>Дата изменения профессии/подразделения</label>
+                <input
+                  type="date"
+                  className="form-control"
+                  value={formData.position_change_date}
+                  onChange={(e) => setFormData({...formData, position_change_date: e.target.value})}
+                />
+              </div>
             </div>
-          </div>
-          <div className={styles.formRow}>
-            <div className={`form-group ${styles.field}`}>
-              <label>Размер СИЗОД (дыхания)</label>
-              <input
-                type="text"
-                className="form-control"
-                value={formData.respirator_size}
-                onChange={(e) => setFormData({...formData, respirator_size: e.target.value})}
-              />
-            </div>
-            <div className={`form-group ${styles.field}`}>
-              <label>Размер СИЗ рук</label>
-              <input
-                type="text"
-                className="form-control"
-                value={formData.gloves_size}
-                onChange={(e) => setFormData({...formData, gloves_size: e.target.value})}
-              />
-            </div>
-          </div>
-          <div className={styles.formRow}>
-            <div className={`form-group ${styles.field}`}>
-              <label>Дата изменения профессии/подразделения</label>
-              <input
-                type="date"
-                className="form-control"
-                value={formData.position_change_date}
-                onChange={(e) => setFormData({...formData, position_change_date: e.target.value})}
-              />
-            </div>
-          </div>
+          </details>
           <div className={styles.actionButtons}>
             <button type="submit" className="btn">{editingEmployee ? 'Сохранить' : 'Сохранить'}</button>
             {editingEmployee && <button type="button" className="btn btn-secondary" onClick={handleClose}>Отмена</button>}

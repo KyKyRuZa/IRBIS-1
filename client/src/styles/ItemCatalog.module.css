@@ -106,6 +106,29 @@
   font-size: 14px;
 }
 
+/* Свёрнутая группа «Сроки и сертификация» (Вариант А) */
+.sizesGroup {
+  grid-column: 1 / -1;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 4px;
+  background: #fafafa;
+}
+
+.sizesGroup summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--dark);
+  padding: 4px 0;
+  user-select: none;
+}
+
+.sizesGroup[open] summary {
+  margin-bottom: 12px;
+}
+
 .sectionTitle {
   color: var(--primary);
   margin: 0 0 15px;

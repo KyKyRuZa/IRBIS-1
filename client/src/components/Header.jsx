@@ -7,15 +7,17 @@ import { pushService } from '@/lib/services/push.service.js';
 import Icon from '@components/ui/Icon.jsx';
 import styles from '@styles/Header.module.css';
 
-// Список навигационных ссылок для всех пользователей
+// Список навигационных ссылок для всех пользователей.
+// Вариант Б: точка входа — «Рабочий стол», справочники сгруппированы в конце.
 const NAV_LINKS = [
-  { to: '/', label: 'Сотрудники' },
+  { to: '/', label: 'Рабочий стол' },
+  { to: '/employees', label: 'Сотрудники' },
+  { to: '/issue', label: 'Выдача' },
+  { to: '/reports', label: 'Отчёты' },
   { to: '/objects', label: 'Объекты' },
   { to: '/items', label: 'Номенклатура' },
   { to: '/norms', label: 'Нормы выдачи' },
-  { to: '/issue', label: 'Выдача' },
   { to: '/certificates', label: 'Сертификаты' },
-  { to: '/reports', label: 'Отчёты' },
 ];
 
 // Ссылки, доступные только администратору

@@ -353,7 +353,14 @@ export default function ItemCatalog() {
               <select
                 className="form-control"
                 value={formData.category}
-                onChange={(e) => setFormData({...formData, category: e.target.value})}
+                onChange={(e) => {
+                  const cat = e.target.value;
+                  setFormData({
+                    ...formData,
+                    category: cat,
+                    requires_certificate: cat === 'siz' ? true : formData.requires_certificate
+                  });
+                }}
               >
                 {Object.entries(categories).map(([key, label]) => (
                   <option key={key} value={key}>{label}</option>
@@ -369,37 +376,43 @@ export default function ItemCatalog() {
                 onChange={(e) => setFormData({...formData, unit: e.target.value})}
               />
             </div>
-            <div className={`form-group ${styles.field}`}>
-              <label>Срок годности (мес)</label>
-              <input
-                type="number"
-                className="form-control"
-                value={formData.default_wear_time_months}
-                onChange={(e) => setFormData({...formData, default_wear_time_months: e.target.value})}
-              />
-            </div>
-            <div className={`form-group ${styles.field}`}>
-              <label>Сезонность</label>
-              <select
-                className="form-control"
-                value={formData.seasonality}
-                onChange={(e) => setFormData({...formData, seasonality: e.target.value})}
-              >
-                <option value="year_round">Круглогодичная</option>
-                <option value="winter">Зимняя</option>
-                <option value="summer">Летняя</option>
-              </select>
-            </div>
-            <div className={`form-group ${styles.field}`}>
-              <div className={styles.checkboxRow}>
-                <span>Требуется сертификат</span>
-                <input
-                  type="checkbox"
-                  checked={formData.requires_certificate}
-                  onChange={(e) => setFormData({...formData, requires_certificate: e.target.checked})}
-                />
+
+            <details className={styles.sizesGroup}>
+              <summary>Сроки и сертификация</summary>
+              <div className={styles.formGrid}>
+                <div className={`form-group ${styles.field}`}>
+                  <label>Срок годности (мес)</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={formData.default_wear_time_months}
+                    onChange={(e) => setFormData({...formData, default_wear_time_months: e.target.value})}
+                  />
+                </div>
+                <div className={`form-group ${styles.field}`}>
+                  <label>Сезонность</label>
+                  <select
+                    className="form-control"
+                    value={formData.seasonality}
+                    onChange={(e) => setFormData({...formData, seasonality: e.target.value})}
+                  >
+                    <option value="year_round">Круглогодичная</option>
+                    <option value="winter">Зимняя</option>
+                    <option value="summer">Летняя</option>
+                  </select>
+                </div>
+                <div className={`form-group ${styles.field}`}>
+                  <div className={styles.checkboxRow}>
+                    <span>Требуется сертификат</span>
+                    <input
+                      type="checkbox"
+                      checked={formData.requires_certificate}
+                      onChange={(e) => setFormData({...formData, requires_certificate: e.target.checked})}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
+            </details>
           </div>
           <div className={styles.actionButtons}>
             <button type="submit" className="btn">{editingItem ? 'Сохранить' : 'Добавить'}</button>
