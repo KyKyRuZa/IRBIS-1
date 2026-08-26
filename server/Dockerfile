@@ -24,7 +24,7 @@ COPY package.json package-lock.json ./
 COPY prisma.config.js ./
 COPY prisma ./prisma
 RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
-USER nextjs
+RUN apk add --no-cache su-exec && chmod +x docker-entrypoint.sh
 EXPOSE 5000
 ENV NODE_ENV=production
-CMD ["node", "src/index.js"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
