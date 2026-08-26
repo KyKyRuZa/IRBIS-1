@@ -7,8 +7,7 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5433:5432"
+    # No published port: postgres stays internal to the compose network.
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -17,8 +16,7 @@ services:
 
   backend:
     build: ./server
-    ports:
-      - "5000:5000"
+    # No published port: reached only via nginx.
     environment:
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
@@ -43,20 +41,14 @@ services:
       timeout: 5s
       retries: 10
 
-  frontend:
-    build: ./client
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
     ports:
-      - "5173:5173"
+      - "80:80"
     depends_on:
-      backend:
-        condition: service_healthy
-    volumes:
-      - ./client:/app
-      - /app/node_modules
-    environment:
-      VITE_API_TARGET: http://backend:5000
-      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
-      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
+      - backend
 
 volumes:
   pgdata:
