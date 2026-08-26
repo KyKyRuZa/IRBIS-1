@@ -4,7 +4,6 @@ import styles from '@styles/App.module.css';
 
 function getPageClass(pathname) {
   if (pathname === '/login') return 'page-login';
-  if (pathname.startsWith('/dashboard')) return 'page-dashboard';
   if (pathname.startsWith('/employees')) return 'page-employees';
   if (pathname === '/objects') return 'page-sites';
   if (pathname === '/items') return 'page-items';

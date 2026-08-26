@@ -8,10 +8,9 @@ import Icon from '@components/ui/Icon.jsx';
 import styles from '@styles/Header.module.css';
 
 // Список навигационных ссылок для всех пользователей.
-// Вариант Б: точка входа — «Рабочий стол», справочники сгруппированы в конце.
+// Точка входа — «Сотрудники» (/).
 const NAV_LINKS = [
-  { to: '/', label: 'Рабочий стол' },
-  { to: '/employees', label: 'Сотрудники' },
+  { to: '/', label: 'Сотрудники' },
   { to: '/issue', label: 'Выдача' },
   { to: '/reports', label: 'Отчёты' },
   { to: '/objects', label: 'Объекты' },

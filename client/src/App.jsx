@@ -6,7 +6,6 @@ import ErrorBoundary from '@components/ErrorBoundary.jsx';
 import '@styles/index.css';
 import MainLayout from '@/layouts/MainLayout.jsx';
 
-const Dashboard = lazy(() => import('@features/dashboard/Dashboard.jsx'));
 const EmployeeList = lazy(() => import('@features/employees/EmployeeList.jsx'));
 const EmployeeCard = lazy(() => import('@features/employees/EmployeeCard.jsx'));
 const ItemCatalog = lazy(() => import('@features/items/ItemCatalog.jsx'));
@@ -40,8 +39,7 @@ function AppContent() {
         <Routes>
           <Route element={<MainLayout />}>
             <Route path="/login" element={<Login />} />
-            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/employees" element={<ProtectedRoute><EmployeeList /></ProtectedRoute>} />
+            <Route path="/" element={<ProtectedRoute><EmployeeList /></ProtectedRoute>} />
             <Route path="/employees/:id" element={<ProtectedRoute><EmployeeCard /></ProtectedRoute>} />
             <Route path="/objects" element={<ProtectedRoute><Object /></ProtectedRoute>} />
             <Route path="/items" element={<ProtectedRoute><ItemCatalog /></ProtectedRoute>} />
