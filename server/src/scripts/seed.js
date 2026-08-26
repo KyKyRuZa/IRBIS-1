@@ -209,9 +209,16 @@ const seedForms = async (employees) => {
 const seedPushSubscriptions = async (employees) => {
   const subscriptions = [];
   for (const emp of employees.slice(0, 5)) {
+    const username = 'employee' + emp.id;
+    const passwordHash = await bcrypt.hash('password', 10);
+    const u = await pool.query(
+      'INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3) ON CONFLICT (username) DO UPDATE SET password_hash = EXCLUDED.password_hash RETURNING id',
+      [username, passwordHash, 'user']
+    );
+    const userId = u.rows[0].id;
     const r = await pool.query(
       'INSERT INTO push_subscriptions (user_id, employee_id, endpoint, p256dh, auth, user_agent) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [emp.id, emp.id, `https://fcm.googleapis.com/fcm/send/${emp.id}`, `p256dh_${emp.id}`, `auth_${emp.id}`, 'Mozilla/5.0']
+      [userId, emp.id, `https://fcm.googleapis.com/fcm/send/${emp.id}`, `p256dh_${emp.id}`, `auth_${emp.id}`, 'Mozilla/5.0']
     );
     subscriptions.push(r.rows[0]);
   }
