@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # 1) Build the client (Vite -> dist/)
-FROM node:24-alpine AS client-build
+FROM node:24.18.0-alpine AS client-build
 WORKDIR /app
 COPY client/package.json client/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
