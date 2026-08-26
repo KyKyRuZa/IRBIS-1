@@ -27,6 +27,7 @@ export default function Object() {
 
   const {
     search,
+    searchApplied,
     setSearch,
     sort,
     toggleSort,
@@ -52,7 +53,7 @@ export default function Object() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, sort, sites]);
+  }, [searchApplied, sort, sites]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -91,7 +92,7 @@ export default function Object() {
   };
 
   const filteredSites = useFilteredList(sites, {
-    search,
+    search: searchApplied,
     filters: {},
     sort,
     searchFields: ['name', 'responsible_person']

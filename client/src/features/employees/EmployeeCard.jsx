@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { employeesService } from '@/lib/services/employees.service.js';
-import { EMPLOYEE_STATUSES } from '@/lib/constants/employee-statuses.js';
+import { EMPLOYEE_STATUSES, EMPLOYEE_STATUS_VALUES, normalizeEmployeeStatus } from '@/lib/constants/employee-statuses.js';
 import { ISSUE_STATUSES, ISSUE_STATUS_LABELS } from '@/lib/constants/issue-statuses.js';
 import StatusBadge from '@/components/ui/StatusBadge.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
@@ -60,7 +60,7 @@ export default function EmployeeCard() {
                     <p><strong>Размер головного убора:</strong> {employee.hat_size || '-'}</p>
                     <p><strong>Размер СИЗОД:</strong> {employee.respirator_size || '-'}</p>
                     <p><strong>Размер СИЗ рук:</strong> {employee.gloves_size || '-'}</p>
-                    <p><strong>Статус:</strong> {employee.status === EMPLOYEE_STATUSES.active ? EMPLOYEE_STATUSES.active : EMPLOYEE_STATUSES.terminated}</p>
+                    <p><strong>Статус:</strong> {normalizeEmployeeStatus(employee.status) === EMPLOYEE_STATUS_VALUES.active ? EMPLOYEE_STATUSES.active : EMPLOYEE_STATUSES.terminated}</p>
                   </div>
                 </div>
               </div>

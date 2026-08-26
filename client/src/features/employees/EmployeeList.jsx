@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { employeesService } from '@/lib/services/employees.service.js';
 import { sitesService } from '@/lib/services/sites.service.js';
 import { useAuth } from '@/hooks/useAuth.js';
 import { useResource } from '@/hooks/useResource.js';
 import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
-import { EMPLOYEE_STATUSES } from '@/lib/constants/employee-statuses.js';
+import { EMPLOYEE_STATUSES, EMPLOYEE_STATUS_VALUES, normalizeEmployeeStatus } from '@/lib/constants/employee-statuses.js';
 import Modal from '@/components/ui/Modal.jsx';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
@@ -47,6 +47,7 @@ export default function EmployeeList() {
 
   const {
     search,
+    searchApplied,
     setSearch,
     filters,
     setFilter,
@@ -64,7 +65,7 @@ export default function EmployeeList() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, filters, employees]);
+  }, [searchApplied, filters, employees]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -119,8 +120,13 @@ export default function EmployeeList() {
     setFormData({ full_name: '', position: '', site_id: '', gender: '', hire_date: '', clothing_size: '', shoe_size: '', personnel_number: '', hat_size: '', respirator_size: '', gloves_size: '', height: '', position_change_date: '' });
   };
 
-  const filteredEmployees = useFilteredList(employees, {
-    search,
+  const normalizedEmployees = useMemo(
+    () => employees.map((e) => ({ ...e, status: normalizeEmployeeStatus(e.status) })),
+    [employees]
+  );
+
+  const filteredEmployees = useFilteredList(normalizedEmployees, {
+    search: searchApplied,
     filters,
     sort,
     searchFields: ['full_name', 'personnel_number', 'position', 'site_name']
@@ -161,8 +167,8 @@ export default function EmployeeList() {
               <label>Статус</label>
               <select value={filters.status} onChange={(e) => setFilter('status', e.target.value)}>
                 <option value="">Все</option>
-                <option value={EMPLOYEE_STATUSES.active}>Активные</option>
-                <option value={EMPLOYEE_STATUSES.terminated}>Уволенные</option>
+                <option value={EMPLOYEE_STATUS_VALUES.active}>Активные</option>
+                <option value={EMPLOYEE_STATUS_VALUES.terminated}>Уволенные</option>
               </select>
             </div>
             <div className="filter-field">
@@ -211,15 +217,15 @@ export default function EmployeeList() {
                       <td>{emp.personnel_number || '-'}</td>
                       <td>{emp.position}</td>
                       <td>{emp.site_name || '-'}</td>
-                      <td className={emp.status === EMPLOYEE_STATUSES.active ? styles.statusActive : styles.statusTerminated}>
-                        {emp.status === EMPLOYEE_STATUSES.active ? EMPLOYEE_STATUSES.active : EMPLOYEE_STATUSES.terminated}
+                      <td className=                        {emp.status === EMPLOYEE_STATUS_VALUES.active ? styles.statusActive : styles.statusTerminated}>
+                        {emp.status === EMPLOYEE_STATUS_VALUES.active ? EMPLOYEE_STATUSES.active : EMPLOYEE_STATUSES.terminated}
                       </td>
                     <td>
                       <div className="action-buttons">
                         <Link to={`/employees/${emp.id}`} className="btn">
                           Карточка
                         </Link>
-                        {emp.status === EMPLOYEE_STATUSES.active && (
+                        {emp.status === EMPLOYEE_STATUS_VALUES.active && (
                           <>
                             <button className="btn" onClick={() => handleEdit(emp)}>Редактировать</button>
                             <button className="btn btn-danger" onClick={() => setDeleteId(emp.id)}>Удалить</button>

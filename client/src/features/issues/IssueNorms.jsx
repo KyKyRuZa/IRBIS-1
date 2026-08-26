@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { normsService } from '@/lib/services/norms.service.js';
 import { itemsService } from '@/lib/services/items.service.js';
-import { sitesService } from '@/lib/services/sites.service.js';
 import { ITEM_CATEGORIES } from '@/lib/constants/item-categories.js';
 import { useResource } from '@/hooks/useResource.js';
 import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
@@ -20,7 +19,6 @@ const categories = ITEM_CATEGORIES;
 
 export default function IssueNorms() {
   const [items, setItems] = useState([]);
-  const [sites, setSites] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingNorm, setEditingNorm] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
@@ -30,15 +28,14 @@ export default function IssueNorms() {
     item_type_id: '',
     period_months: '',
     quantity: 1,
-    gender: '',
-    position: '',
-    site_id: ''
+    position: ''
   });
 
   const { data: norms, loading, error, refetch } = useResource(normsService.list);
 
   const {
     search,
+    searchApplied,
     setSearch,
     filters,
     setFilter,
@@ -46,18 +43,17 @@ export default function IssueNorms() {
     toggleSort,
     resetFilters
   } = useTableControls({
-    filters: { item_type_id: '', site_id: '', gender: '' },
+    filters: { item_type_id: '' },
     sort: { key: 'item_type_name', dir: 'asc' }
   });
 
   useEffect(() => {
     itemsService.list().then(setItems);
-    sitesService.list().then(setSites);
   }, []);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, filters, sort, norms]);
+  }, [searchApplied, filters, sort, norms]);
 
   // Blank select/number inputs must not be sent: the API columns are integers
   // and an empty string is rejected by the database.
@@ -81,7 +77,7 @@ export default function IssueNorms() {
       } else {
         await normsService.create(payload);
       }
-      setFormData({ item_type_id: '', period_months: '', quantity: 1, gender: '', position: '', site_id: '' });
+    setFormData({ item_type_id: '', period_months: '', quantity: 1, position: '' });
       setShowModal(false);
       refetch();
     } catch (err) {
@@ -96,9 +92,7 @@ export default function IssueNorms() {
       item_type_id: norm.item_type_id || '',
       period_months: norm.period_months || '',
       quantity: norm.quantity || 1,
-      gender: norm.gender || '',
-      position: norm.position || '',
-      site_id: norm.site_id || ''
+      position: norm.position || ''
     });
     setShowModal(true);
   };
@@ -118,12 +112,12 @@ export default function IssueNorms() {
     setShowModal(false);
     setEditingNorm(null);
     setSubmitError('');
-    setFormData({ item_type_id: '', period_months: '', quantity: 1, gender: '', position: '', site_id: '' });
+    setFormData({ item_type_id: '', period_months: '', quantity: 1, position: '' });
   };
 
   const filteredNorms = useFilteredList(norms, {
-    search,
-    filters: { item_type_id: filters.item_type_id, site_id: filters.site_id, gender: filters.gender },
+    search: searchApplied,
+    filters: { item_type_id: filters.item_type_id },
     sort,
     searchFields: ['item_type_name', 'position']
   });
@@ -132,8 +126,7 @@ export default function IssueNorms() {
   const startIndex = (currentPage - 1) * 10;
   const paginatedNorms = filteredNorms.slice(startIndex, startIndex + 10);
 
-  const hasActiveFilters = Boolean(search) ||
-    filters.item_type_id !== '' || filters.site_id !== '' || filters.gender !== '';
+  const hasActiveFilters = Boolean(search) || filters.item_type_id !== '';
 
   return (
     <div className={styles.pageWrapper}>
@@ -167,23 +160,6 @@ export default function IssueNorms() {
                 {items.map((item) => (
                   <option key={item.id} value={item.id}>{item.name}</option>
                 ))}
-              </select>
-            </div>
-            <div className="filter-field">
-              <label>Объект</label>
-              <select value={filters.site_id} onChange={(e) => setFilter('site_id', e.target.value)}>
-                <option value="">Все</option>
-                {sites.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="filter-field">
-              <label>Пол</label>
-              <select value={filters.gender} onChange={(e) => setFilter('gender', e.target.value)}>
-                <option value="">Все</option>
-                <option value="male">Мужской</option>
-                <option value="female">Женский</option>
               </select>
             </div>
             {hasActiveFilters && (

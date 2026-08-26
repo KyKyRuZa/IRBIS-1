@@ -43,6 +43,7 @@ export default function ItemCatalog() {
 
   const {
     search,
+    searchApplied,
     setSearch,
     sort,
     toggleSort,
@@ -55,7 +56,7 @@ export default function ItemCatalog() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [category, items, search, sort]);
+  }, [category, items, searchApplied, sort]);
 
   useEffect(() => {
     if (detailItem) {
@@ -82,7 +83,7 @@ export default function ItemCatalog() {
   };
 
   const filteredItems = useFilteredList(items, {
-    search,
+    search: searchApplied,
     filters: {},
     sort,
     searchFields: ['name']

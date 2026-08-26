@@ -49,10 +49,10 @@ const activeEmployee = {
   hat_size: '58',
   respirator_size: 'M',
   gloves_size: 'L',
-  status: 'Работает',
+  status: 'active',
 };
 
-const terminatedEmployee = { ...activeEmployee, id: 2, status: 'Уволен' };
+const terminatedEmployee = { ...activeEmployee, id: 2, status: 'terminated' };
 
 describe('EmployeeList', () => {
   beforeEach(() => {

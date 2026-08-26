@@ -28,6 +28,7 @@ export default function FormTracker() {
 
   const {
     search,
+    searchApplied,
     setSearch,
     filters,
     setFilter,
@@ -47,7 +48,7 @@ export default function FormTracker() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, filters, sort, records]);
+  }, [searchApplied, filters, sort, records]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -110,7 +111,7 @@ export default function FormTracker() {
   }), [records, filters.date_from, filters.date_to]);
 
   const filteredRecords = useFilteredList(dateFilteredRecords, {
-    search,
+    search: searchApplied,
     filters: {},
     sort,
     searchFields: ['full_name', 'position', 'form_name']
@@ -171,7 +172,6 @@ export default function FormTracker() {
               <table className="table">
                 <thead>
                   <tr>
-                    <th>ID</th>
                     <SortableTh label="Сотрудник (ФИО)" sortKey="full_name" sort={sort} onSort={toggleSort} />
                     <SortableTh label="Должность" sortKey="position" sort={sort} onSort={toggleSort} />
                     <SortableTh label="Форма" sortKey="form_name" sort={sort} onSort={toggleSort} />
@@ -181,7 +181,6 @@ export default function FormTracker() {
                 <tbody>
                   {paginatedRecords.map((r) => (
                     <tr key={r.id}>
-                      <td>{r.id}</td>
                       <td>{r.full_name}</td>
                       <td>{r.position}</td>
                       <td>{r.form_name}</td>

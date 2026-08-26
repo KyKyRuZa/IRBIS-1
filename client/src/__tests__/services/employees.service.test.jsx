@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { employeesService } from '@/lib/services/employees.service.js';
-import { EMPLOYEE_STATUSES } from '@/lib/constants/employee-statuses.js';
+import { EMPLOYEE_STATUS_VALUES } from '@/lib/constants/employee-statuses.js';
 import { api } from '@/lib/api.js';
 
 vi.mock('@/lib/api.js', () => {
@@ -22,7 +22,7 @@ const specs = [
   { name: 'terminate', http: 'patch', args: [7], expected: ['/api/employees/7/terminate'], sample: { id: 7 } },
   { name: 'delete', http: 'delete', args: [7], expected: ['/api/employees/7'], sample: { id: 7 } },
   { name: 'search', http: 'get', args: ['иван'], expected: ['/api/employees', { params: { search: 'иван' } }], sample: [{ id: 1 }] },
-  { name: 'bySite', http: 'get', args: [3], expected: ['/api/employees', { params: { site_id: 3, status: EMPLOYEE_STATUSES.active } }], sample: [{ id: 1 }] },
+  { name: 'bySite', http: 'get', args: [3], expected: ['/api/employees', { params: { site_id: 3, status: EMPLOYEE_STATUS_VALUES.active } }], sample: [{ id: 1 }] },
 ];
 
 describe('employeesService', () => {
@@ -44,7 +44,7 @@ describe('employeesService', () => {
 
   it('bySite passes an explicit status when provided', async () => {
     api.get.mockResolvedValue({ data: [] });
-    await employeesService.bySite(3, EMPLOYEE_STATUSES.terminated);
-    expect(api.get).toHaveBeenCalledWith('/api/employees', { params: { site_id: 3, status: EMPLOYEE_STATUSES.terminated } });
+    await employeesService.bySite(3, EMPLOYEE_STATUS_VALUES.terminated);
+    expect(api.get).toHaveBeenCalledWith('/api/employees', { params: { site_id: 3, status: EMPLOYEE_STATUS_VALUES.terminated } });
   });
 });

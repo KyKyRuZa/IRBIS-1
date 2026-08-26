@@ -1,5 +1,4 @@
 import { api } from '@/lib/api.js';
-import { EMPLOYEE_STATUSES } from '@/lib/constants/employee-statuses.js';
 
 export const employeesService = {
   list: (params = {}) =>
@@ -23,6 +22,6 @@ export const employeesService = {
   search: (query) =>
     api.get('/api/employees', { params: { search: query } }).then(r => r.data),
 
-  bySite: (siteId, status = EMPLOYEE_STATUSES.active) =>
+  bySite: (siteId, status = 'active') =>
     api.get('/api/employees', { params: { site_id: siteId, status } }).then(r => r.data),
 };

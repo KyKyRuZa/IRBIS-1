@@ -43,7 +43,7 @@ const sampleEmployee = {
   personnel_number: '001',
   position: 'Оператор',
   site_name: 'АЗС-1',
-  status: 'Работает',
+  status: 'active',
 };
 
 describe('EmployeeList (integration)', () => {
