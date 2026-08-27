@@ -126,10 +126,8 @@
   }
 
   .tableWrapper {
-    display: block;
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    min-width: 100%;
+    width: max-content;
   }
 }
 

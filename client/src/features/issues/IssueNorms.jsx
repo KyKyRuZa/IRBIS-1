@@ -181,8 +181,9 @@ export default function IssueNorms() {
               />
             ) : (
               <>
-                <table className={`table ${styles.tableWrapper}`}>
-                <thead>
+                 <div className="tableScroll">
+                 <table className={`table ${styles.tableWrapper}`}>
+                 <thead>
                   <tr>
                     <SortableTh label="Наименование" sortKey="item_type_name" sort={sort} onSort={toggleSort} />
                     <SortableTh label="Периодичность" sortKey="period_months" sort={sort} onSort={toggleSort} />
@@ -206,6 +207,7 @@ export default function IssueNorms() {
                   ))}
                 </tbody>
               </table>
+              </div>
               <Pagination
                 totalItems={totalItems}
                 itemsPerPage={10}

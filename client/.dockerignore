@@ -1,7 +1,16 @@
 node_modules
 npm-debug.log
 .env
+.env.*
 .git
 .gitignore
 README.md
 dist
+.vite/
+coverage/
+*.log
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/

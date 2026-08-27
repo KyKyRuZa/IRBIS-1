@@ -314,9 +314,7 @@ export default function IssueForm() {
               </button>
             )}
           </div>
-        </div>
 
-        <div className="card">
           {loading && <LoadingState label="Загрузка выдач..." />}
           {!loading && error && <ErrorState message={error} onRetry={refetchRecords} />}
           {!loading && !error && (
@@ -329,8 +327,9 @@ export default function IssueForm() {
               />
             ) : (
               <>
-                <table className="table">
-                  <thead>
+                 <div className="tableScroll">
+                 <table className="table">
+                   <thead>
                     <tr>
                       <SortableTh label="Дата" sortKey="issue_date" sort={sort} onSort={toggleSort} />
                       <SortableTh label="Сотрудник" sortKey="full_name" sort={sort} onSort={toggleSort} />
@@ -375,6 +374,7 @@ export default function IssueForm() {
                     ))}
                   </tbody>
                 </table>
+                </div>
                 <Pagination
                   totalItems={totalItems}
                   itemsPerPage={10}

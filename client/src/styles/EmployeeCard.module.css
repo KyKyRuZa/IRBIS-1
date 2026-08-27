@@ -151,6 +151,11 @@
   .exportActions .btn {
     width: 100%;
   }
+
+  .dataTable {
+    min-width: 100%;
+    width: max-content;
+  }
 }
 
 @media (max-width: 480px) {

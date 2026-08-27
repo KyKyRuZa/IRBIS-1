@@ -372,11 +372,18 @@ body {
 /* Телефоны — таблицы на всю ширину экрана со скроллом по горизонтали */
 @media (max-width: 768px) {
   .table {
-    display: block;
-    width: auto;
-    margin-right: 0;
+    min-width: 100%;
+    width: max-content;
+  }
+
+  /* Отдельный скролл-контейнер таблицы — фильтры (.table-controls) остаются на месте */
+  .tableScroll {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+  }
+
+  .card {
+    padding: 16px;
   }
 
   .action-buttons {
@@ -390,10 +397,6 @@ body {
 
   .search-box input {
     width: 100%;
-  }
-
-  .card {
-    padding: 16px;
   }
 }
 

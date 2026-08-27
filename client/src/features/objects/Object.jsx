@@ -148,6 +148,8 @@ export default function Object() {
               />
             ) : (
               <>
+                <div className="tableScroll">
+
                 <table className="table">
                   <thead>
                     <tr>
@@ -170,7 +172,9 @@ export default function Object() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                 </table>
+
+                 </div>
                 <Pagination
                   totalItems={totalItems}
                   itemsPerPage={10}

@@ -199,7 +199,8 @@ export default function EmployeeList() {
               />
             ) : (
               <>
-                <table className="table">
+                 <div className="tableScroll">
+                 <table className="table">
                 <thead>
                   <tr>
                     <SortableTh label="ФИО" sortKey="full_name" sort={sort} onSort={toggleSort} />
@@ -238,6 +239,7 @@ export default function EmployeeList() {
                   ))}
                 </tbody>
               </table>
+              </div>
               <Pagination
                 totalItems={totalItems}
                 itemsPerPage={10}

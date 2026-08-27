@@ -1,9 +1,22 @@
 node_modules
 .env
+.env.*
+!.env.example
+
 uploads/
 dist/
+coverage/
 
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Kilo
 .kilo/
 
+# Generated local docs
 NEXT.md
 ONBOARDING.md

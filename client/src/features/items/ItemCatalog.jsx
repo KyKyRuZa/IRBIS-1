@@ -214,8 +214,9 @@ export default function ItemCatalog() {
               />
             ) : (
               <>
-                <table className="table">
-                  <thead>
+                 <div className="tableScroll">
+                 <table className="table">
+                   <thead>
                     <tr>
                       <SortableTh label="Наименование" sortKey="name" sort={sort} onSort={toggleSort} />
                       <SortableTh label="Категория" sortKey="category" sort={sort} onSort={toggleSort} />
@@ -250,6 +251,7 @@ export default function ItemCatalog() {
                     ))}
                   </tbody>
                 </table>
+                </div>
                 <Pagination
                   totalItems={totalItems}
                   itemsPerPage={10}
@@ -299,8 +301,9 @@ export default function ItemCatalog() {
               <div className={styles.certificatesSection}>
                 <h4 className={styles.certificatesTitle}>Сертификаты</h4>
                 {detailItem.certificates && detailItem.certificates.length > 0 ? (
-                  <table className={`${styles.certificatesTable} table`}>
-                    <thead>
+                   <div className="tableScroll">
+                   <table className={`${styles.certificatesTable} table`}>
+                     <thead>
                       <tr>
                         <th>Номер</th>
                         <th>Дата выдачи</th>
@@ -323,6 +326,7 @@ export default function ItemCatalog() {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 ) : (
                   <div className={styles.emptyCertificates}>Сертификаты отсутствуют</div>
                 )}

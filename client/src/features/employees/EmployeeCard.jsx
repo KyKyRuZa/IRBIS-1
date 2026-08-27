@@ -80,6 +80,7 @@ export default function EmployeeCard() {
                 <EmptyState icon={<FontAwesomeIcon icon={faClipboardList} />} title="Нормы не заданы" description="Для этого сотрудника пока не установлены нормы выдачи." />
               ) : (
                 <>
+                  <div className="tableScroll">
                   <table className="table">
                     <thead>
                       <tr>
@@ -98,6 +99,7 @@ export default function EmployeeCard() {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                   <Pagination
                     totalItems={employee.norms?.length || 0}
                     itemsPerPage={10}
@@ -114,6 +116,7 @@ export default function EmployeeCard() {
                 <EmptyState icon={<FontAwesomeIcon icon={faBox} />} title="История выдач пуста" description="Сотруднику ещё не выдавались СИЗ." />
               ) : (
                 <>
+                  <div className="tableScroll">
                   <table className="table">
                     <thead>
                       <tr>
@@ -148,6 +151,7 @@ export default function EmployeeCard() {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                   <Pagination
                     totalItems={employee.history?.length || 0}
                     itemsPerPage={10}

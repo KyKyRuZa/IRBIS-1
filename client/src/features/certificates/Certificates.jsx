@@ -224,8 +224,9 @@ export default function Certificates() {
               />
             ) : (
               <>
-                <table className={`table ${styles.tableWrapper}`}>
-                  <thead>
+                 <div className="tableScroll">
+                 <table className={`table ${styles.tableWrapper}`}>
+                   <thead>
                     <tr>
                       <SortableTh label="Продукция" sortKey="product_name" sort={sort} onSort={toggleSort} />
                       <SortableTh label="Номер" sortKey="certificate_number" sort={sort} onSort={toggleSort} />
@@ -263,6 +264,7 @@ export default function Certificates() {
                     ))}
                   </tbody>
                 </table>
+                </div>
                 <Pagination
                   totalItems={filteredCerts.length}
                   itemsPerPage={10}

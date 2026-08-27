@@ -169,6 +169,8 @@ export default function FormTracker() {
             <EmptyState icon={<FontAwesomeIcon icon={faPenToSquare} />} title="Нет записей" description={hasActiveFilters ? 'По заданным фильтрам ничего не найдено.' : 'Формы ещё не отмечались как взятые.'} />
           ) : (
             <>
+              <div className="tableScroll">
+
               <table className="table">
                 <thead>
                   <tr>
@@ -188,7 +190,9 @@ export default function FormTracker() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+               </table>
+
+               </div>
               <Pagination
                 totalItems={totalItems}
                 itemsPerPage={10}

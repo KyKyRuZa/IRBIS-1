@@ -305,6 +305,8 @@ export default function Reports() {
                 <EmptyState icon={<FontAwesomeIcon icon={faChartBar} />} title="Нет данных о потребности" description={Boolean(search) ? 'По поиску ничего не найдено.' : 'Добавьте сотрудников, нормы и выдачи, чтобы увидеть потребность в СИЗ.'} />
               ) : (
                 <>
+                  <div className="tableScroll">
+
                   <table className="table">
                     <thead>
                       <tr>
@@ -327,6 +329,8 @@ export default function Reports() {
                       ))}
                     </tbody>
                   </table>
+
+                  </div>
                   <Pagination totalItems={sortedDemand.length} itemsPerPage={10} currentPage={currentPage} onPageChange={setCurrentPage} />
                 </>
               )}
@@ -339,6 +343,8 @@ export default function Reports() {
                 <EmptyState icon={<FontAwesomeIcon icon={faClipboardList} />} title="Нет записей о выдачах" description={Boolean(search) ? 'По поиску ничего не найдено.' : 'Выдачи сотрудникам ещё не зарегистрированы.'} />
               ) : (
                 <>
+                  <div className="tableScroll">
+
                   <table className="table">
                     <thead>
                       <tr>
@@ -361,6 +367,8 @@ export default function Reports() {
                       ))}
                     </tbody>
                   </table>
+
+                  </div>
                   <Pagination totalItems={sortedRecords.length} itemsPerPage={10} currentPage={recordsPage} onPageChange={setRecordsPage} />
                 </>
               )}
@@ -374,6 +382,8 @@ export default function Reports() {
               ) : (
                 <>
                   <p className={styles.sectionSubtitle}>Истекающие сроки годности (в течение 2 месяцев)</p>
+                  <div className="tableScroll">
+
                   <table className="table">
                     <thead>
                       <tr>
@@ -394,6 +404,8 @@ export default function Reports() {
                       ))}
                     </tbody>
                   </table>
+
+                  </div>
                   <Pagination totalItems={sortedExpiring.length} itemsPerPage={10} currentPage={expiringPage} onPageChange={setExpiringPage} />
                 </>
               )}
