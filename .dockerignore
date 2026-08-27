@@ -6,3 +6,8 @@ README.md
 dist
 .irbis
 .env
+
+.kilo/
+
+NEXT.md
+ONBOARDING.md

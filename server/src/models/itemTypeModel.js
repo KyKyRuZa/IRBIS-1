@@ -19,10 +19,10 @@ export async function getItemTypeById(id) {
 }
 
 export async function updateItemType(id, data) {
-  const { name, category, unit, default_wear_time_months, seasonality, requires_certificate } = data;
+  const { name, category, unit, default_wear_time, seasonality, requires_certificate } = data;
   const result = await pool.query(
     'UPDATE item_types SET name=$1, category=$2, unit=$3, default_wear_time_months=$4, seasonality=$5, requires_certificate=$6 WHERE id=$7 RETURNING *',
-    [name, category, unit, default_wear_time_months, seasonality, requires_certificate, id]
+    [name, category, unit, default_wear_time, seasonality, requires_certificate, id]
   );
   return result.rows[0];
 }

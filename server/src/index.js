@@ -25,17 +25,33 @@ import rateLimit from 'express-rate-limit';
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
   message: { error: 'Too many login attempts, please try again later' },
 });
 
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later' },
+});
+
 const app = express();
-app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') || false, credentials: true }));
+app.set('trust proxy', 1);
+const allowedOrigins = (process.env.CORS_ORIGIN || 'https://irbis.cloud-ip.cc')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(cookiesMiddleware);
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 app.use('/certs', express.static('certs'));
 
 app.use('/api/auth/login', loginLimiter);
+app.use('/api', apiLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/sites', siteRoutes);
@@ -52,7 +68,9 @@ app.use('/api/upload', uploadRoutes);
 
 app.use((err, req, res, next) => {
   logger.error(err);
-  res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
+  const status = err.status || 500;
+  const message = status >= 500 ? 'Internal server error' : (err.message || 'Error');
+  res.status(status).json({ error: message });
 });
 
 const PORT = process.env.PORT || 5000;
