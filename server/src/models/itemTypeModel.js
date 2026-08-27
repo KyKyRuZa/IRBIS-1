@@ -19,10 +19,24 @@ export async function getItemTypeById(id) {
 }
 
 export async function updateItemType(id, data) {
-  const { name, category, unit, default_wear_time, seasonality, requires_certificate } = data;
+  const fields = {
+    name: data.name,
+    category: data.category,
+    unit: data.unit,
+    default_wear_time_months: data.default_wear_time,
+    seasonality: data.seasonality,
+    requires_certificate: data.requires_certificate,
+  };
+  const entries = Object.entries(fields).filter(([, v]) => v !== undefined);
+  if (entries.length === 0) {
+    const r = await pool.query('SELECT * FROM item_types WHERE id=$1', [id]);
+    return r.rows[0];
+  }
+  const assignments = entries.map(([col], i) => `"${col}"=$${i + 1}`);
+  const values = entries.map(([, v]) => v);
   const result = await pool.query(
-    'UPDATE item_types SET name=$1, category=$2, unit=$3, default_wear_time_months=$4, seasonality=$5, requires_certificate=$6 WHERE id=$7 RETURNING *',
-    [name, category, unit, default_wear_time, seasonality, requires_certificate, id]
+    `UPDATE item_types SET ${assignments.join(', ')} WHERE id=$${entries.length + 1} RETURNING *`,
+    [...values, id]
   );
   return result.rows[0];
 }

@@ -16,7 +16,7 @@ import formRoutes from './routes/formRoutes.js';
 import pushRoutes from './routes/pushRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import { logger } from './utils/logger.js';
-import { initDB } from './models/db.js';
+import { initDB, pool } from './models/db.js';
 import { aggregateNotifications } from './services/notificationService.js';
 import { cookiesMiddleware } from './middleware/auth.js';
 
@@ -25,33 +25,17 @@ import rateLimit from 'express-rate-limit';
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
-  standardHeaders: true,
-  legacyHeaders: false,
   message: { error: 'Too many login attempts, please try again later' },
 });
 
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 300,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many requests, please try again later' },
-});
-
 const app = express();
-app.set('trust proxy', 1);
-const allowedOrigins = (process.env.CORS_ORIGIN || 'https://irbis.cloud-ip.cc')
-  .split(',')
-  .map((o) => o.trim())
-  .filter(Boolean);
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') || false, credentials: true }));
 app.use(cookiesMiddleware);
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 app.use('/certs', express.static('certs'));
 
 app.use('/api/auth/login', loginLimiter);
-app.use('/api', apiLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/sites', siteRoutes);
@@ -68,13 +52,10 @@ app.use('/api/upload', uploadRoutes);
 
 app.use((err, req, res, next) => {
   logger.error(err);
-  const status = err.status || 500;
-  const message = status >= 500 ? 'Internal server error' : (err.message || 'Error');
-  res.status(status).json({ error: message });
+  res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
 });
 
 const PORT = process.env.PORT || 5000;
-
 
 const gracefulShutdown = async () => {
   console.log('Received shutdown signal, closing database pool...');
@@ -89,12 +70,17 @@ const gracefulShutdown = async () => {
 
 process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
-initDB().then(() => {
-  aggregateNotifications().catch(err => console.error('Initial notification aggregation failed:', err));
-  cron.schedule('0 8 * * *', () => {
-    aggregateNotifications().catch(err => console.error('Notification job failed:', err));
+
+if (process.env.NODE_ENV !== 'test') {
+  initDB().then(() => {
+    aggregateNotifications().catch(err => console.error('Initial notification aggregation failed:', err));
+    cron.schedule('0 8 * * *', () => {
+      aggregateNotifications().catch(err => console.error('Notification job failed:', err));
+    });
+    app.listen(PORT, () => {
+      logger.info(`Server running on port ${PORT}`);
+    });
   });
-  app.listen(PORT, () => {
-    logger.info(`Server running on port ${PORT}`);
-  });
-});
+}
+
+export default app;

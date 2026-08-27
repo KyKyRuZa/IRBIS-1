@@ -58,25 +58,35 @@ export async function getEmployeeById(id) {
 
 export async function updateEmployee(id, data) {
   const sanitize = (v) => (v === '' || v === undefined || v === null) ? null : v;
-  const {
-    full_name, position, site_id, gender, hire_date,
-    clothing_size, shoe_size, height, status, personnel_number,
-    hat_size, respirator_size, gloves_size, position_change_date
-  } = data;
+  const map = {
+    full_name: data.full_name !== undefined ? sanitize(data.full_name) : undefined,
+    position: data.position !== undefined ? sanitize(data.position) : undefined,
+    site_id: data.site_id !== undefined ? (sanitize(data.site_id) && data.site_id !== '' ? Number(data.site_id) : null) : undefined,
+    gender: data.gender !== undefined ? sanitize(data.gender) : undefined,
+    hire_date: data.hire_date !== undefined ? sanitize(data.hire_date) : undefined,
+    clothing_size: data.clothing_size !== undefined ? sanitize(data.clothing_size) : undefined,
+    shoe_size: data.shoe_size !== undefined ? sanitize(data.shoe_size) : undefined,
+    height: data.height !== undefined ? (sanitize(data.height) && data.height !== '' ? Number(data.height) : null) : undefined,
+    status: data.status !== undefined ? sanitize(data.status) : undefined,
+    personnel_number: data.personnel_number !== undefined ? sanitize(data.personnel_number) : undefined,
+    hat_size: data.hat_size !== undefined ? sanitize(data.hat_size) : undefined,
+    respirator_size: data.respirator_size !== undefined ? sanitize(data.respirator_size) : undefined,
+    gloves_size: data.gloves_size !== undefined ? sanitize(data.gloves_size) : undefined,
+    position_change_date: data.position_change_date !== undefined ? sanitize(data.position_change_date) : undefined,
+  };
+  const entries = Object.entries(map).filter(([, v]) => v !== undefined);
+  if (entries.length === 0) {
+    const r = await pool.query(
+      `SELECT e.*, s.name as site_name FROM employees e LEFT JOIN sites s ON e.site_id = s.id WHERE e.id=$1`,
+      [id]
+    );
+    return r.rows[0];
+  }
+  const assignments = entries.map(([col], i) => `"${col}"=$${i + 1}`);
+  const values = entries.map(([, v]) => v);
   const result = await pool.query(
-    `UPDATE employees SET full_name=$1, position=$2, site_id=$3, gender=$4, hire_date=$5, 
-     clothing_size=$6, shoe_size=$7, height=$8, status=$9, personnel_number=$10, hat_size=$11, respirator_size=$12, gloves_size=$13, position_change_date=$14 
-     WHERE id=$15 RETURNING *`,
-    [
-      sanitize(full_name), sanitize(position),
-      sanitize(site_id) && site_id !== '' ? Number(site_id) : null,
-      sanitize(gender), sanitize(hire_date),
-      sanitize(clothing_size), sanitize(shoe_size),
-      sanitize(height) && height !== '' ? Number(height) : null,
-      sanitize(status), sanitize(personnel_number),
-      sanitize(hat_size), sanitize(respirator_size), sanitize(gloves_size),
-      sanitize(position_change_date), id
-    ]
+    `UPDATE employees SET ${assignments.join(', ')} WHERE id=$${entries.length + 1} RETURNING *`,
+    [...values, id]
   );
   return result.rows[0];
 }
@@ -100,10 +110,20 @@ export async function getSiteById(id) {
 }
 
 export async function updateSite(id, data) {
-  const { name, responsible_person } = data;
+  const fields = {
+    name: data.name,
+    responsible_person: data.responsible_person,
+  };
+  const entries = Object.entries(fields).filter(([, v]) => v !== undefined);
+  if (entries.length === 0) {
+    const r = await pool.query('SELECT * FROM sites WHERE id=$1', [id]);
+    return r.rows[0];
+  }
+  const assignments = entries.map(([col], i) => `"${col}"=$${i + 1}`);
+  const values = entries.map(([, v]) => v);
   const result = await pool.query(
-    'UPDATE sites SET name=$1, responsible_person=$2 WHERE id=$3 RETURNING *',
-    [name, responsible_person, id]
+    `UPDATE sites SET ${assignments.join(', ')} WHERE id=$${entries.length + 1} RETURNING *`,
+    [...values, id]
   );
   return result.rows[0];
 }

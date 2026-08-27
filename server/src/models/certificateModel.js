@@ -40,10 +40,24 @@ export async function getCertificateById(id) {
 }
 
 export async function updateCertificate(id, data) {
-  const { product_name, certificate_number, issue_date, expiry_date, file_path, item_type_id } = data;
+  const fields = {
+    product_name: data.product_name,
+    certificate_number: data.certificate_number,
+    issue_date: data.issue_date,
+    expiry_date: data.expiry_date,
+    file_path: data.file_path,
+    item_type_id: data.item_type_id,
+  };
+  const entries = Object.entries(fields).filter(([, v]) => v !== undefined);
+  if (entries.length === 0) {
+    const r = await pool.query('SELECT * FROM certificates WHERE id=$1', [id]);
+    return r.rows[0];
+  }
+  const assignments = entries.map(([col], i) => `"${col}"=$${i + 1}`);
+  const values = entries.map(([, v]) => v);
   const result = await pool.query(
-    'UPDATE certificates SET product_name=$1, certificate_number=$2, issue_date=$3, expiry_date=$4, file_path=$5, item_type_id=$6 WHERE id=$7 RETURNING *',
-    [product_name, certificate_number, issue_date, expiry_date, file_path, item_type_id, id]
+    `UPDATE certificates SET ${assignments.join(', ')} WHERE id=$${entries.length + 1} RETURNING *`,
+    [...values, id]
   );
   return result.rows[0];
 }
