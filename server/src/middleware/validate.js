@@ -3,7 +3,8 @@ import { z } from 'zod';
 export function validate(schema) {
   return (req, res, next) => {
     try {
-      schema.parse(req.body);
+      const parsed = schema.parse(req.body);
+      req.body = parsed;
       next();
     } catch (err) {
       if (err instanceof z.ZodError) {

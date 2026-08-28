@@ -6,4 +6,8 @@ set -e
 mkdir -p /app/uploads/certificates /app/uploads/signatures
 chown -R nextjs:nodejs /app/uploads
 
+# Apply database migrations on every start so a fresh prod database gets its schema.
+echo "Applying database migrations..."
+npx prisma migrate deploy
+
 exec su-exec nextjs:nodejs node src/index.js

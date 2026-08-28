@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { employeesService } from '@/lib/services/employees.service.js';
 import { sitesService } from '@/lib/services/sites.service.js';
 import { useAuth } from '@/hooks/useAuth.js';
+import { toDateInput } from '@/lib/utils/date.js';
 import { useResource } from '@/hooks/useResource.js';
 import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
 import { EMPLOYEE_STATUSES, EMPLOYEE_STATUS_VALUES, normalizeEmployeeStatus } from '@/lib/constants/employee-statuses.js';
@@ -19,6 +20,7 @@ import styles from '@styles/EmployeeList.module.css';
 
 export default function EmployeeList() {
   const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [showModal, setShowModal] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [formData, setFormData] = useState({
@@ -87,7 +89,7 @@ export default function EmployeeList() {
       position: emp.position,
       site_id: emp.site_id || '',
       gender: emp.gender || '',
-      hire_date: emp.hire_date || '',
+      hire_date: toDateInput(emp.hire_date),
       clothing_size: emp.clothing_size || '',
       shoe_size: emp.shoe_size || '',
       personnel_number: emp.personnel_number || '',
@@ -95,7 +97,7 @@ export default function EmployeeList() {
       respirator_size: emp.respirator_size || '',
       gloves_size: emp.gloves_size || '',
       height: emp.height || '',
-      position_change_date: emp.position_change_date || ''
+      position_change_date: toDateInput(emp.position_change_date)
     });
     setShowModal(true);
   };
@@ -146,9 +148,11 @@ export default function EmployeeList() {
             <h1>Справочник сотрудников</h1>
             <div className={styles.subtitle}>Управление кадрами и персональными данными</div>
           </div>
+          {isAdmin && (
           <button className="btn" onClick={() => setShowModal(true)}>
             Добавить сотрудника
           </button>
+          )}
         </div>
       </div>
       <div className={styles.container}>
@@ -228,9 +232,13 @@ export default function EmployeeList() {
                         </Link>
                         {emp.status === EMPLOYEE_STATUS_VALUES.active && (
                           <>
+                        {isAdmin && (
+                          <>
                             <button className="btn" onClick={() => handleEdit(emp)}>Редактировать</button>
                             <button className="btn btn-danger" onClick={() => setDeleteId(emp.id)}>Удалить</button>
                             <button className="btn btn-secondary" onClick={() => setTerminateId(emp.id)}>Уволить</button>
+                          </>
+                        )}
                           </>
                         )}
                       </div>

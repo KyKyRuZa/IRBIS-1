@@ -36,7 +36,7 @@ export default function ItemCatalog() {
     name: '',
     category: 'consumable',
     unit: 'шт',
-    default_wear_time_months: '',
+    default_wear_time: '',
     seasonality: 'year_round',
     requires_certificate: false
   });
@@ -98,14 +98,14 @@ export default function ItemCatalog() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const data = { ...formData };
-    if (data.default_wear_time_months === '') data.default_wear_time_months = null;
+    if (data.default_wear_time === '') data.default_wear_time = null;
     if (editingItem) {
       await itemsService.update(editingItem.id, data);
       setEditingItem(null);
     } else {
       await itemsService.create(data);
     }
-    setFormData({ name: '', category: 'consumable', unit: 'шт', default_wear_time_months: '', seasonality: 'year_round', requires_certificate: false });
+    setFormData({ name: '', category: 'consumable', unit: 'шт', default_wear_time: '', seasonality: 'year_round', requires_certificate: false });
     setShowModal(false);
     fetchItems();
   };
@@ -116,7 +116,7 @@ export default function ItemCatalog() {
       name: item.name,
       category: item.category,
       unit: item.unit || 'шт',
-      default_wear_time_months: item.default_wear_time_months || '',
+      default_wear_time: item.default_wear_time || '',
       seasonality: item.seasonality || 'year_round',
       requires_certificate: item.requires_certificate || false
     });
@@ -138,7 +138,7 @@ export default function ItemCatalog() {
   const handleCancel = () => {
     setEditingItem(null);
     setShowModal(false);
-    setFormData({ name: '', category: 'consumable', unit: 'шт', default_wear_time_months: '', seasonality: 'year_round', requires_certificate: false });
+    setFormData({ name: '', category: 'consumable', unit: 'шт', default_wear_time: '', seasonality: 'year_round', requires_certificate: false });
   };
 
   const showDetails = async (item) => {
@@ -165,7 +165,7 @@ export default function ItemCatalog() {
             <h1>Номенклатура</h1>
             <div className={styles.subtitle}>Справочник спецодежды, обуви и СИЗ</div>
           </div>
-          <button className="btn" onClick={() => { setEditingItem(null); setFormData({ name: '', category: 'consumable', unit: 'шт', default_wear_time_months: '', seasonality: 'year_round', requires_certificate: false }); setShowModal(true); }}>
+          <button className="btn" onClick={() => { setEditingItem(null); setFormData({ name: '', category: 'consumable', unit: 'шт', default_wear_time: '', seasonality: 'year_round', requires_certificate: false }); setShowModal(true); }}>
             Добавить позицию
           </button>
         </div>
@@ -210,7 +210,7 @@ export default function ItemCatalog() {
                 icon={<FontAwesomeIcon icon={faBox} />}
                 title="Позиции не найдены"
                 description={hasActiveFilters ? 'По заданным фильтрам ничего не найдено.' : (category ? 'В выбранной категории пока нет позиций.' : 'Номенклатура пуста. Добавьте первую позицию.')}
-                action={<button className="btn" onClick={() => { setEditingItem(null); setFormData({ name: '', category: 'consumable', unit: 'шт', default_wear_time_months: '', seasonality: 'year_round', requires_certificate: false }); setShowModal(true); }}>Добавить позицию</button>}
+                action={<button className="btn" onClick={() => { setEditingItem(null); setFormData({ name: '', category: 'consumable', unit: 'шт', default_wear_time: '', seasonality: 'year_round', requires_certificate: false }); setShowModal(true); }}>Добавить позицию</button>}
               />
             ) : (
               <>
@@ -220,7 +220,7 @@ export default function ItemCatalog() {
                     <tr>
                       <SortableTh label="Наименование" sortKey="name" sort={sort} onSort={toggleSort} />
                       <SortableTh label="Категория" sortKey="category" sort={sort} onSort={toggleSort} />
-                      <SortableTh label="Срок (мес)" sortKey="default_wear_time_months" sort={sort} onSort={toggleSort} />
+                      <SortableTh label="Срок (мес)" sortKey="default_wear_time" sort={sort} onSort={toggleSort} />
                       <SortableTh label="Сезон" sortKey="seasonality" sort={sort} onSort={toggleSort} />
                       <th>Сертификат</th>
                       <th>Действия</th>
@@ -231,7 +231,7 @@ export default function ItemCatalog() {
                       <tr key={item.id}>
                         <td>{item.name}</td>
                         <td>{categories[item.category]}</td>
-                        <td>{item.default_wear_time_months || '-'}</td>
+                        <td>{item.default_wear_time || '-'}</td>
                         <td>{seasonality[item.seasonality] || '-'}</td>
                         <td>
                           {item.requires_certificate ? (
@@ -286,7 +286,7 @@ export default function ItemCatalog() {
                 </div>
                 <div className={styles.detailField}>
                   <span className={styles.detailFieldLabel}>Срок годности</span>
-                  <span className={styles.detailFieldValue}>{detailItem.default_wear_time_months || '-'} мес.</span>
+                  <span className={styles.detailFieldValue}>{detailItem.default_wear_time || '-'} мес.</span>
                 </div>
                 <div className={styles.detailField}>
                   <span className={styles.detailFieldLabel}>Сезонность</span>
@@ -389,8 +389,8 @@ export default function ItemCatalog() {
                   <input
                     type="number"
                     className="form-control"
-                    value={formData.default_wear_time_months}
-                    onChange={(e) => setFormData({...formData, default_wear_time_months: e.target.value})}
+                    value={formData.default_wear_time}
+                    onChange={(e) => setFormData({...formData, default_wear_time: e.target.value})}
                   />
                 </div>
                 <div className={`form-group ${styles.field}`}>

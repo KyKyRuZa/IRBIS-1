@@ -7,20 +7,21 @@ import { pushService } from '@/lib/services/push.service.js';
 import Icon from '@components/ui/Icon.jsx';
 import styles from '@styles/Header.module.css';
 
-// Список навигационных ссылок для всех пользователей.
-// Точка входа — «Сотрудники» (/).
-const NAV_LINKS = [
+// Базовые ссылки для всех пользователей
+const USER_LINKS = [
   { to: '/', label: 'Сотрудники' },
   { to: '/issue', label: 'Выдача' },
+];
+
+// Ссылки, доступные только администратору
+const ADMIN_LINKS = [
   { to: '/objects', label: 'Объекты' },
   { to: '/items', label: 'Номенклатура' },
   { to: '/norms', label: 'Нормы выдачи' },
   { to: '/certificates', label: 'Сертификаты' },
   { to: '/reports', label: 'Отчёты' },
+  { to: '/forms', label: 'Учёт форм' },
 ];
-
-// Ссылки, доступные только администратору
-const ADMIN_LINKS = [{ to: '/forms', label: 'Учёт форм' }];
 
 // Компонент одной ссылки
 const NavItem = ({ to, label, isActive, onClick }) => (
@@ -178,7 +179,7 @@ const ProfileDropdown = ({ user, notifications, unreadCount, onLogout, pushProps
 
 function Header() {
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
   const {
     supported,
     subscribed,
@@ -206,14 +207,14 @@ function Header() {
         if (mounted) setNotifLoading(false);
       }
     };
-    if (user) loadNotifications();
+    if (user?.role === 'admin') loadNotifications();
     return () => { mounted = false; };
   }, [user]);
 
   const allLinks = useMemo(() => {
-    const base = user?.role === 'admin' ? [...NAV_LINKS, ...ADMIN_LINKS] : NAV_LINKS;
+    const base = isAdmin ? [...USER_LINKS, ...ADMIN_LINKS] : USER_LINKS;
     return base;
-  }, [user?.role]);
+  }, [isAdmin]);
 
   const handleLinkClick = useCallback(() => setIsMenuOpen(false), []);
 

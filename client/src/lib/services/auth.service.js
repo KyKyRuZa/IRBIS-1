@@ -8,7 +8,7 @@ export const authService = {
     api.post('/api/auth/register', { username, password, role }).then(r => r.data),
 
   changePassword: (oldPassword, newPassword) =>
-    api.post('/api/auth/change-password', { oldPassword, newPassword }).then(r => r.data),
+    api.post('/api/auth/change-password', { old_password: oldPassword, new_password: newPassword }).then(r => r.data),
 
   me: () =>
     api.get('/api/auth/me').then(r => r.data),

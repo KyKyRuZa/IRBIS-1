@@ -44,8 +44,9 @@ function useAuthState() {
   }, []);
 
   const isAuthenticated = Boolean(user);
+  const isAdmin = isAuthenticated && user?.role === 'admin';
 
-  return { user, login, logout, isAuthenticated, ready };
+  return { user, login, logout, isAuthenticated, isAdmin, ready };
 }
 
 export function AuthProvider({ children }) {

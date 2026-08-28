@@ -30,6 +30,19 @@ export async function uploadSignature(req, res, next) {
     if (!issue_record_id) {
       return res.status(400).json({ error: 'issue_record_id is required' });
     }
+    const recordResult = await pool.query('SELECT employee_id FROM issue_records WHERE id=$1', [issue_record_id]);
+    const record = recordResult.rows[0];
+    if (!record) {
+      return res.status(404).json({ error: 'Issue record not found' });
+    }
+    const isAdmin = req.user?.role === 'admin';
+    if (!isAdmin) {
+      const empResult = await pool.query('SELECT id FROM employees WHERE user_id=$1', [req.user.id]);
+      const employeeId = empResult.rows[0]?.id;
+      if (!employeeId || record.employee_id !== employeeId) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+    }
     const relativePath = path.join('/uploads', 'signatures', req.file.filename);
     await pool.query('UPDATE issue_records SET signature_path=$1, signature_date=$2 WHERE id=$3', [relativePath, new Date().toISOString().split('T')[0], issue_record_id]);
     const result = await pool.query('SELECT * FROM issue_records WHERE id=$1', [issue_record_id]);

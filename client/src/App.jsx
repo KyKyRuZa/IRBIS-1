@@ -25,6 +25,13 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+function AdminRoute({ children }) {
+  const { isAuthenticated, isAdmin } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isAdmin) return <Navigate to="/" replace />;
+  return children;
+}
+
 function AppContent() {
   const { user, logout } = useAuth();
   useEffect(() => {
@@ -41,12 +48,12 @@ function AppContent() {
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<ProtectedRoute><EmployeeList /></ProtectedRoute>} />
             <Route path="/employees/:id" element={<ProtectedRoute><EmployeeCard /></ProtectedRoute>} />
-            <Route path="/objects" element={<ProtectedRoute><Object /></ProtectedRoute>} />
-            <Route path="/items" element={<ProtectedRoute><ItemCatalog /></ProtectedRoute>} />
-            <Route path="/norms" element={<ProtectedRoute><IssueNorms /></ProtectedRoute>} />
+            <Route path="/objects" element={<AdminRoute><Object /></AdminRoute>} />
+            <Route path="/items" element={<AdminRoute><ItemCatalog /></AdminRoute>} />
+            <Route path="/norms" element={<AdminRoute><IssueNorms /></AdminRoute>} />
             <Route path="/issue" element={<ProtectedRoute><IssueForm /></ProtectedRoute>} />
-            <Route path="/certificates" element={<ProtectedRoute><Certificates /></ProtectedRoute>} />
-            <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+            <Route path="/certificates" element={<AdminRoute><Certificates /></AdminRoute>} />
+            <Route path="/reports" element={<AdminRoute><Reports /></AdminRoute>} />
             {user?.role === 'admin' && <Route path="/forms" element={<ProtectedRoute><FormTracker /></ProtectedRoute>} />}
           </Route>
           <Route path="*" element={<NotFoundPage />} />

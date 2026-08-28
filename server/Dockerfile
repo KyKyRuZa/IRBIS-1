@@ -25,7 +25,7 @@ COPY prisma.config.js ./
 COPY prisma ./prisma
 COPY docker-entrypoint.sh ./
 RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
-RUN apk add --no-cache su-exec postgresql-client && chmod +x docker-entrypoint.sh
+RUN apk add --no-cache su-exec postgresql-client && npm install -g prisma@7.9.1 && chmod +x docker-entrypoint.sh
 EXPOSE 5000
 ENV NODE_ENV=production
 ENTRYPOINT ["./docker-entrypoint.sh"]

@@ -4,6 +4,7 @@ import { itemsService } from '@/lib/services/items.service.js';
 import { uploadService } from '@/lib/services/upload.service.js';
 import { CERTIFICATE_STATUSES, CERTIFICATE_STATUS_LABELS } from '@lib/constants/certificate-statuses.js';
 import { formatDate } from '@/lib/utils/date.js';
+import { toDateInput } from '@/lib/utils/date.js';
 import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
 import Modal from '@components/ui/Modal.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
@@ -120,8 +121,8 @@ export default function Certificates() {
     setFormData({
       product_name: cert.product_name,
       certificate_number: cert.certificate_number || '',
-      issue_date: cert.issue_date || '',
-      expiry_date: cert.expiry_date || '',
+      issue_date: toDateInput(cert.issue_date),
+      expiry_date: toDateInput(cert.expiry_date),
       item_type_id: cert.item_type_id || ''
     });
     setCertificateFile(null);

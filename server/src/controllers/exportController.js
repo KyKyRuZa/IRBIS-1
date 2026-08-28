@@ -26,6 +26,64 @@ function splitFullName(fullName) {
   };
 }
 
+async function buildCardData(emp) {
+  const nameParts = splitFullName(emp.full_name);
+  const norms = await getNormsForEmployee(emp);
+  const history = await getIssueRecordsByEmployee(emp.id);
+
+  const normRows = norms.map(n => ({
+    name: n.item_type_name || '',
+    etnPoint: n.etn_point || '',
+    period: n.period_text ? `${n.quantity} шт. в ${n.period_text}` : `${n.quantity} шт.`,
+    category: n.category || '',
+  }));
+
+  const toGroup = (arr) => arr.length > 0 ? arr : [{ name: '', etnPoint: '', period: '' }];
+
+  const otherNorms = toGroup(normRows.filter(n => ['clothing', 'footwear', 'siz'].includes(n.category)).map(({ category, ...rest }) => rest));
+  const waterNorms = toGroup([]);
+  const coldNorms = toGroup([]);
+  const dermatologicalNorms = toGroup(normRows.filter(n => n.category === 'consumable').map(({ category, ...rest }) => rest));
+
+  return {
+    lastName: nameParts.lastName,
+    firstName: nameParts.firstName,
+    middleName: nameParts.middleName,
+    personnelNumber: emp.personnel_number || '',
+    siteName: emp.site_name || '',
+    position: emp.position || '',
+    hireDate: formatDate(emp.hire_date),
+    positionChangeDate: formatDate(emp.position_change_date),
+    gender: emp.gender === 'male' ? 'Мужской' : emp.gender === 'female' ? 'Женский' : '',
+    height: emp.height || '',
+    clothingSize: emp.clothing_size || '',
+    shoeSize: emp.shoe_size || '',
+    hatSize: emp.hat_size || '',
+    respiratorSize: emp.respirator_size || '',
+    glovesSize: emp.gloves_size || '',
+    otherNorms,
+    waterNorms,
+    coldNorms,
+    dermatologicalNorms,
+    signatureGet: '',
+    signatureReturn: '',
+    responsiblePerson: emp.site_responsible || '',
+    history: history.map(record => {
+      const isConsumable = record.category === 'consumable';
+      return {
+        itemName: record.item_type_name || '',
+        model: record.certificate_number || '‒',
+        issueDate: formatDate(record.issue_date),
+        issueQty: String(record.quantity || ''),
+        issueMethod: record.issue_method || (isConsumable ? 'лично' : '‒'),
+        returnDate: (!isConsumable && record.return_date) ? formatDate(record.return_date) : '‒',
+        returnQty: (!isConsumable && record.return_quantity !== undefined) ? String(record.return_quantity) : '‒',
+        act: isConsumable ? '' : (record.write_off_act || ''),
+      };
+    }),
+  };
+}
+
 // Загрузка и рендеринг шаблона
 async function renderTemplate(templatePath, data) {
   const content = fs.readFileSync(templatePath);
@@ -127,61 +185,7 @@ export async function exportEmployeeCard(req, res, next) {
     if (!result.rows[0]) return res.status(404).json({ error: 'Employee not found' });
 
     const emp = result.rows[0];
-    const nameParts = splitFullName(emp.full_name);
-    const norms = await getNormsForEmployee(emp);
-    const history = await getIssueRecordsByEmployee(req.params.id);
-
-    const normRows = norms.map(n => ({
-      name: n.item_type_name || '',
-      etnPoint: n.etn_point || '',
-      period: n.period_text ? `${n.quantity} шт. в ${n.period_text}` : `${n.quantity} шт.`,
-      category: n.category || '',
-    }));
-
-    const toGroup = (arr) => arr.length > 0 ? arr : [{ name: '', etnPoint: '', period: '' }];
-
-    const otherNorms = toGroup(normRows.filter(n => ['clothing', 'footwear', 'siz'].includes(n.category)).map(({ category, ...rest }) => rest));
-    const waterNorms = toGroup([]);
-    const coldNorms = toGroup([]);
-    const dermatologicalNorms = toGroup(normRows.filter(n => n.category === 'consumable').map(({ category, ...rest }) => rest));
-
-    const data = {
-      lastName: nameParts.lastName,
-      firstName: nameParts.firstName,
-      middleName: nameParts.middleName,
-      personnelNumber: emp.personnel_number || '',
-      siteName: emp.site_name || '',
-      position: emp.position || '',
-      hireDate: formatDate(emp.hire_date),
-      positionChangeDate: formatDate(emp.position_change_date),
-      gender: emp.gender === 'male' ? 'Мужской' : emp.gender === 'female' ? 'Женский' : '',
-      height: emp.height || '',
-      clothingSize: emp.clothing_size || '',
-      shoeSize: emp.shoe_size || '',
-      hatSize: emp.hat_size || '',
-      respiratorSize: emp.respirator_size || '',
-      glovesSize: emp.gloves_size || '',
-      otherNorms,
-      waterNorms,
-      coldNorms,
-      dermatologicalNorms,
-      signatureGet: '',
-      signatureReturn: '',
-      responsiblePerson: emp.site_responsible || '',
-      history: history.map(record => {
-        const isConsumable = record.category === 'consumable';
-        return {
-          itemName: record.item_type_name || '',
-          model: record.certificate_number || '‒',
-          issueDate: formatDate(record.issue_date),
-          issueQty: String(record.quantity || ''),
-          issueMethod: record.issue_method || (isConsumable ? 'лично' : '‒'),
-          returnDate: (!isConsumable && record.return_date) ? formatDate(record.return_date) : '‒',
-          returnQty: (!isConsumable && record.return_quantity !== undefined) ? String(record.return_quantity) : '‒',
-          act: isConsumable ? '' : (record.write_off_act || ''),
-        };
-      }),
-    };
+    const data = await buildCardData(emp);
 
     const templatePath = path.join(__dirname, '..', 'templates', 'card-template.docx');
     const templateBuffer = fs.readFileSync(templatePath);
@@ -283,60 +287,7 @@ export async function exportAllCards(req, res, next) {
     const templatePath = path.join(__dirname, '..', 'templates', 'card-template.docx');
 
     for (const emp of employees) {
-      const norms = await getNormsForEmployee(emp);
-      const history = await getIssueRecordsByEmployee(emp.id);
-
-      const normRows = norms.map(n => ({
-        name: n.item_type_name || '',
-        etnPoint: n.etn_point || '',
-        period: n.period_text ? `${n.quantity} шт. в ${n.period_text}` : `${n.quantity} шт.`,
-        category: n.category || '',
-      }));
-
-      const toGroup = (arr) => arr.length > 0 ? arr : [{ name: '', etnPoint: '', period: '' }];
-
-      const otherNorms = toGroup(normRows.filter(n => ['clothing', 'footwear', 'siz'].includes(n.category)).map(({ category, ...rest }) => rest));
-      const waterNorms = toGroup([]);
-      const coldNorms = toGroup([]);
-      const dermatologicalNorms = toGroup(normRows.filter(n => n.category === 'consumable').map(({ category, ...rest }) => rest));
-
-      const data = {
-        fullName: emp.full_name || '',
-        firstName: '',
-        middleName: '',
-        personnelNumber: emp.personnel_number || '',
-        siteName: emp.site_name || '',
-        position: emp.position || '',
-        hireDate: formatDate(emp.hire_date),
-        positionChangeDate: formatDate(emp.position_change_date),
-        gender: emp.gender === 'male' ? 'Мужской' : emp.gender === 'female' ? 'Женский' : '',
-        height: emp.height || '',
-        clothingSize: emp.clothing_size || '',
-        shoeSize: emp.shoe_size || '',
-        hatSize: emp.hat_size || '',
-        respiratorSize: emp.respirator_size || '',
-        glovesSize: emp.gloves_size || '',
-        otherNorms,
-        waterNorms,
-        coldNorms,
-        dermatologicalNorms,
-        responsiblePerson: emp.site_responsible || '',
-        history: history.map(record => {
-          const isConsumable = record.category === 'consumable';
-          return {
-            itemName: record.item_type_name || '',
-            model: record.certificate_number || '‒',
-            issueDate: formatDate(record.issue_date),
-            issueQty: String(record.quantity || ''),
-            issueMethod: record.issue_method || (isConsumable ? 'лично' : '‒'),
-            returnDate: (!isConsumable && record.return_date) ? formatDate(record.return_date) : '‒',
-            returnQty: (!isConsumable && record.return_quantity !== undefined) ? String(record.return_quantity) : '‒',
-            signatureGet: '',
-            signatureReturn: '',
-            act: isConsumable ? '' : (record.write_off_act || ''),
-          };
-        }),
-      };
+      const data = await buildCardData(emp);
 
       const buffer = await renderTemplate(templatePath, data);
       if (!buffer || !Buffer.isBuffer(buffer)) {

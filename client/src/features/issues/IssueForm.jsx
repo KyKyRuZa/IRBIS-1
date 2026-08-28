@@ -5,6 +5,7 @@ import { sitesService } from '@/lib/services/sites.service.js';
 import { certificatesService } from '@/lib/services/certificates.service.js';
 import { issuesService } from '@/lib/services/issues.service.js';
 import { uploadService } from '@/lib/services/upload.service.js';
+import { useAuth } from '@/hooks/useAuth.js';
 import { ISSUE_STATUSES, ISSUE_STATUS_LABELS } from '@/lib/constants/issue-statuses.js';
 import { useResource } from '@/hooks/useResource.js';
 import { useFormState } from '@/hooks/useFormState.js';
@@ -31,6 +32,7 @@ const formInitialState = {
 };
 
 export default function IssueForm() {
+  const { isAdmin } = useAuth();
   const [employees, setEmployees] = useState([]);
   const [items, setItems] = useState([]);
   const [sites, setSites] = useState([]);
@@ -246,9 +248,11 @@ export default function IssueForm() {
             <h1>Выдача спецодежды и СИЗ</h1>
             <div className={styles.subtitle}>Оперативная выдача, групповая раздача и возвраты</div>
           </div>
+          {isAdmin && (
           <button className="btn" onClick={() => setShowModal(true)}>
             Новая выдача
           </button>
+          )}
         </div>
       </div>
       <div className={styles.container}>
@@ -323,7 +327,7 @@ export default function IssueForm() {
                 icon={<FontAwesomeIcon icon={faTruckRampBox} />}
                 title="Выдач пока нет"
                 description={hasActiveFilters ? 'По заданным фильтрам ничего не найдено.' : 'Зарегистрируйте первую выдачу спецодежды или СИЗ.'}
-                action={<button className="btn" onClick={() => setShowModal(true)}>Новая выдача</button>}
+                action={isAdmin ? <button className="btn" onClick={() => setShowModal(true)}>Новая выдача</button> : null}
               />
             ) : (
               <>
@@ -362,7 +366,7 @@ export default function IssueForm() {
                            )}
                          </td>
                         <td>
-                          {record.status === ISSUE_STATUSES.issued && (
+                          {record.status === ISSUE_STATUSES.issued && isAdmin && (
                             <div className="action-buttons">
                               <button className="btn" onClick={() => handleEdit(record)}>Редактировать</button>
                               <button className="btn btn-danger" onClick={() => setDeleteId(record.id)}>Удалить</button>

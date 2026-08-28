@@ -16,7 +16,7 @@ vi.mock('@/lib/api.js', () => {
 const specs = [
   { name: 'login', http: 'post', args: ['user', 'pass'], expected: ['/api/auth/login', { username: 'user', password: 'pass' }], sample: { token: 't', username: 'user', role: 'admin' } },
   { name: 'register', http: 'post', args: ['user', 'pass'], expected: ['/api/auth/register', { username: 'user', password: 'pass', role: 'admin' }], sample: { id: 1 } },
-  { name: 'changePassword', http: 'post', args: ['old', 'new'], expected: ['/api/auth/change-password', { oldPassword: 'old', newPassword: 'new' }], sample: { ok: true } },
+  { name: 'changePassword', http: 'post', args: ['old', 'new'], expected: ['/api/auth/change-password', { old_password: 'old', new_password: 'new' }], sample: { ok: true } },
 ];
 
 describe('authService', () => {
