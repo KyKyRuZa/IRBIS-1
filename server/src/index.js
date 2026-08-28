@@ -22,18 +22,46 @@ import { cookiesMiddleware } from './middleware/auth.js';
 
 import rateLimit from 'express-rate-limit';
 
+const isProd = process.env.NODE_ENV === 'production';
+const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === 'true';
+
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => rateLimitDisabled,
   message: { error: 'Too many login attempts, please try again later' },
 });
 
+const globalLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 600,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => rateLimitDisabled,
+  message: { error: 'Too many requests, please try again later' },
+});
+
+function securityHeaders(req, res, next) {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  next();
+}
+
 const app = express();
 app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') || false, credentials: true }));
+app.use(securityHeaders);
 app.use(cookiesMiddleware);
 app.use(express.json());
-app.use('/uploads', express.static('uploads'));
-app.use('/certs', express.static('certs'));
+app.use('/uploads', express.static('uploads', {
+  setHeaders: (res) => res.setHeader('X-Content-Type-Options', 'nosniff'),
+}));
+app.use('/certs', express.static('certs', {
+  setHeaders: (res) => res.setHeader('X-Content-Type-Options', 'nosniff'),
+}));
+app.use('/api', globalLimiter);
 
 app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth', authRoutes);
@@ -52,7 +80,9 @@ app.use('/api/upload', uploadRoutes);
 
 app.use((err, req, res, next) => {
   logger.error(err);
-  res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
+  const status = err.status || 500;
+  const message = isProd ? 'Internal Server Error' : (err.message || 'Internal Server Error');
+  res.status(status).json({ error: message });
 });
 
 const PORT = process.env.PORT || 5000;

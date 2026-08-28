@@ -24,19 +24,23 @@ export async function subscribePush(req, res, next) {
     if (!endpoint || !keys?.p256dh || !keys?.auth) {
       return res.status(400).json({ error: 'endpoint, keys.p256dh and keys.auth are required' });
     }
-    let effectiveEmployeeId = employee_id;
-    if (effectiveEmployeeId === undefined || effectiveEmployeeId === null || effectiveEmployeeId === '') {
-      const empResult = await pool.query('SELECT id FROM employees WHERE id = $1', [userId]);
-      if (empResult.rows.length > 0) {
-        effectiveEmployeeId = userId;
+    const isAdmin = req.user?.role === 'admin';
+    let effectiveEmployeeId;
+    if (isAdmin) {
+      if (employee_id) {
+        const empResult = await pool.query('SELECT id FROM employees WHERE id = $1', [employee_id]);
+        if (empResult.rows.length === 0) {
+          return res.status(400).json({ error: 'Employee not found' });
+        }
+        effectiveEmployeeId = employee_id;
       } else {
-        effectiveEmployeeId = null;
+        const self = await pool.query('SELECT id FROM employees WHERE user_id = $1', [userId]);
+        effectiveEmployeeId = self.rows.length > 0 ? self.rows[0].id : null;
       }
     } else {
-      const empResult = await pool.query('SELECT id FROM employees WHERE id = $1', [effectiveEmployeeId]);
-      if (empResult.rows.length === 0) {
-        return res.status(400).json({ error: 'Employee not found' });
-      }
+      // Non-admins may only subscribe for themselves.
+      const self = await pool.query('SELECT id FROM employees WHERE user_id = $1', [userId]);
+      effectiveEmployeeId = self.rows.length > 0 ? self.rows[0].id : null;
     }
     const userAgent = req.headers['user-agent'] || undefined;
     // One active subscription per user: upsert on user_id replaces any

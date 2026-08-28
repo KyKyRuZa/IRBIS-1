@@ -2,6 +2,16 @@ import crypto from 'crypto';
 import pool from '../models/db.js';
 import bcrypt from 'bcrypt';
 import { LoginSchema, RegisterSchema, ChangePasswordSchema } from '../validation/index.js';
+
+const DUMMY_HASH = '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZd9qJ6jFm';
+
+async function verifyPassword(password, hash) {
+  try {
+    return await bcrypt.compare(password, hash);
+  } catch {
+    return false;
+  }
+}
 import {
   signAccessToken,
   createRefreshToken,
@@ -21,9 +31,10 @@ export async function login(req, res, next) {
     const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
     const user = result.rows[0];
     if (!user) {
+      await verifyPassword(password, DUMMY_HASH);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    const valid = await bcrypt.compare(password, user.password_hash);
+    const valid = await verifyPassword(password, user.password_hash);
     if (!valid) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -129,7 +140,7 @@ export async function changePassword(req, res, next) {
     const result = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
     const user = result.rows[0];
     if (!user) return res.status(404).json({ error: 'User not found' });
-    const valid = await bcrypt.compare(old_password, user.password_hash);
+    const valid = await verifyPassword(old_password, user.password_hash);
     if (!valid) return res.status(401).json({ error: 'Invalid old password' });
     const hash = await bcrypt.hash(new_password, 10);
     await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, userId]);

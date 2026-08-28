@@ -1,7 +1,8 @@
 import pool from '../models/db.js';
 
 export async function aggregateNotifications() {
-  await pool.query('DELETE FROM notifications');
+  const existing = await pool.query('SELECT notification_id, read FROM notifications');
+  const readMap = new Map(existing.rows.map(r => [r.notification_id, r.read]));
 
   const notifications = [];
 
@@ -99,10 +100,18 @@ export async function aggregateNotifications() {
     });
   });
 
+  const currentIds = notifications.map(n => n.notification_id);
+  if (currentIds.length > 0) {
+    await pool.query('DELETE FROM notifications WHERE notification_id != ALL($1)', [currentIds]);
+  } else {
+    await pool.query('DELETE FROM notifications');
+  }
+
   for (const n of notifications) {
+    const read = readMap.get(n.notification_id) ?? false;
     await pool.query(`
       INSERT INTO notifications (notification_id, type, severity, message, employee_id, site_id, date, read, created_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, false, NOW())
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
       ON CONFLICT (notification_id) DO UPDATE SET
         type = EXCLUDED.type,
         severity = EXCLUDED.severity,
@@ -110,6 +119,7 @@ export async function aggregateNotifications() {
         employee_id = EXCLUDED.employee_id,
         site_id = EXCLUDED.site_id,
         date = EXCLUDED.date,
+        read = EXCLUDED.read,
         created_at = NOW()
     `, [
       n.notification_id,
@@ -118,7 +128,8 @@ export async function aggregateNotifications() {
       n.message,
       n.employee_id || null,
       n.site_id || null,
-      n.date
+      n.date,
+      read
     ]);
   }
 }

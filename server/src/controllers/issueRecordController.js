@@ -145,6 +145,11 @@ export async function listIssues(req, res, next) {
 
 export async function dispose(req, res, next) {
   try {
+    const current = await getIssueRecordById(req.params.id);
+    if (!current) return res.status(404).json({ error: 'Record not found' });
+    if (current.status !== 'issued') {
+      return res.status(409).json({ error: `Cannot dispose a record with status '${current.status}'` });
+    }
     const record = await disposeIssueRecord(req.params.id);
     if (!record) return res.status(404).json({ error: 'Record not found' });
     res.json(record);
@@ -156,7 +161,16 @@ export async function dispose(req, res, next) {
 export async function returnItem(req, res, next) {
   try {
     const { return_date, return_quantity } = req.body;
-    const record = await returnIssueRecord(req.params.id, return_date || new Date().toISOString().split('T')[0], return_quantity || 0);
+    const current = await getIssueRecordById(req.params.id);
+    if (!current) return res.status(404).json({ error: 'Record not found' });
+    if (current.status !== 'issued') {
+      return res.status(409).json({ error: `Cannot return a record with status '${current.status}'` });
+    }
+    const qty = Number(return_quantity) || 0;
+    if (qty > Number(current.quantity)) {
+      return res.status(400).json({ error: 'return_quantity exceeds issued quantity' });
+    }
+    const record = await returnIssueRecord(req.params.id, return_date || new Date().toISOString().split('T')[0], qty);
     if (!record) return res.status(404).json({ error: 'Record not found' });
     res.json(record);
   } catch (error) {

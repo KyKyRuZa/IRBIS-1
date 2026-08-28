@@ -115,9 +115,10 @@ export async function markAllNotificationsRead(req, res, next) {
 
 export async function backupDatabase(req, res, next) {
   try {
-    const { exec } = await import('child_process');
+    const { execFile } = await import('child_process');
+    const { unlink } = await import('fs/promises');
     const { promisify } = await import('util');
-    const execAsync = promisify(exec);
+    const execFileAsync = promisify(execFile);
 
     const dbHost = process.env.DB_HOST || 'localhost';
     const dbPort = process.env.DB_PORT || 5432;
@@ -125,12 +126,14 @@ export async function backupDatabase(req, res, next) {
     const dbUser = process.env.DB_USER || 'postgres';
     const dbPassword = process.env.DB_PASSWORD || 'postgres';
 
-    const dumpPath = `/tmp/irbis_backup_${new Date().toISOString().split('T')[0]}.sql`;
-    const command = `PGPASSWORD="${dbPassword}" pg_dump -h ${dbHost} -p ${dbPort} -U ${dbUser} -d ${dbName} -f ${dumpPath}`;
+    const date = new Date().toISOString().split('T')[0];
+    const dumpPath = `/tmp/irbis_backup_${date}.sql`;
+    const args = ['-h', dbHost, '-p', String(dbPort), '-U', dbUser, '-d', dbName, '-f', dumpPath];
 
-    await execAsync(command);
+    await execFileAsync('pg_dump', args, { env: { ...process.env, PGPASSWORD: dbPassword } });
 
-    res.download(dumpPath, `irbis_backup_${new Date().toISOString().split('T')[0]}.sql`, (err) => {
+    res.download(dumpPath, `irbis_backup_${date}.sql`, (err) => {
+      unlink(dumpPath).catch(() => {});
       if (err) {
         console.error('Backup download error:', err);
       }
