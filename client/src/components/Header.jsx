@@ -12,11 +12,11 @@ import styles from '@styles/Header.module.css';
 const NAV_LINKS = [
   { to: '/', label: 'Сотрудники' },
   { to: '/issue', label: 'Выдача' },
-  { to: '/reports', label: 'Отчёты' },
   { to: '/objects', label: 'Объекты' },
   { to: '/items', label: 'Номенклатура' },
   { to: '/norms', label: 'Нормы выдачи' },
   { to: '/certificates', label: 'Сертификаты' },
+  { to: '/reports', label: 'Отчёты' },
 ];
 
 // Ссылки, доступные только администратору
