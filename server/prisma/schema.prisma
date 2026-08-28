@@ -34,15 +34,18 @@ model Employee {
   height             Int?
   status             String?            @default("active") @db.VarChar(20)
   createdAt          DateTime?          @default(now()) @map("created_at") @db.Timestamp(6)
+  userId             Int?               @map("user_id")
   site               Site?              @relation(fields: [siteId], references: [id], onUpdate: NoAction)
+  user               User?              @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: NoAction)
   formTaken          FormTaken[]
   issueRecords       IssueRecord[]
-  notifications      Notification[]
+  notifications       Notification[]
   pushSubs           PushSubscription[]
 
   @@index([siteId])
   @@index([status])
   @@index([createdAt])
+  @@index([userId])
   @@map("employees")
 }
 
@@ -135,6 +138,7 @@ model User {
   createdAt    DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
   refreshTokens RefreshToken[]
   pushSubs      PushSubscription[]
+  employees     Employee[]
 
   @@map("users")
 }
