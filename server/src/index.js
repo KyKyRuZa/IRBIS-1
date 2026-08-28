@@ -66,6 +66,7 @@ function requestLogger(req, res, next) {
 }
 
 const app = express();
+app.set('trust proxy', 1);
 app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') || false, credentials: true }));
 app.use(securityHeaders);
 app.use(cookiesMiddleware);
