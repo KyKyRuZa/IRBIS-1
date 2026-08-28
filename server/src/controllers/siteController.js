@@ -1,3 +1,6 @@
+import { childLogger } from '../utils/logger.js';
+const log = childLogger('site');
+
 import { createSite, getAllSites, getSiteById, updateSite as updateSiteModel, deleteSite as deleteSiteModel } from '../models/employeeModel.js';
 
 export async function addSite(req, res, next) {
@@ -7,6 +10,7 @@ export async function addSite(req, res, next) {
     const site = await createSite(name, responsible_person);
     res.status(201).json(site);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -16,6 +20,7 @@ export async function listSites(req, res, next) {
     const sites = await getAllSites();
     res.json(sites);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -26,6 +31,7 @@ export async function getSite(req, res, next) {
     if (!site) return res.status(404).json({ error: 'Site not found' });
     res.json(site);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -36,6 +42,7 @@ export async function updateSite(req, res, next) {
     if (!site) return res.status(404).json({ error: 'Site not found' });
     res.json(site);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -46,6 +53,7 @@ export async function deleteSite(req, res, next) {
     if (!site) return res.status(404).json({ error: 'Site not found' });
     res.json({ message: 'Site deleted' });
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }

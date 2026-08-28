@@ -1,6 +1,9 @@
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../models/db.js';
+import { childLogger } from './logger.js';
+
+const log = childLogger('tokens');
 
 const ACCESS_TTL = '15m';
 const REFRESH_TTL_DAYS = 7;
@@ -55,6 +58,7 @@ export async function findValidRefreshToken(tokenHash) {
   if (!record) return null;
   if (record.expiresAt.getTime() < Date.now()) {
     await revokeRefreshToken(tokenHash);
+    log.warn({ userId: record.userId }, 'Refresh token expired, revoked');
     return null;
   }
   return record;

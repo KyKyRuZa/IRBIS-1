@@ -1,3 +1,6 @@
+import { childLogger } from '../utils/logger.js';
+const log = childLogger('form');
+
 import {
   createForm,
   getAllForms,
@@ -15,6 +18,7 @@ export async function addForm(req, res, next) {
     const form = await createForm(name, description);
     res.status(201).json(form);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -24,6 +28,7 @@ export async function listForms(req, res, next) {
     const forms = await getAllForms();
     res.json(forms);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -37,6 +42,7 @@ export async function takeForm(req, res, next) {
     const record = await recordFormTaken(employee_id, form_id);
     res.status(201).json(record);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -46,6 +52,7 @@ export async function listFormTaken(req, res, next) {
     const records = await getFormTakenRecords();
     res.json(records);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -55,6 +62,7 @@ export async function listFormTakenByEmployee(req, res, next) {
     const records = await getFormTakenByEmployee(req.params.employeeId);
     res.json(records);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }

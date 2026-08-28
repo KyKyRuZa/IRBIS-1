@@ -1,3 +1,6 @@
+import { childLogger } from '../utils/logger.js';
+const log = childLogger('certificate');
+
 import {
   createCertificate,
   getAllCertificates,
@@ -17,6 +20,7 @@ export async function addCertificate(req, res, next) {
     const certificate = await createCertificate(product_name, certificate_number, issue_date, expiry_date, file_path, item_type_id);
     res.status(201).json(certificate);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -27,6 +31,7 @@ export async function listCertificates(req, res, next) {
     const certificates = await getAllCertificates();
     res.json(certificates);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -37,6 +42,7 @@ export async function getCertificate(req, res, next) {
     if (!certificate) return res.status(404).json({ error: 'Certificate not found' });
     res.json(certificate);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -47,6 +53,7 @@ export async function updateCertificate(req, res, next) {
     if (!certificate) return res.status(404).json({ error: 'Certificate not found' });
     res.json(certificate);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -57,6 +64,7 @@ export async function deleteCertificate(req, res, next) {
     if (!certificate) return res.status(404).json({ error: 'Certificate not found' });
     res.json({ message: 'Certificate deleted' });
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -66,6 +74,7 @@ export async function listCertificatesByItem(req, res, next) {
     const certificates = await getCertificatesByItemTypeId(req.params.itemTypeId);
     res.json(certificates);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }

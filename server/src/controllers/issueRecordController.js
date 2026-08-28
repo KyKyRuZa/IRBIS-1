@@ -1,3 +1,6 @@
+import { childLogger } from '../utils/logger.js';
+const log = childLogger('issueRecord');
+
 import {
   createIssueRecord,
   getAllIssueRecords,
@@ -47,6 +50,7 @@ export async function issueItem(req, res, next) {
     }
     res.status(201).json(record);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -92,6 +96,7 @@ export async function batchIssue(req, res, next) {
     const created = await batchIssueRecords(records);
     res.status(201).json({ count: created.length, records: created });
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -139,6 +144,7 @@ export async function listIssues(req, res, next) {
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -154,6 +160,7 @@ export async function dispose(req, res, next) {
     if (!record) return res.status(404).json({ error: 'Record not found' });
     res.json(record);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -174,6 +181,7 @@ export async function returnItem(req, res, next) {
     if (!record) return res.status(404).json({ error: 'Record not found' });
     res.json(record);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -184,6 +192,7 @@ export async function getExpiring(req, res, next) {
     const items = await getExpiringItems(months);
     res.json(items);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -194,6 +203,7 @@ export async function getIssue(req, res, next) {
     if (!record) return res.status(404).json({ error: 'Issue record not found' });
     res.json(record);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -204,6 +214,7 @@ export async function updateIssue(req, res, next) {
     if (!record) return res.status(404).json({ error: 'Issue record not found' });
     res.json(record);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -214,6 +225,7 @@ export async function deleteIssue(req, res, next) {
     if (!record) return res.status(404).json({ error: 'Issue record not found' });
     res.json({ message: 'Issue record deleted' });
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }

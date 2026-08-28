@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { randomUUID } from 'node:crypto';
 import express from 'express';
 import cors from 'cors';
 import cron from 'node-cron';
@@ -15,7 +16,8 @@ import authRoutes from './routes/authRoutes.js';
 import formRoutes from './routes/formRoutes.js';
 import pushRoutes from './routes/pushRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
-import { logger } from './utils/logger.js';
+import logRoutes from './routes/logRoutes.js';
+import { logger, runWithRequestContext, getRequestLogger } from './utils/logger.js';
 import { initDB, pool } from './models/db.js';
 import { aggregateNotifications } from './services/notificationService.js';
 import { cookiesMiddleware } from './middleware/auth.js';
@@ -50,11 +52,25 @@ function securityHeaders(req, res, next) {
   next();
 }
 
+function requestLogger(req, res, next) {
+  const reqId = req.headers['x-request-id'] || randomUUID();
+  req.id = reqId;
+  const log = logger.child({ reqId });
+  const start = Date.now();
+  res.on('finish', () => {
+    const durationMs = Date.now() - start;
+    const level = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info';
+    log[level]({ method: req.method, url: req.originalUrl, status: res.statusCode, durationMs });
+  });
+  runWithRequestContext(reqId, log, next);
+}
+
 const app = express();
 app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') || false, credentials: true }));
 app.use(securityHeaders);
 app.use(cookiesMiddleware);
 app.use(express.json());
+app.use(requestLogger);
 app.use('/uploads', express.static('uploads', {
   setHeaders: (res) => res.setHeader('X-Content-Type-Options', 'nosniff'),
 }));
@@ -77,23 +93,38 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/forms', formRoutes);
 app.use('/api/push', pushRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/log', logRoutes);
 
 app.use((err, req, res, next) => {
-  logger.error(err);
+  getRequestLogger().error({ err, method: req.method, url: req.originalUrl }, err.message || 'Request failed');
   const status = err.status || 500;
   const message = isProd ? 'Internal Server Error' : (err.message || 'Internal Server Error');
   res.status(status).json({ error: message });
 });
 
+app.use((req, res) => {
+  getRequestLogger().warn({ method: req.method, url: req.originalUrl }, 'Route not found');
+  res.status(404).json({ error: 'Not found' });
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error({ reason, promise }, 'Unhandled promise rejection');
+});
+
+process.on('uncaughtException', (err) => {
+  logger.error(err, 'Uncaught exception, shutting down');
+  process.exit(1);
+});
+
 const PORT = process.env.PORT || 5000;
 
 const gracefulShutdown = async () => {
-  console.log('Received shutdown signal, closing database pool...');
+  logger.info('Received shutdown signal, closing database pool...');
   try {
     await pool.end();
-    console.log('Database pool closed');
+    logger.info('Database pool closed');
   } catch (err) {
-    logger.error('Error closing database pool:', err);
+    logger.error(err, 'Error closing database pool');
   }
   process.exit(0);
 };
@@ -103,9 +134,9 @@ process.on('SIGINT', gracefulShutdown);
 
 if (process.env.NODE_ENV !== 'test') {
   initDB().then(() => {
-    aggregateNotifications().catch(err => console.error('Initial notification aggregation failed:', err));
+    aggregateNotifications().catch(err => logger.error(err, 'Initial notification aggregation failed'));
     cron.schedule('0 8 * * *', () => {
-      aggregateNotifications().catch(err => console.error('Notification job failed:', err));
+      aggregateNotifications().catch(err => logger.error(err, 'Notification job failed'));
     });
     app.listen(PORT, () => {
       logger.info(`Server running on port ${PORT}`);

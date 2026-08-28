@@ -1,5 +1,6 @@
 import pool from '../models/db.js';
 import webpush from 'web-push';
+import { logger } from '../utils/logger.js';
 
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
@@ -106,12 +107,12 @@ export async function sendPushToEmployee(req, res, next) {
         endpoint: sub.endpoint,
         keys: { p256dh: sub.p256dh, auth: sub.auth }
       };
-      console.log('Sending push to', sub.endpoint, 'payload', payload);
+      logger.debug({ endpoint: sub.endpoint }, 'Sending push');
       return webpush.sendNotification(pushSubscription, payload).catch(async err => {
         if (err.statusCode === 410 || err.statusCode === 404) {
           await pool.query('DELETE FROM push_subscriptions WHERE id = $1', [sub.id]);
         }
-        console.error('Push send error', err.statusCode, err.body);
+        logger.error({ statusCode: err.statusCode, body: err.body }, 'Push send error');
         return null;
       });
     });
@@ -136,12 +137,12 @@ export async function sendPushToAll(req, res, next) {
         endpoint: sub.endpoint,
         keys: { p256dh: sub.p256dh, auth: sub.auth }
       };
-      console.log('Sending push to', sub.endpoint, 'payload', payload);
+      logger.debug({ endpoint: sub.endpoint }, 'Sending push');
       return webpush.sendNotification(pushSubscription, payload).catch(async err => {
         if (err.statusCode === 410 || err.statusCode === 404) {
           await pool.query('DELETE FROM push_subscriptions WHERE id = $1', [sub.id]);
         }
-        console.error('Push send error', err.statusCode, err.body);
+        logger.error({ statusCode: err.statusCode, body: err.body }, 'Push send error');
         return null;
       });
     });
@@ -178,7 +179,7 @@ export async function sendTestPush(req, res, next) {
         if (err.statusCode === 410 || err.statusCode === 404) {
           await pool.query('DELETE FROM push_subscriptions WHERE id = $1', [sub.id]);
         }
-        console.error('Push test send error', err?.statusCode ?? err?.message, err?.body);
+        logger.error({ statusCode: err?.statusCode ?? err?.message, body: err?.body }, 'Push test send error');
         return null;
       });
     });

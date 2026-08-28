@@ -40,6 +40,9 @@ model Employee {
   notifications      Notification[]
   pushSubs           PushSubscription[]
 
+  @@index([siteId])
+  @@index([status])
+  @@index([createdAt])
   @@map("employees")
 }
 
@@ -55,6 +58,7 @@ model ItemType {
   issueNorms            IssueNorm[]
   issueRecords          IssueRecord[]
 
+  @@index([category, name])
   @@map("item_types")
 }
 
@@ -70,6 +74,8 @@ model Certificate {
   itemType          ItemType?     @relation(fields: [itemTypeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   issueRecords      IssueRecord[]
 
+  @@index([itemTypeId])
+  @@index([status, expiryDate])
   @@map("certificates")
 }
 
@@ -87,6 +93,8 @@ model IssueNorm {
   itemType     ItemType? @relation(fields: [itemTypeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   site         Site?     @relation(fields: [siteId], references: [id], onUpdate: NoAction)
 
+  @@index([itemTypeId])
+  @@index([siteId])
   @@map("issue_norms")
 }
 
@@ -110,6 +118,11 @@ model IssueRecord {
   employee               Employee?    @relation(fields: [employeeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   itemType               ItemType?    @relation(fields: [itemTypeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
+  @@index([employeeId, issueDate])
+  @@index([status, expiryDate])
+  @@index([itemTypeId])
+  @@index([certificateId])
+  @@index([reorderDate])
   @@map("issue_records")
 }
 
@@ -157,6 +170,8 @@ model FormTaken {
   employee   Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   form       Form?     @relation(fields: [formId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
+  @@index([employeeId])
+  @@index([formId])
   @@map("form_taken")
 }
 
@@ -174,6 +189,11 @@ model Notification {
   employee        Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   site            Site?     @relation(fields: [siteId], references: [id], onUpdate: NoAction)
 
+  @@index([employeeId])
+  @@index([siteId])
+  @@index([read])
+  @@index([type])
+  @@index([date])
   @@map("notifications")
 }
 
@@ -190,5 +210,6 @@ model PushSubscription {
   employee   Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([userId])
+  @@index([employeeId])
   @@map("push_subscriptions")
 }

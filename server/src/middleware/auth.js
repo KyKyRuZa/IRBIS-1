@@ -1,5 +1,8 @@
 import jwt from 'jsonwebtoken';
 import pool from '../models/db.js';
+import { childLogger } from '../utils/logger.js';
+
+const log = childLogger('authMiddleware');
 
 export function cookiesMiddleware(req, res, next) {
   const header = req.headers.cookie;
@@ -20,6 +23,7 @@ export function authMiddleware(req, res, next) {
   const headerToken = req.headers.authorization?.replace('Bearer ', '');
   const token = cookieToken || headerToken;
   if (!token) {
+    log.warn({ ip: req.ip }, 'Auth rejected: missing token');
     return res.status(401).json({ error: 'Authorization token required' });
   }
   try {
@@ -27,12 +31,14 @@ export function authMiddleware(req, res, next) {
     req.user = { id: decoded.id, username: decoded.username, role: decoded.role };
     next();
   } catch (err) {
+    log.warn({ ip: req.ip }, 'Auth rejected: invalid or expired token');
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 }
 
 export function adminOnly(req, res, next) {
   if (req.user?.role !== 'admin') {
+    log.warn({ username: req.user?.username, role: req.user?.role }, 'Admin-only route denied');
     return res.status(403).json({ error: 'Admin access required' });
   }
   next();

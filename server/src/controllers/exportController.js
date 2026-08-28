@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import pool from '../models/db.js';
+import { logger } from '../utils/logger.js';
 import { getNormsForEmployee } from '../models/issueNormModel.js';
 import { getIssueRecordsByEmployee } from '../models/issueRecordModel.js';
 import {
@@ -26,10 +27,18 @@ function splitFullName(fullName) {
   };
 }
 
-async function buildCardData(emp) {
+function matchNorms(employee, allNorms) {
+  return allNorms.filter(n =>
+    (n.gender == null || n.gender === employee.gender) &&
+    (n.position == null || n.position === employee.position) &&
+    (n.site_id == null || n.site_id === employee.site_id)
+  );
+}
+
+async function buildCardData(emp, norms, history) {
   const nameParts = splitFullName(emp.full_name);
-  const norms = await getNormsForEmployee(emp);
-  const history = await getIssueRecordsByEmployee(emp.id);
+  if (norms === undefined) norms = await getNormsForEmployee(emp);
+  if (history === undefined) history = await getIssueRecordsByEmployee(emp.id);
 
   const normRows = norms.map(n => ({
     name: n.item_type_name || '',
@@ -202,7 +211,7 @@ export async function exportEmployeeCard(req, res, next) {
     res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`);
     res.send(buffer);
   } catch (error) {
-    console.error('exportEmployeeCard error', error);
+    logger.error(error, 'exportEmployeeCard error');
     next(error);
   }
 }
@@ -255,7 +264,7 @@ export async function exportConsumables(req, res, next) {
     res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`);
     res.send(buffer);
   } catch (error) {
-    console.error('exportConsumables error', error);
+    logger.error(error, 'exportConsumables error');
     next(error);
   }
 }
@@ -270,6 +279,33 @@ export async function exportAllCards(req, res, next) {
     `, ['active']);
     const employees = result.rows;
 
+    // Batch-load norms and issue history once instead of issuing 2 queries per
+    // employee (the old N+1 loop). Norms are matched per employee in memory using
+    // the same predicate as getNormsForEmployee; history is grouped by employee_id.
+    let allNorms = [];
+    const historyByEmp = new Map();
+    if (employees.length > 0) {
+      const normsRes = await pool.query(`
+        SELECT n.*, it.name as item_type_name, it.category
+        FROM issue_norms n
+        JOIN item_types it ON n.item_type_id = it.id
+      `);
+      allNorms = normsRes.rows;
+
+      const histRes = await pool.query(`
+        SELECT r.*, it.name as item_type_name, it.category, c.certificate_number
+        FROM issue_records r
+        JOIN item_types it ON r.item_type_id = it.id
+        LEFT JOIN certificates c ON r.certificate_id = c.id
+        WHERE r.employee_id = ANY($1::int[])
+        ORDER BY r.employee_id, r.issue_date DESC
+      `, [employees.map(e => e.id)]);
+      for (const row of histRes.rows) {
+        if (!historyByEmp.has(row.employee_id)) historyByEmp.set(row.employee_id, []);
+        historyByEmp.get(row.employee_id).push(row);
+      }
+    }
+
     const { ZipArchive } = await import('archiver');
     const archive = new ZipArchive();
     
@@ -278,7 +314,7 @@ export async function exportAllCards(req, res, next) {
     archive.pipe(res);
 
     archive.on('error', (err) => {
-      console.error('Archive error:', err);
+      logger.error(err, 'Archive error');
       if (!res.headersSent) {
         res.status(500).json({ error: err.message });
       }
@@ -287,7 +323,7 @@ export async function exportAllCards(req, res, next) {
     const templatePath = path.join(__dirname, '..', 'templates', 'card-template.docx');
 
     for (const emp of employees) {
-      const data = await buildCardData(emp);
+      const data = await buildCardData(emp, matchNorms(emp, allNorms), historyByEmp.get(emp.id) || []);
 
       const buffer = await renderTemplate(templatePath, data);
       if (!buffer || !Buffer.isBuffer(buffer)) {
@@ -298,7 +334,7 @@ export async function exportAllCards(req, res, next) {
 
     await archive.finalize();
   } catch (error) {
-    console.error('exportAllCards error', error);
+    logger.error(error, 'exportAllCards error');
     if (!res.headersSent) {
       next(error);
     }
@@ -381,7 +417,7 @@ export async function exportIssuesReport(req, res, next) {
     res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`);
     res.send(buffer);
   } catch (error) {
-    console.error('exportIssuesReport error', error);
+    logger.error(error, 'exportIssuesReport error');
     next(error);
   }
 }
@@ -465,7 +501,7 @@ export async function exportExpiringReport(req, res, next) {
     res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`);
     res.send(buffer);
   } catch (error) {
-    console.error('exportExpiringReport error', error);
+    logger.error(error, 'exportExpiringReport error');
     next(error);
   }
 }
@@ -523,7 +559,7 @@ export async function exportItemsReport(req, res, next) {
     res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`);
     res.send(buffer);
   } catch (error) {
-    console.error('exportItemsReport error', error);
+    logger.error(error, 'exportItemsReport error');
     next(error);
   }
 }
@@ -579,7 +615,7 @@ export async function exportGroupConsumablesReport(req, res, next) {
     res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`);
     res.send(buffer);
   } catch (error) {
-    console.error('exportGroupConsumablesReport error', error);
+    logger.error(error, 'exportGroupConsumablesReport error');
     next(error);
   }
 }

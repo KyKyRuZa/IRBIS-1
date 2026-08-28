@@ -5,6 +5,7 @@ import {
 } from 'docx';
 
 import pool from '../models/db.js';
+import { logger } from '../utils/logger.js';
 
 const categories = {
   clothing: 'Спецодежда',
@@ -306,7 +307,7 @@ export async function exportIssuesReport(req, res, next) {
     res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`);
     res.send(buffer);
   } catch (error) {
-    console.error('exportIssuesReport error', error);
+    logger.error(error, 'exportIssuesReport error');
     next(error);
   }
 }
@@ -381,7 +382,7 @@ export async function exportExpiringReport(req, res, next) {
     res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`);
     res.send(buffer);
   } catch (error) {
-    console.error('exportExpiringReport error', error);
+    logger.error(error, 'exportExpiringReport error');
     next(error);
   }
 }
@@ -431,7 +432,7 @@ export async function exportItemsReport(req, res, next) {
     res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`);
     res.send(buffer);
   } catch (error) {
-    console.error('exportItemsReport error', error);
+    logger.error(error, 'exportItemsReport error');
     next(error);
   }
 }

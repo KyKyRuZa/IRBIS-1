@@ -1,6 +1,10 @@
 import pool from '../models/db.js';
+import { childLogger } from '../utils/logger.js';
+
+const log = childLogger('notifications');
 
 export async function aggregateNotifications() {
+  log.info('Aggregating notifications');
   const existing = await pool.query('SELECT notification_id, read FROM notifications');
   const readMap = new Map(existing.rows.map(r => [r.notification_id, r.read]));
 
@@ -100,18 +104,35 @@ export async function aggregateNotifications() {
     });
   });
 
-  const currentIds = notifications.map(n => n.notification_id);
+    const currentIds = notifications.map(n => n.notification_id);
   if (currentIds.length > 0) {
     await pool.query('DELETE FROM notifications WHERE notification_id != ALL($1)', [currentIds]);
-  } else {
-    await pool.query('DELETE FROM notifications');
-  }
 
-  for (const n of notifications) {
-    const read = readMap.get(n.notification_id) ?? false;
+    // Single multi-row INSERT instead of one INSERT per notification (was an
+    // N+1 loop). Read state is preserved via the readMap on conflict. Each
+    // value is bound as a scalar parameter to avoid the array-type binding
+    // problems of UNNEST through $queryRawUnsafe (Prisma sends Date arrays as
+    // timestamptz, which the timestamp(6)[] cast rejects).
+    const valueRows = [];
+    const params = [];
+    let p = 1;
+    for (const n of notifications) {
+      valueRows.push(`($${p++}, $${p++}, $${p++}, $${p++}, $${p++}, $${p++}, $${p++}, $${p++}, NOW())`);
+      params.push(
+        n.notification_id,
+        n.type,
+        n.severity,
+        n.message,
+        n.employee_id ?? null,
+        n.site_id ?? null,
+        n.date,
+        readMap.get(n.notification_id) ?? false
+      );
+    }
+
     await pool.query(`
       INSERT INTO notifications (notification_id, type, severity, message, employee_id, site_id, date, read, created_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+      VALUES ${valueRows.join(', ')}
       ON CONFLICT (notification_id) DO UPDATE SET
         type = EXCLUDED.type,
         severity = EXCLUDED.severity,
@@ -121,15 +142,10 @@ export async function aggregateNotifications() {
         date = EXCLUDED.date,
         read = EXCLUDED.read,
         created_at = NOW()
-    `, [
-      n.notification_id,
-      n.type,
-      n.severity,
-      n.message,
-      n.employee_id || null,
-      n.site_id || null,
-      n.date,
-      read
-    ]);
+    `, params);
+  } else {
+    await pool.query('DELETE FROM notifications');
   }
+
+  log.info({ count: notifications.length }, 'Notifications aggregated');
 }

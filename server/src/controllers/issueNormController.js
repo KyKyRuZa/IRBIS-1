@@ -1,3 +1,6 @@
+import { childLogger } from '../utils/logger.js';
+const log = childLogger('issueNorm');
+
 import {
   createIssueNorm,
   getAllIssueNorms,
@@ -16,6 +19,7 @@ export async function addNorm(req, res, next) {
     const norm = await createIssueNorm(req.body);
     res.status(201).json(norm);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -25,6 +29,7 @@ export async function listNorms(req, res, next) {
     const norms = await getAllIssueNorms();
     res.json(norms);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -35,6 +40,7 @@ export async function getNorm(req, res, next) {
     if (!norm) return res.status(404).json({ error: 'Norm not found' });
     res.json(norm);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -45,6 +51,7 @@ export async function updateNorm(req, res, next) {
     if (!norm) return res.status(404).json({ error: 'Norm not found' });
     res.json(norm);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -55,6 +62,7 @@ export async function deleteNorm(req, res, next) {
     if (!norm) return res.status(404).json({ error: 'Norm not found' });
     res.json({ message: 'Norm deleted' });
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -67,6 +75,7 @@ export async function getEmployeeNorms(req, res, next) {
     const norms = await getNormsForEmployee(employee.rows[0]);
     res.json(norms);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }

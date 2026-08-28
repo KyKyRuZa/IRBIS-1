@@ -1,3 +1,6 @@
+import { childLogger } from '../utils/logger.js';
+const log = childLogger('employee');
+
 import { createEmployee, getAllEmployees, getEmployeeById, updateEmployee, terminateEmployee, deleteEmployee as deleteEmployeeModel } from '../models/employeeModel.js';
 import { getNormsForEmployee } from '../models/issueNormModel.js';
 import { getIssueRecordsByEmployee } from '../models/issueRecordModel.js';
@@ -25,6 +28,7 @@ export async function registerEmployee(req, res, next) {
     );
     res.status(201).json(employee);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -53,6 +57,7 @@ export async function listEmployees(req, res, next) {
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -67,6 +72,7 @@ export async function getEmployee(req, res, next) {
     
     res.json({ ...employee, norms, history });
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -85,6 +91,7 @@ export async function editEmployee(req, res, next) {
     if (!employee) return res.status(404).json({ error: 'Employee not found' });
     res.json(employee);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -95,6 +102,7 @@ export async function fireEmployee(req, res, next) {
     if (!employee) return res.status(404).json({ error: 'Employee not found' });
     res.json(employee);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -105,6 +113,7 @@ export async function deleteEmployee(req, res, next) {
     if (!employee) return res.status(404).json({ error: 'Employee not found' });
     res.json({ message: 'Employee deleted' });
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }

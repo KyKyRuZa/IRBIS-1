@@ -1,5 +1,8 @@
 import pool from '../models/db.js';
 import path from 'path';
+import { childLogger } from '../utils/logger.js';
+
+const log = childLogger('upload');
 
 export async function uploadCertificate(req, res, next) {
   try {
@@ -16,7 +19,9 @@ export async function uploadCertificate(req, res, next) {
       [product_name, certificate_number || null, issue_date || null, expiry_date || null, relativePath, item_type_id || null]
     );
     res.status(201).json(result.rows[0]);
+    log.info({ certificateNumber: certificate_number }, 'Certificate file uploaded');
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -47,7 +52,9 @@ export async function uploadSignature(req, res, next) {
     await pool.query('UPDATE issue_records SET signature_path=$1, signature_date=$2 WHERE id=$3', [relativePath, new Date().toISOString().split('T')[0], issue_record_id]);
     const result = await pool.query('SELECT * FROM issue_records WHERE id=$1', [issue_record_id]);
     res.json(result.rows[0]);
+    log.info({ issueRecordId: issue_record_id, employeeId: record.employee_id, byAdmin: isAdmin }, 'Signature uploaded');
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }

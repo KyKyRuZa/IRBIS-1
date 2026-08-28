@@ -1,6 +1,9 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { childLogger } from '../utils/logger.js';
+
+const log = childLogger('upload');
 
 const uploadDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadDir)) {
@@ -31,6 +34,7 @@ const fileFilter = (req, file, cb) => {
   if (ext && mime) {
     cb(null, true);
   } else {
+    log.warn({ originalname: file.originalname, mimetype: file.mimetype }, 'Rejected upload: unsupported file type');
     cb(new Error('Only PDF and image files are allowed'), false);
   }
 };

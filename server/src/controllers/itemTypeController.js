@@ -1,3 +1,6 @@
+import { childLogger } from '../utils/logger.js';
+const log = childLogger('itemType');
+
 import {
   createItemType,
   getAllItemTypes,
@@ -16,6 +19,7 @@ export async function addItem(req, res, next) {
     const item = await createItemType(name, category, unit, default_wear_time, seasonality, requires_certificate);
     res.status(201).json(item);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -44,6 +48,7 @@ export async function listItems(req, res, next) {
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -54,6 +59,7 @@ export async function getItem(req, res, next) {
     if (!item) return res.status(404).json({ error: 'Item type not found' });
     res.json(item);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -64,6 +70,7 @@ export async function updateItem(req, res, next) {
     if (!item) return res.status(404).json({ error: 'Item type not found' });
     res.json(item);
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }
@@ -74,6 +81,7 @@ export async function deleteItem(req, res, next) {
     if (!item) return res.status(404).json({ error: 'Item type not found' });
     res.json({ message: 'Item type deleted' });
   } catch (error) {
+    log.error(error);
     next(error);
   }
 }

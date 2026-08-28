@@ -1,4 +1,5 @@
 import pool from '../models/db.js';
+import { logger } from '../utils/logger.js';
 
 export async function getDemandReport(req, res, next) {
   try {
@@ -135,7 +136,7 @@ export async function backupDatabase(req, res, next) {
     res.download(dumpPath, `irbis_backup_${date}.sql`, (err) => {
       unlink(dumpPath).catch(() => {});
       if (err) {
-        console.error('Backup download error:', err);
+        logger.error(err, 'Backup download error');
       }
     });
   } catch (error) {
