@@ -19,6 +19,9 @@ export const issuesService = {
   batchCreate: (data) =>
     api.post('/api/issues/batch', data).then(r => r.data),
 
+  batchSingleCreate: (data) =>
+    api.post('/api/issues/batch-single', data).then(r => r.data),
+
   dispose: (id) =>
     api.patch(`/api/issues/${id}/dispose`).then(r => r.data),
 

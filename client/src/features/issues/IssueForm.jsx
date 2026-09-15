@@ -7,9 +7,12 @@ import { issuesService } from '@/lib/services/issues.service.js';
 import { uploadService } from '@/lib/services/upload.service.js';
 import { useAuth } from '@/hooks/useAuth.js';
 import { ISSUE_STATUSES, ISSUE_STATUS_LABELS } from '@/lib/constants/issue-statuses.js';
+import { ISSUE_METHODS, ISSUE_METHOD_VALUES } from '@/lib/constants/issue-methods.js';
 import { useResource } from '@/hooks/useResource.js';
 import { useFormState } from '@/hooks/useFormState.js';
 import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
+import { showError, showSuccess, showFieldErrors } from '@/lib/toast.js';
+import { issueSchema, issueBatchSchema, issueBatchSingleSchema, issueUpdateSchema } from '@/lib/validation/forms.js';
 import Modal from '@/components/ui/Modal.jsx';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
@@ -28,7 +31,8 @@ const formInitialState = {
   certificate_id: '',
   wear_time_override: '',
   signature_path: '',
-  notes: ''
+  notes: '',
+  issue_method: 'personal'
 };
 
 export default function IssueForm() {
@@ -38,7 +42,7 @@ export default function IssueForm() {
   const [sites, setSites] = useState([]);
   const [certificates, setCertificates] = useState([]);
   const [lastSignature, setLastSignature] = useState(null);
-  const [isGroup, setIsGroup] = useState(true);
+  const [issueMode, setIssueMode] = useState('group');
   const [selectedSite, setSelectedSite] = useState('');
   const [signatureFile, setSignatureFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -48,6 +52,8 @@ export default function IssueForm() {
   const [deleteId, setDeleteId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [batchItems, setBatchItems] = useState([]);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const form = useFormState(formInitialState);
   const { data: records, loading, error, refetch: refetchRecords } = useResource(issuesService.list);
@@ -111,6 +117,20 @@ export default function IssueForm() {
 
   const handleSiteChange = (siteId) => setSelectedSite(siteId);
 
+  const emptyBatchItem = () => ({ item_type_id: '', quantity: 1, certificate_id: '', issue_method: 'personal', notes: '' });
+
+  const addBatchItem = () => setBatchItems(prev => [...prev, emptyBatchItem()]);
+  const removeBatchItem = (index) => setBatchItems(prev => prev.filter((_, i) => i !== index));
+  const updateBatchItem = (index, patch) => setBatchItems(prev => prev.map((item, i) => i === index ? { ...item, ...patch } : item));
+
+  const handleBatchItemChange = async (index, itemId) => {
+    updateBatchItem(index, { item_type_id: itemId, certificate_id: '' });
+    if (itemId) {
+      const certs = await certificatesService.listByItem(itemId);
+      setCertificates(certs);
+    }
+  };
+
   // The edited employee may no longer be active (and thus absent from the
   // loaded list), so always keep them selectable in the dropdown.
   const visibleEmployees = selectedEmployee
@@ -122,28 +142,116 @@ export default function IssueForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setUploading(true);
+    setFieldErrors({});
     try {
-      const data = {
-        item_type_id: form.values.item_type_id,
-        quantity: form.values.quantity,
-        certificate_id: form.values.certificate_id,
-        wear_time_override: form.values.wear_time_override,
-        notes: form.values.notes
-      };
       let record;
-      if (isGroup) {
-        const res = await issuesService.batchCreate({
-          site_id: selectedSite,
-          ...data
+      if (issueMode === 'batch-single') {
+        const rawItems = batchItems
+          .filter(bi => bi.item_type_id)
+          .map(bi => ({
+            item_type_id: bi.item_type_id,
+            quantity: bi.quantity || 1,
+            certificate_id: bi.certificate_id || null,
+            wear_time_override: bi.wear_time_override || null,
+            notes: bi.notes || null,
+            issue_method: bi.issue_method || 'personal',
+          }));
+        const batchResult = issueBatchSingleSchema.safeParse({
+          employee_id: form.values.employee_id,
+          issue_date: form.values.issue_date || null,
+          items: rawItems,
+        });
+        if (!batchResult.success) {
+          const fieldError = {};
+          (batchResult.error?.issues || []).forEach((err) => {
+            const key = err.path.join('.');
+            fieldError[key] = err.message;
+          });
+          setFieldErrors(fieldError);
+          showFieldErrors(batchResult.error?.issues || []);
+          return;
+        }
+        const items = rawItems.map(bi => {
+          const itemTypeId = Number(bi.item_type_id);
+          const quantity = Number(bi.quantity);
+          const certId = bi.certificate_id ? Number(bi.certificate_id) : null;
+          const wearTime = bi.wear_time_override ? Number(bi.wear_time_override) : null;
+          if (Number.isNaN(itemTypeId) || Number.isNaN(quantity) || (bi.certificate_id && Number.isNaN(certId)) || (bi.wear_time_override && Number.isNaN(wearTime))) {
+            throw new Error('Некорректные числовые значения в позициях');
+          }
+          return {
+            item_type_id: itemTypeId,
+            quantity,
+            certificate_id: certId,
+            wear_time_override: wearTime,
+            notes: bi.notes || null,
+            issue_method: bi.issue_method || 'personal',
+          };
+        });
+        if (items.length === 0) {
+          showError('Нет позиций для выдачи. Добавьте хотя бы одну.');
+          return;
+        }
+        const res = await issuesService.batchSingleCreate({
+          employee_id: Number(batchResult.data.employee_id),
+          issue_date: batchResult.data.issue_date || null,
+          items,
         });
         record = res.records?.[0];
       } else {
-        const res = await issuesService.create({
-          employee_id: form.values.employee_id,
-          ...data,
-          signature_path: form.values.signature_path
-        });
-        record = res;
+        const baseData = {
+          item_type_id: form.values.item_type_id,
+          quantity: form.values.quantity,
+          certificate_id: form.values.certificate_id,
+          wear_time_override: form.values.wear_time_override,
+          notes: form.values.notes,
+          issue_method: form.values.issue_method || 'personal',
+        };
+        let payload;
+        if (issueMode === 'group') {
+          const result = issueBatchSchema.safeParse({ site_id: selectedSite, ...baseData });
+          if (!result.success) {
+            const fieldError = {};
+            (result.error?.issues || []).forEach((err) => {
+              fieldError[err.path.join('.')] = err.message;
+            });
+            setFieldErrors(fieldError);
+            showFieldErrors(result.error?.issues || []);
+            return;
+          }
+          payload = result.data;
+        } else {
+          const result = issueSchema.safeParse({ employee_id: form.values.employee_id, ...baseData });
+          if (!result.success) {
+            const fieldError = {};
+            (result.error?.issues || []).forEach((err) => {
+              fieldError[err.path.join('.')] = err.message;
+            });
+            setFieldErrors(fieldError);
+            showFieldErrors(result.error?.issues || []);
+            return;
+          }
+          payload = result.data;
+        }
+        if (issueMode === 'group') {
+          const res = await issuesService.batchCreate({
+            site_id: payload.site_id,
+            ...payload,
+          });
+          record = res.records?.[0];
+        } else {
+          const res = await issuesService.create({
+            employee_id: payload.employee_id,
+            ...payload,
+            signature_path: form.values.signature_path,
+          });
+          record = res;
+        }
+
+      if (record) {
+        const modeLabel = issueMode === 'group' ? 'Групповая выдача' : issueMode === 'batch-single' ? 'Несколько позиций' : 'Одиночная выдача';
+        showSuccess(`${modeLabel} создана${record.id ? `, ID ${record.id}` : ''}`);
+      }
       }
 
       if (signatureFile && record?.id) {
@@ -160,9 +268,10 @@ export default function IssueForm() {
       setSignatureFile(null);
       setCertificates([]);
       setShowModal(false);
+      setFieldErrors({});
       refetchRecords();
     } catch (err) {
-      alert(err.response?.data?.error || 'Ошибка');
+      showError(err.response?.data?.error || 'Не удалось сохранить выдачу');
     } finally {
       setUploading(false);
     }
@@ -181,7 +290,8 @@ export default function IssueForm() {
       quantity: record.quantity || 1,
       certificate_id: record.certificate_id || '',
       wear_time_override: record.wear_time_override_months || '',
-      notes: record.notes || ''
+      notes: record.notes || '',
+      issue_method: record.issue_method || 'personal'
     });
     setShowModal(true);
   };
@@ -189,22 +299,37 @@ export default function IssueForm() {
   const handleUpdate = async (e) => {
     e.preventDefault();
     setUploading(true);
+    setFieldErrors({});
     try {
-      await issuesService.update(editingRecord.id, {
+      const baseData = {
         employee_id: form.values.employee_id,
         item_type_id: form.values.item_type_id,
         quantity: form.values.quantity,
         certificate_id: form.values.certificate_id,
         wear_time_override: form.values.wear_time_override,
-        notes: form.values.notes
-      });
+        notes: form.values.notes,
+        issue_method: form.values.issue_method || 'personal',
+      };
+      const result = issueUpdateSchema.safeParse(baseData);
+      if (!result.success) {
+        const fieldError = {};
+        (result.error?.issues || []).forEach((err) => {
+          fieldError[err.path.join('.')] = err.message;
+        });
+        setFieldErrors(fieldError);
+        showFieldErrors(result.error?.issues || []);
+        return;
+      }
+      await issuesService.update(editingRecord.id, result.data);
+      showSuccess('Выдача обновлена');
       form.reset();
       setEditingRecord(null);
       setShowModal(false);
       setCertificates([]);
+      setFieldErrors({});
       refetchRecords();
     } catch (err) {
-      alert(err.response?.data?.error || 'Ошибка');
+      showError(err.response?.data?.error || 'Не удалось обновить выдачу');
     } finally {
       setUploading(false);
     }
@@ -232,8 +357,10 @@ export default function IssueForm() {
     setSignatureFile(null);
     setCertificates([]);
     setLastSignature(null);
-    setIsGroup(false);
+    setIssueMode('group');
     setSelectedSite('');
+    setBatchItems([]);
+    setFieldErrors({});
   };
 
   const totalItems = filteredRecords.length;
@@ -391,41 +518,46 @@ export default function IssueForm() {
         </div>
       </div>
 
-      <Modal isOpen={showModal} onClose={handleClose} title={editingRecord && !isGroup ? 'Редактировать выдачу' : 'Выдача спецодежды и СИЗ'}>
-        <form onSubmit={editingRecord && !isGroup ? handleUpdate : handleSubmit} className={styles.formSection}>
+      <Modal isOpen={showModal} onClose={handleClose} title={editingRecord && issueMode !== 'group' ? 'Редактировать выдачу' : 'Выдача спецодежды и СИЗ'}>
+        <form onSubmit={editingRecord && issueMode !== 'group' ? handleUpdate : handleSubmit} className={styles.formSection}>
           <div className={styles.radioGroup}>
             <label>
               <input
                 type="radio"
-                checked={!isGroup}
-                onChange={() => setIsGroup(false)}
+                name="issue_mode"
+                value="single"
+                checked={issueMode === 'single'}
+                onChange={() => { setIssueMode('single'); setBatchItems([]); }}
               /> Одиночная выдача
             </label>
             <label>
               <input
                 type="radio"
-                checked={isGroup}
-                onChange={() => {
-                  // Switching to group while editing a single record means we
-                  // create a new group issue; the original record is left as-is.
-                  if (editingRecord) {
-                    setEditingRecord(null);
-                    setSelectedEmployee(null);
-                  }
-                  setIsGroup(true);
-                }}
+                name="issue_mode"
+                value="group"
+                checked={issueMode === 'group'}
+                onChange={() => { setIssueMode('group'); setBatchItems([]); }}
               /> Групповая выдача (всем сотрудникам объекта)
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="issue_mode"
+                value="batch-single"
+                checked={issueMode === 'batch-single'}
+                onChange={() => { setIssueMode('batch-single'); setBatchItems([emptyBatchItem()]); }}
+              /> Несколько позиций сотруднику
             </label>
           </div>
 
-          {editingRecord && isGroup && (
+          {editingRecord && issueMode === 'group' && (
             <div className={styles.warning}>
               Режим «Групповая выдача» создаст новую выдачу всем сотрудникам объекта на основе
               выбранного наименования и количества. Текущая запись не будет изменена.
             </div>
           )}
 
-          {isGroup && (
+          {issueMode === 'group' && (
             <div className={`form-group ${styles.field}`}>
               <label>Объект *</label>
               <select
@@ -433,16 +565,19 @@ export default function IssueForm() {
                 value={selectedSite}
                 onChange={(e) => handleSiteChange(e.target.value)}
                 required
+                aria-invalid={Boolean(fieldErrors.site_id)}
+                aria-describedby={fieldErrors.site_id ? 'site-error' : undefined}
               >
                 <option value="">Выберите объект...</option>
                 {sites.map((s) => (
                   <option key={s.id} value={s.id}>{s.name}</option>
                 ))}
               </select>
+              {fieldErrors.site_id && <div id="site-error" className={styles.fieldError} role="alert">{fieldErrors.site_id}</div>}
             </div>
           )}
 
-          {!isGroup && (
+          {(issueMode === 'single' || issueMode === 'batch-single') && (
             <div className={`form-group ${styles.field}`}>
               <label>Сотрудник *</label>
               <select
@@ -450,12 +585,107 @@ export default function IssueForm() {
                 value={form.values.employee_id}
                 onChange={(e) => form.setMany({ employee_id: e.target.value })}
                 required
+                aria-invalid={Boolean(fieldErrors.employee_id)}
+                aria-describedby={fieldErrors.employee_id ? 'employee-error' : undefined}
               >
                 <option value="">Выберите...</option>
                 {visibleEmployees.map((emp) => (
                   <option key={emp.id} value={emp.id}>{emp.full_name} ({emp.position})</option>
                 ))}
               </select>
+              {fieldErrors.employee_id && <div id="employee-error" className={styles.fieldError} role="alert">{fieldErrors.employee_id}</div>}
+            </div>
+          )}
+
+          {issueMode === 'batch-single' && (
+            <div className={`form-group ${styles.field}`}>
+              <label>Позиции выдачи</label>
+              <table className="table" style={{ marginBottom: 8 }}>
+                <thead>
+                  <tr>
+                    <th>Наименование</th>
+                    <th>Кол-во</th>
+                    <th>Сертификат</th>
+                    <th>Способ выдачи</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {batchItems.map((bi, idx) => (
+                    <tr key={idx}>
+                      <td>
+                        <select
+                          className="form-control"
+                          value={bi.item_type_id}
+                          onChange={(e) => handleBatchItemChange(idx, e.target.value)}
+                          aria-invalid={Boolean(fieldErrors[`items.${idx}.item_type_id`])}
+                          aria-describedby={fieldErrors[`items.${idx}.item_type_id`] ? `batch-item-${idx}-error` : undefined}
+                        >
+                          <option value="">Выберите...</option>
+                          {items.map((item) => (
+                            <option key={item.id} value={item.id}>{item.name}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          className="form-control"
+                          value={bi.quantity}
+                          onChange={(e) => updateBatchItem(idx, { quantity: e.target.value })}
+                          aria-invalid={Boolean(fieldErrors[`items.${idx}.quantity`])}
+                          aria-describedby={fieldErrors[`items.${idx}.quantity`] ? `batch-item-${idx}-error` : undefined}
+                        />
+                      </td>
+                      <td>
+                        <select
+                          className="form-control"
+                          value={bi.certificate_id}
+                          onChange={(e) => updateBatchItem(idx, { certificate_id: e.target.value })}
+                          aria-invalid={Boolean(fieldErrors[`items.${idx}.certificate_id`])}
+                          aria-describedby={fieldErrors[`items.${idx}.certificate_id`] ? `batch-item-${idx}-error` : undefined}
+                        >
+                          <option value="">Без сертификата</option>
+                          {certificates.map((cert) => (
+                            <option key={cert.id} value={cert.id}>
+                              {cert.certificate_number}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td>
+                        <select
+                          className="form-control"
+                          value={bi.issue_method}
+                          onChange={(e) => updateBatchItem(idx, { issue_method: e.target.value })}
+                          aria-invalid={Boolean(fieldErrors[`items.${idx}.issue_method`])}
+                          aria-describedby={fieldErrors[`items.${idx}.issue_method`] ? `batch-item-${idx}-error` : undefined}
+                        >
+                          <option value="personal">{ISSUE_METHODS.personal}</option>
+                          <option value="dosator">{ISSUE_METHODS.dosator}</option>
+                        </select>
+                      </td>
+                      <td>
+                        <button type="button" className="btn btn-danger" onClick={() => removeBatchItem(idx)}>×</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {batchItems.some((_, idx) => ['item_type_id', 'quantity', 'certificate_id', 'issue_method'].some(key => fieldErrors[`items.${idx}.${key}`])) && (
+                <div className={styles.batchErrors}>
+                  {batchItems.map((_, idx) =>
+                    ['item_type_id', 'quantity', 'certificate_id', 'issue_method'].map(key => {
+                      const errKey = `items.${idx}.${key}`;
+                      if (fieldErrors[errKey]) {
+                        return <div key={errKey} id={`batch-item-${idx}-error`} className={styles.fieldError} role="alert">{fieldErrors[errKey]}</div>;
+                      }
+                      return null;
+                    })
+                  ).flat()}
+                </div>
+              )}
+              <button type="button" className="btn btn-secondary" onClick={addBatchItem}>+ Добавить позицию</button>
             </div>
           )}
 
@@ -466,50 +696,91 @@ export default function IssueForm() {
               value={form.values.item_type_id}
               onChange={(e) => handleItemChange(e.target.value)}
               required
+              aria-invalid={Boolean(fieldErrors.item_type_id)}
+              aria-describedby={fieldErrors.item_type_id ? 'item-type-error' : undefined}
             >
               <option value="">Выберите...</option>
               {items.map((item) => (
                 <option key={item.id} value={item.id}>{item.name}</option>
               ))}
             </select>
+            {fieldErrors.item_type_id && <div id="item-type-error" className={styles.fieldError} role="alert">{fieldErrors.item_type_id}</div>}
           </div>
-          <div className={`form-group ${styles.field}`}>
-            <label>Количество</label>
-            <input
-              type="number"
-              className="form-control"
-              value={form.values.quantity}
-              onChange={(e) => form.setMany({ quantity: e.target.value })}
-            />
-          </div>
-          <div className={`form-group ${styles.field}`}>
-            <label>Срок носки (мес.) — оставьте пустым для значения по умолчанию</label>
-            <input
-              type="number"
-              className="form-control"
-              placeholder="Автоматически из нормы"
-              value={form.values.wear_time_override}
-              onChange={(e) => form.setMany({ wear_time_override: e.target.value })}
-            />
-          </div>
-          {certificates.length > 0 && (
+          {issueMode !== 'batch-single' && (
+            <div className={`form-group ${styles.field}`}>
+              <label>Способ выдачи</label>
+              <div className={styles.radioGroup}>
+                <label>
+                  <input
+                    type="radio"
+                    name="issue_method"
+                    value="personal"
+                    checked={form.values.issue_method === 'personal'}
+                    onChange={(e) => form.setMany({ issue_method: e.target.value })}
+                  /> {ISSUE_METHODS.personal}
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="issue_method"
+                    value="dosator"
+                    checked={form.values.issue_method === 'dosator'}
+                    onChange={(e) => form.setMany({ issue_method: e.target.value })}
+                  /> {ISSUE_METHODS.dosator}
+                </label>
+              </div>
+            </div>
+          )}
+          {issueMode !== 'batch-single' && (
+            <div className={`form-group ${styles.field}`}>
+              <label>Количество</label>
+              <input
+                type="number"
+                className="form-control"
+                value={form.values.quantity}
+                onChange={(e) => form.setMany({ quantity: e.target.value })}
+                aria-invalid={Boolean(fieldErrors.quantity)}
+                aria-describedby={fieldErrors.quantity ? 'quantity-error' : undefined}
+              />
+              {fieldErrors.quantity && <div id="quantity-error" className={styles.fieldError} role="alert">{fieldErrors.quantity}</div>}
+            </div>
+          )}
+          {issueMode !== 'batch-single' && (
+            <div className={`form-group ${styles.field}`}>
+              <label>Срок носки (мес.) — оставьте пустым для значения по умолчанию</label>
+              <input
+                type="number"
+                className="form-control"
+                placeholder="Автоматически из нормы"
+                value={form.values.wear_time_override}
+                onChange={(e) => form.setMany({ wear_time_override: e.target.value })}
+                aria-invalid={Boolean(fieldErrors.wear_time_override)}
+                aria-describedby={fieldErrors.wear_time_override ? 'wear-error' : undefined}
+              />
+              {fieldErrors.wear_time_override && <div id="wear-error" className={styles.fieldError} role="alert">{fieldErrors.wear_time_override}</div>}
+            </div>
+          )}
+          {issueMode !== 'batch-single' && (
             <div className={`form-group ${styles.field}`}>
               <label>Сертификат</label>
               <select
                 className="form-control"
                 value={form.values.certificate_id}
                 onChange={(e) => form.setMany({ certificate_id: e.target.value })}
+                aria-invalid={Boolean(fieldErrors.certificate_id)}
+                aria-describedby={fieldErrors.certificate_id ? 'cert-error' : undefined}
               >
-                <option value="">Выберите...</option>
+                <option value="">Без сертификата</option>
                 {certificates.map((cert) => (
                   <option key={cert.id} value={cert.id}>
                     {cert.certificate_number} (до {new Date(cert.expiry_date).toLocaleDateString()})
                   </option>
                 ))}
               </select>
+              {fieldErrors.certificate_id && <div id="cert-error" className={styles.fieldError} role="alert">{fieldErrors.certificate_id}</div>}
             </div>
           )}
-          {!editingRecord && !isGroup && (
+          {!editingRecord && issueMode === 'single' && (
             <div className={`form-group ${styles.field}`}>
               <label>Подпись сотрудника (файл)</label>
               <input
@@ -534,9 +805,11 @@ export default function IssueForm() {
               ? 'Загрузка...'
               : (editingRecord
                 ? 'Сохранить'
-                : (isGroup
+                : (issueMode === 'group'
                   ? `Выдать всем сотрудникам объекта (${selectedSite ? sites.find(s => s.id == selectedSite)?.name : 'объект не выбран'})`
-                  : 'Выдать'))}
+                  : issueMode === 'batch-single'
+                    ? 'Выдать все позиции сотруднику'
+                    : 'Выдать'))}
           </button>
           {editingRecord && <button type="button" className="btn btn-secondary" onClick={handleClose}>Отмена</button>}
           {lastSignature && editingRecord && (
