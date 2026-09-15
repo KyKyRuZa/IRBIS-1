@@ -1,7 +1,7 @@
 import { childLogger } from '../utils/logger.js';
 const log = childLogger('employee');
 
-import { createEmployee, getAllEmployees, getEmployeeById, updateEmployee, terminateEmployee, deleteEmployee as deleteEmployeeModel } from '../models/employeeModel.js';
+import { createEmployee, getAllEmployees, getEmployeeById, updateEmployee, terminateEmployee, deleteEmployee as deleteEmployeeModel, getEmployeesWithSizesBySite } from '../models/employeeModel.js';
 import { getNormsForEmployee } from '../models/issueNormModel.js';
 import { getIssueRecordsByEmployee } from '../models/issueRecordModel.js';
 import pool from '../models/db.js';
@@ -112,6 +112,16 @@ export async function deleteEmployee(req, res, next) {
     const employee = await deleteEmployeeModel(req.params.id);
     if (!employee) return res.status(404).json({ error: 'Employee not found' });
     res.json({ message: 'Employee deleted' });
+  } catch (error) {
+    log.error(error);
+    next(error);
+  }
+}
+
+export async function getEmployeesSizesBySite(req, res, next) {
+  try {
+    const rows = await getEmployeesWithSizesBySite(req.params.siteId);
+    res.json(rows);
   } catch (error) {
     log.error(error);
     next(error);

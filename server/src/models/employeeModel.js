@@ -56,6 +56,16 @@ export async function getEmployeeById(id) {
   return result.rows[0];
 }
 
+export async function getEmployeesWithSizesBySite(siteId) {
+  const result = await pool.query(`
+    SELECT e.id, e.full_name, e.position, e.clothing_size, e.shoe_size, e.hat_size, e.respirator_size, e.gloves_size
+    FROM employees e
+    WHERE e.site_id = $1 AND e.status = 'active'
+    ORDER BY e.full_name
+  `, [siteId]);
+  return result.rows;
+}
+
 export async function updateEmployee(id, data) {
   const sanitize = (v) => (v === '' || v === undefined || v === null) ? null : v;
   const map = {

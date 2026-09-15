@@ -6,11 +6,11 @@ function badRequest(message) {
   return error;
 }
 
-export async function createIssueRecord(employeeId, itemTypeId, quantity, issueDate, expiryDate, certificateId, reorderDate, wearTimeOverride) {
+export async function createIssueRecord(employeeId, itemTypeId, quantity, issueDate, expiryDate, certificateId, reorderDate, wearTimeOverride, issueMethod) {
   const result = await pool.query(
-    `INSERT INTO issue_records (employee_id, item_type_id, quantity, issue_date, expiry_date, certificate_id, reorder_date, wear_time_override_months) 
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-    [employeeId, itemTypeId, quantity, issueDate, expiryDate, certificateId, reorderDate, wearTimeOverride]
+    `INSERT INTO issue_records (employee_id, item_type_id, quantity, issue_date, expiry_date, certificate_id, reorder_date, wear_time_override_months, issue_method) 
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+    [employeeId, itemTypeId, quantity, issueDate, expiryDate, certificateId, reorderDate, wearTimeOverride, issueMethod]
   );
   return result.rows[0];
 }
@@ -67,22 +67,31 @@ export async function returnIssueRecord(id, returnDate, returnQuantity) {
   return result.rows[0];
 }
 
+export async function deleteIssueRecord(id) {
+  const result = await pool.query(
+    'DELETE FROM issue_records WHERE id=$1 RETURNING id',
+    [id]
+  );
+  return result.rows[0] || null;
+}
+
 export async function batchIssueRecords(records) {
   const result = await pool.query(
-    `INSERT INTO issue_records (employee_id, item_type_id, quantity, issue_date, expiry_date, certificate_id, reorder_date, wear_time_override_months, notes)
-     SELECT * FROM UNNEST($1::int[], $2::int[], $3::int[], $4::date[], $5::date[], $6::int[], $7::date[], $8::int[], $9::text[]) RETURNING *`,
-    [
-      records.map(r => r.employee_id),
-      records.map(r => r.item_type_id),
-      records.map(r => r.quantity),
-      records.map(r => r.issue_date),
-      records.map(r => r.expiry_date),
-      records.map(r => r.certificate_id),
-      records.map(r => r.reorder_date),
-      records.map(r => r.wear_time_override),
-      records.map(r => r.notes || null)
-    ]
-  );
+    `INSERT INTO issue_records (employee_id, item_type_id, quantity, issue_date, expiry_date, certificate_id, reorder_date, wear_time_override_months, notes, issue_method)
+     SELECT * FROM UNNEST($1::int[], $2::int[], $3::int[], $4::date[], $5::date[], $6::int[], $7::date[], $8::int[], $9::text[], $10::text[]) RETURNING *`,
+     [
+       records.map(r => r.employee_id),
+       records.map(r => r.item_type_id),
+       records.map(r => r.quantity),
+       records.map(r => r.issue_date),
+       records.map(r => r.expiry_date),
+       records.map(r => r.certificate_id),
+       records.map(r => r.reorder_date),
+       records.map(r => r.wear_time_override),
+       records.map(r => r.notes || null),
+       records.map(r => r.issue_method || null)
+     ]
+   );
   return result.rows;
 }
 
@@ -116,7 +125,7 @@ export async function updateIssueRecord(id, data) {
   if (!current) return null;
 
   const patch = {};
-  const whitelist = ['employee_id', 'item_type_id', 'quantity', 'issue_date', 'expiry_date', 'certificate_id', 'notes', 'status'];
+  const whitelist = ['employee_id', 'item_type_id', 'quantity', 'issue_date', 'expiry_date', 'certificate_id', 'notes', 'status', 'issue_method'];
   for (const key of whitelist) {
     if (Object.prototype.hasOwnProperty.call(data, key)) patch[key] = data[key];
   }
@@ -126,17 +135,17 @@ export async function updateIssueRecord(id, data) {
   }
 
   if (Object.prototype.hasOwnProperty.call(patch, 'employee_id')) {
-    if (patch.employee_id === '' || patch.employee_id == null) throw badRequest('employee_id is required');
+    if (patch.employee_id === '' || patch.employee_id == null) throw badRequest('Некорректный сотрудник');
     const emp = await pool.query('SELECT id FROM employees WHERE id=$1', [patch.employee_id]);
-    if (!emp.rows[0]) throw badRequest('Employee not found');
+    if (!emp.rows[0]) throw badRequest('Сотрудник не найден');
   }
   if (Object.prototype.hasOwnProperty.call(patch, 'item_type_id')) {
     const item = await pool.query('SELECT * FROM item_types WHERE id=$1', [patch.item_type_id]);
-    if (!item.rows[0]) throw badRequest('Item type not found');
+    if (!item.rows[0]) throw badRequest('Позиция не найдена');
   }
   if (Object.prototype.hasOwnProperty.call(patch, 'quantity')) {
     const parsed = Number(patch.quantity);
-    if (!Number.isInteger(parsed) || parsed <= 0) throw badRequest('quantity must be a positive integer');
+    if (!Number.isInteger(parsed) || parsed <= 0) throw badRequest('Количество должно быть целым и больше 0');
     patch.quantity = parsed;
   }
 
@@ -144,7 +153,7 @@ export async function updateIssueRecord(id, data) {
   const wearTime = patch.wear_time_override_months ?? current.wear_time_override_months;
   if (wearTime !== null && wearTime !== undefined) {
     const parsedWear = Number(wearTime);
-    if (!Number.isFinite(parsedWear)) throw badRequest('wear_time_override must be a number');
+    if (!Number.isFinite(parsedWear)) throw badRequest('Срок носки должен быть числом');
     patch.wear_time_override_months = parsedWear;
   }
 
@@ -174,7 +183,22 @@ export async function updateIssueRecord(id, data) {
   return result.rows[0];
 }
 
-export async function deleteIssueRecord(id) {
-  const result = await pool.query('DELETE FROM issue_records WHERE id=$1 RETURNING *', [id]);
-  return result.rows[0];
+export async function batchIssueRecordsForEmployee(employeeId, records, issueDate) {
+  const result = await pool.query(
+    `INSERT INTO issue_records (employee_id, item_type_id, quantity, issue_date, expiry_date, certificate_id, reorder_date, wear_time_override_months, notes, issue_method)
+     SELECT $1, * FROM UNNEST($2::int[], $3::int[], $4::date[], $5::date[], $6::int[], $7::date[], $8::int[], $9::text[], $10::text[]) RETURNING *`,
+     [
+       employeeId,
+       records.map(r => r.item_type_id),
+       records.map(r => r.quantity),
+       records.map(r => issueDate),
+       records.map(r => r.expiry_date),
+       records.map(r => r.certificate_id),
+       records.map(r => r.reorder_date),
+       records.map(r => r.wear_time_override),
+       records.map(r => r.notes || null),
+       records.map(r => r.issue_method || null)
+     ]
+   );
+  return result.rows;
 }

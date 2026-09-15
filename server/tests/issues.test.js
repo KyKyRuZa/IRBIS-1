@@ -116,4 +116,29 @@ describe('Issues (issue records)', () => {
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
   });
+
+  it('stores issue_method on create and update', async () => {
+    const site = await createSite();
+    const item = await createItem();
+    const emp = await createEmployee();
+    const created = await request(app)
+      .post(base)
+      .set(authHeaders('admin', 1))
+      .send({
+        employee_id: emp.id,
+        item_type_id: item.id,
+        site_id: site.id,
+        quantity: 1,
+        issue_method: 'dosator',
+      });
+    expect(created.status).toBe(201);
+    expect(created.body.issue_method).toBe('dosator');
+
+    const updated = await request(app)
+      .put(`${base}/${created.body.id}`)
+      .set(authHeaders('admin', 1))
+      .send({ issue_method: 'personal' });
+    expect(updated.status).toBe(200);
+    expect(updated.body.issue_method).toBe('personal');
+  });
 });

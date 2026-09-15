@@ -9,6 +9,7 @@ import {
   disposeIssueRecord,
   returnIssueRecord,
   batchIssueRecords,
+  batchIssueRecordsForEmployee,
   getExpiringItems,
   getIssueRecordById,
   updateIssueRecord,
@@ -18,7 +19,7 @@ import pool from '../models/db.js';
 
 export async function issueItem(req, res, next) {
   try {
-    const { employee_id, item_type_id, quantity, issue_date, certificate_id, wear_time_override, signature_path, signature_date, notes } = req.body;
+    const { employee_id, item_type_id, quantity, issue_date, certificate_id, wear_time_override, signature_path, signature_date, notes, issue_method } = req.body;
     if (!employee_id || !item_type_id) {
       return res.status(400).json({ error: 'employee_id and item_type_id are required' });
     }
@@ -43,7 +44,8 @@ export async function issueItem(req, res, next) {
       expiryDate ? expiryDate.toISOString().split('T')[0] : null,
       certificate_id || null,
       reorderDate ? reorderDate.toISOString().split('T')[0] : null,
-      wear_time_override || null
+      wear_time_override || null,
+      issue_method || null
     );
     if (signature_path || signature_date) {
       await pool.query('UPDATE issue_records SET signature_path=$1, signature_date=$2 WHERE id=$3', [signature_path || null, signature_date || null, record.id]);
@@ -57,7 +59,7 @@ export async function issueItem(req, res, next) {
 
 export async function batchIssue(req, res, next) {
   try {
-    const { site_id, item_type_id, quantity, issue_date, certificate_id, wear_time_override, notes } = req.body;
+    const { site_id, item_type_id, quantity, issue_date, certificate_id, wear_time_override, notes, issue_method } = req.body;
     if (!site_id || !item_type_id) {
       return res.status(400).json({ error: 'site_id and item_type_id are required' });
     }
@@ -90,10 +92,60 @@ export async function batchIssue(req, res, next) {
       certificate_id: certificate_id || null,
       reorder_date: reorderDate ? reorderDate.toISOString().split('T')[0] : null,
       wear_time_override: wear_time_override ? Number(wear_time_override) : null,
-      notes: notes || null
+      notes: notes || null,
+      issue_method: issue_method || null
     }));
 
     const created = await batchIssueRecords(records);
+    res.status(201).json({ count: created.length, records: created });
+  } catch (error) {
+    log.error(error);
+    next(error);
+  }
+}
+
+export async function batchIssueSingle(req, res, next) {
+  try {
+    const { employee_id, issue_date, items } = req.body;
+    if (!employee_id || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'employee_id and items array are required' });
+    }
+    const emp = await pool.query('SELECT id FROM employees WHERE id=$1', [employee_id]);
+    if (!emp.rows[0]) return res.status(404).json({ error: 'Employee not found' });
+
+    const issueDate = issue_date || new Date().toISOString().split('T')[0];
+    const enriched = [];
+    for (const entry of items) {
+      if (!entry.item_type_id) continue;
+      const item = await pool.query('SELECT * FROM item_types WHERE id = $1', [entry.item_type_id]);
+      if (!item.rows[0]) return res.status(404).json({ error: `Item type ${entry.item_type_id} not found` });
+
+      const wearTime = entry.wear_time_override ? Number(entry.wear_time_override) : (item.rows[0].default_wear_time_months || null);
+      let expiryDate = null;
+      if (wearTime) {
+        expiryDate = new Date(issueDate);
+        expiryDate.setMonth(expiryDate.getMonth() + wearTime);
+      }
+      const reorderDate = expiryDate ? new Date(expiryDate) : null;
+      if (reorderDate) reorderDate.setMonth(reorderDate.getMonth() - 2);
+
+      enriched.push({
+        item_type_id: entry.item_type_id,
+        quantity: entry.quantity || 1,
+        expiry_date: expiryDate ? expiryDate.toISOString().split('T')[0] : null,
+        certificate_id: entry.certificate_id || null,
+        reorder_date: reorderDate ? reorderDate.toISOString().split('T')[0] : null,
+        wear_time_override: entry.wear_time_override ? Number(entry.wear_time_override) : null,
+        notes: entry.notes || null,
+        issue_method: entry.issue_method || null,
+      });
+    }
+
+    if (enriched.length === 0) {
+      return res.status(400).json({ error: 'No valid items to issue' });
+    }
+
+    const created = await batchIssueRecordsForEmployee(employee_id, enriched, issueDate);
     res.status(201).json({ count: created.length, records: created });
   } catch (error) {
     log.error(error);
