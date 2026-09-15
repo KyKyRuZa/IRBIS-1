@@ -35,15 +35,23 @@ function isBlank(value) {
  * instead of being passed straight into integer columns, which used to fail with
  * `invalid input syntax for type integer: ""` (HTTP 500).
  */
+const COLUMN_LABELS = {
+  item_type_id: 'Выберите наименование',
+  period_months: 'Укажите периодичность',
+  quantity: 'Укажите количество',
+  gender: 'Выберите пол',
+  site_id: 'Выберите объект',
+};
+
 function normalizeValue(column, value) {
   if (isBlank(value)) {
-    if (REQUIRED_COLUMNS.has(column)) throw badRequest(`${column} is required`);
+    if (REQUIRED_COLUMNS.has(column)) throw badRequest(COLUMN_LABELS[column] || `Поле "${column}" обязательно`);
     return null;
   }
 
   if (INTEGER_COLUMNS.has(column)) {
     const parsed = Number(value);
-    if (!Number.isInteger(parsed)) throw badRequest(`${column} must be an integer`);
+    if (!Number.isInteger(parsed)) throw badRequest(`${COLUMN_LABELS[column] || column} должно быть целым числом`);
     return parsed;
   }
 
@@ -70,14 +78,14 @@ function collectFields(data, { skipBlank = false } = {}) {
 
 export function normalizeNormId(id) {
   const parsed = Number(id);
-  if (!Number.isInteger(parsed) || parsed <= 0) throw badRequest('Invalid norm id');
+  if (!Number.isInteger(parsed) || parsed <= 0) throw badRequest('Некорректный ID нормы');
   return parsed;
 }
 
 export async function createIssueNorm(data) {
   const fields = collectFields(data, { skipBlank: true });
   if (!fields.some(([column]) => column === 'period_months')) {
-    throw badRequest('period_months is required');
+    throw badRequest('Укажите периодичность');
   }
 
   const columns = fields.map(([column]) => column);

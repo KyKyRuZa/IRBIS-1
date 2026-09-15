@@ -82,9 +82,9 @@ async function buildCardData(emp, norms, history) {
       return {
         itemName: record.item_type_name || '',
         model: record.certificate_number || '‒',
-        issueDate: formatDate(record.issue_date),
+        issueDate: '',
         issueQty: String(record.quantity || ''),
-        issueMethod: record.issue_method || (isConsumable ? 'лично' : '‒'),
+        issueMethod: record.issue_method === 'dosator' ? 'в дозаторе' : (isConsumable ? 'лично' : '‒'),
         returnDate: (!isConsumable && record.return_date) ? formatDate(record.return_date) : '‒',
         returnQty: (!isConsumable && record.return_quantity !== undefined) ? String(record.return_quantity) : '‒',
         act: isConsumable ? '' : (record.write_off_act || ''),
@@ -567,7 +567,7 @@ export async function exportItemsReport(req, res, next) {
 export async function exportGroupConsumablesReport(req, res, next) {
   try {
     const { site_id, period } = req.query;
-    if (!site_id) return res.status(400).json({ error: 'site_id is required' });
+    if (!site_id) return res.status(400).json({ error: 'Укажите объект' });
 
     const employees = await pool.query(`
       SELECT e.* FROM employees e WHERE e.site_id = $1 AND e.status = 'active' ORDER BY e.full_name

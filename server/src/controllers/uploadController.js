@@ -7,11 +7,11 @@ const log = childLogger('upload');
 export async function uploadCertificate(req, res, next) {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'File is required' });
+      return res.status(400).json({ error: 'Файл обязателен' });
     }
     const { product_name, certificate_number, issue_date, expiry_date, item_type_id } = req.body;
     if (!product_name) {
-      return res.status(400).json({ error: 'product_name is required' });
+      return res.status(400).json({ error: 'Введите наименование продукции' });
     }
     const relativePath = path.join('/uploads', 'certificates', req.file.filename);
     const result = await pool.query(
@@ -29,11 +29,11 @@ export async function uploadCertificate(req, res, next) {
 export async function uploadSignature(req, res, next) {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'File is required' });
+      return res.status(400).json({ error: 'Файл обязателен' });
     }
     const { issue_record_id } = req.body;
     if (!issue_record_id) {
-      return res.status(400).json({ error: 'issue_record_id is required' });
+      return res.status(400).json({ error: 'Укажите запись выдачи' });
     }
     const recordResult = await pool.query('SELECT employee_id FROM issue_records WHERE id=$1', [issue_record_id]);
     const record = recordResult.rows[0];

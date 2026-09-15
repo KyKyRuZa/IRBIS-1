@@ -6,7 +6,7 @@ import { createSite, getAllSites, getSiteById, updateSite as updateSiteModel, de
 export async function addSite(req, res, next) {
   try {
     const { name, responsible_person } = req.body;
-    if (!name) return res.status(400).json({ error: 'name is required' });
+    if (!name) return res.status(400).json({ error: 'Введите название объекта' });
     const site = await createSite(name, responsible_person);
     res.status(201).json(site);
   } catch (error) {
@@ -28,7 +28,7 @@ export async function listSites(req, res, next) {
 export async function getSite(req, res, next) {
   try {
     const site = await getSiteById(req.params.id);
-    if (!site) return res.status(404).json({ error: 'Site not found' });
+    if (!site) return res.status(404).json({ error: 'Объект не найден' });
     res.json(site);
   } catch (error) {
     log.error(error);
@@ -39,7 +39,7 @@ export async function getSite(req, res, next) {
 export async function updateSite(req, res, next) {
   try {
     const site = await updateSiteModel(req.params.id, req.body);
-    if (!site) return res.status(404).json({ error: 'Site not found' });
+    if (!site) return res.status(404).json({ error: 'Объект не найден' });
     res.json(site);
   } catch (error) {
     log.error(error);
@@ -50,8 +50,8 @@ export async function updateSite(req, res, next) {
 export async function deleteSite(req, res, next) {
   try {
     const site = await deleteSiteModel(req.params.id);
-    if (!site) return res.status(404).json({ error: 'Site not found' });
-    res.json({ message: 'Site deleted' });
+    if (!site) return res.status(404).json({ error: 'Объект не найден' });
+    res.json({ message: 'Объект удалён' });
   } catch (error) {
     log.error(error);
     next(error);

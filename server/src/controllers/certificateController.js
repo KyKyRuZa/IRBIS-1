@@ -15,7 +15,7 @@ export async function addCertificate(req, res, next) {
   try {
     const { product_name, certificate_number, issue_date, expiry_date, file_path, item_type_id } = req.body;
     if (!product_name) {
-      return res.status(400).json({ error: 'product_name is required' });
+      return res.status(400).json({ error: 'Введите наименование продукции' });
     }
     const certificate = await createCertificate(product_name, certificate_number, issue_date, expiry_date, file_path, item_type_id);
     res.status(201).json(certificate);
@@ -39,7 +39,7 @@ export async function listCertificates(req, res, next) {
 export async function getCertificate(req, res, next) {
   try {
     const certificate = await getCertificateById(req.params.id);
-    if (!certificate) return res.status(404).json({ error: 'Certificate not found' });
+    if (!certificate) return res.status(404).json({ error: 'Сертификат не найден' });
     res.json(certificate);
   } catch (error) {
     log.error(error);
@@ -50,7 +50,7 @@ export async function getCertificate(req, res, next) {
 export async function updateCertificate(req, res, next) {
   try {
     const certificate = await updateCertificateModel(req.params.id, req.body);
-    if (!certificate) return res.status(404).json({ error: 'Certificate not found' });
+    if (!certificate) return res.status(404).json({ error: 'Сертификат не найден' });
     res.json(certificate);
   } catch (error) {
     log.error(error);
@@ -61,8 +61,8 @@ export async function updateCertificate(req, res, next) {
 export async function deleteCertificate(req, res, next) {
   try {
     const certificate = await deleteCertificateModel(req.params.id);
-    if (!certificate) return res.status(404).json({ error: 'Certificate not found' });
-    res.json({ message: 'Certificate deleted' });
+    if (!certificate) return res.status(404).json({ error: 'Сертификат не найден' });
+    res.json({ message: 'Сертификат удалён' });
   } catch (error) {
     log.error(error);
     next(error);
