@@ -98,9 +98,9 @@ async function generateEmployeeCardTemplate() {
           width: { size: 100, type: WidthType.PERCENTAGE },
           borders: createTableBorder(),
           rows: [
-            new TableRow({ children: ['Наименование СИЗ', 'Модель, марка, артикул, класс защиты', 'Дата выдачи', 'Количество', 'Лично/дозатор', 'Подпись получившего', 'Дата возврата', 'Количество возвращено', 'Подпись сдавшего', 'Акт списания (дата, номер)'].map((h, i) => buildHeaderCell(h, [16, 14, 10, 8, 8, 10, 10, 10, 8, 8][i])) }),
+            new TableRow({ children: ['Наименование СИЗ', 'Модель, марка, артикул, класс защиты', 'Дата выдачи', 'Количество', 'Лично/дозатор', 'Подпись получившего', 'Дата возврата', 'Количество возвращено', 'Подпись сдавшего', 'Акт списания (дата, номер)'].map((h, i) => buildHeaderCell(h, [14, 12, 12, 6, 8, 10, 10, 8, 8, 6][i])) }),
             ...Array.from({ length: 10 }, () => new TableRow({
-              children: ['{history_name_0}', '', '{history_date_0}', '{history_qty_0}', '{history_type_0}', '', '{history_return_date_0}', '', '', ''].map((c, i) => makeCell(c, { width: [16, 14, 10, 8, 8, 10, 10, 10, 8, 8][i] }))
+              children: ['{history_name_0}', '', '{history_date_0}', '{history_qty_0}', '{history_type_0}', '', '{history_return_date_0}', '', '', ''].map((c, i) => makeCell(c, { width: [14, 12, 12, 6, 8, 10, 10, 8, 8, 6][i] }))
             }))
           ]
         }),
@@ -124,7 +124,7 @@ async function generateConsumablesTemplate() {
   ];
 
   const tableHeader = ['Наименование СИЗ', 'Модель/марка', 'Дата выдачи', 'Количество', 'Лично/дозатор', 'Подпись получившего', 'Дата возврата', 'Количество возвращено', 'Подпись сдавшего', 'Акт списания (дата, номер)'];
-  const columnWidths = [16, 14, 10, 8, 8, 10, 10, 10, 8, 8];
+  const columnWidths = [14, 12, 12, 6, 8, 10, 10, 8, 8, 6];
 
   const months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь'];
 

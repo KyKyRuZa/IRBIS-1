@@ -2,7 +2,9 @@
 # with published ports and hot reload. No nginx — the Vite dev server
 # proxies /api directly to the backend service.
 #
-# Usage:
+# Each service is built from its Dockerfile.dev (deps + Prisma client are
+# installed at build time; source + node_modules are bind-mounted for hot
+# reload). Rebuild only when package.json / lockfile change:
 #   docker compose -f docker-compose.dev.yml up -d --build
 #   # run prisma migrations against the dev DB if needed:
 #   #   docker compose -f docker-compose.dev.yml exec backend npx prisma migrate deploy
@@ -29,10 +31,11 @@ services:
       retries: 5
 
   backend:
-    image: node:24-alpine
+    build:
+      context: ./server
+      dockerfile: Dockerfile.dev
     working_dir: /app
-    # Install deps, apply migrations, then run with hot reload.
-    command: sh -c "npm install && npx prisma generate && npx prisma migrate deploy && node --watch src/index.js"
+    command: sh -c "npx prisma migrate deploy && node --watch src/index.js"
     environment:
       # Hardcode the in-network service name so we never pick up a host
       # DB_HOST=localhost from the shell environment.
@@ -58,22 +61,25 @@ services:
         condition: service_healthy
 
   frontend:
-    image: node:24-alpine
+    build:
+      context: ./client
+      dockerfile: Dockerfile.dev
     working_dir: /app
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    command: npm run dev -- --host 0.0.0.0 --port 5173
     environment:
       # Vite proxies /api (and /certs) to the backend service.
       VITE_API_TARGET: http://backend:5000
     ports:
       - "5173:5173"
     volumes:
-      - ./client:/app
-      - frontend_node_modules:/app/node_modules
+      - ./client/src:/app/src
+      - ./client/public:/app/public
+      - ./client/index.html:/app/index.html
+      - ./client/vite.config.js:/app/vite.config.js
     depends_on:
       - backend
 
 volumes:
   pgdata-dev:
   backend_node_modules:
-  frontend_node_modules:
   irbis_uploads_dev:

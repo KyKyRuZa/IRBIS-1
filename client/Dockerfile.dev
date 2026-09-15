@@ -1,0 +1,21 @@
+# syntax=docker/dockerfile:1
+# Development image for the frontend: installs all deps and runs the Vite
+# dev server with hot reload. Source + node_modules are bind-mounted from
+# the host, so the image only needs rebuilding when package.json changes.
+FROM node:24-alpine
+
+WORKDIR /app
+
+# Install all dependencies (dev + prod) — Vite, TypeScript, etc.
+COPY package.json package-lock.json ./
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
+
+# Copy the rest of the source so the image is self-contained; the bind-mount
+# overlays it at runtime anyway.
+COPY . .
+
+EXPOSE 5173
+
+# Default command — overridden by docker-compose.dev.yml for explicit control.
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]

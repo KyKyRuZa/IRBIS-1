@@ -1,0 +1,30 @@
+# syntax=docker/dockerfile:1
+# Development image for the backend: installs all deps (incl. dev),
+# generates the Prisma client, and runs the server with hot reload.
+# Source code + node_modules are bind-mounted from the host, so the
+# image only needs to be rebuilt when package.json / lockfile change.
+FROM node:24-alpine
+
+WORKDIR /app
+
+# Install all dependencies (dev + prod) — prisma CLI, vitest, etc. are needed.
+COPY package.json package-lock.json ./
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
+
+# Prisma schema + config must be present before generating the client.
+COPY prisma.config.js ./
+COPY prisma ./prisma
+RUN --mount=type=cache,target=/root/.npm \
+    ./node_modules/.bin/prisma generate
+
+# Copy the rest of the source so the image is self-contained; the bind-mount
+# will overlay it at runtime anyway.
+COPY src ./src
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
+
+EXPOSE 5000
+
+# Default command — overridden by docker-compose.dev.yml for explicit control.
+CMD ["node", "--watch", "src/index.js"]
