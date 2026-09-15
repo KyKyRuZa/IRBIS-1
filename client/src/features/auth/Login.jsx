@@ -4,6 +4,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { authService } from '@lib/services/auth.service.js';
 import { useAuth } from '@hooks/useAuth.js';
+import { showError, showFieldErrors } from '@/lib/toast.js';
+import { loginSchema } from '@/lib/validation/forms.js';
 import styles from '@styles/Login.module.css';
 
 export default function Login() {
@@ -27,6 +29,12 @@ export default function Login() {
     if (isLoading) return;
     setIsLoading(true);
     setError('');
+    const result = loginSchema.safeParse({ username, password });
+    if (!result.success) {
+      showFieldErrors(result.error?.issues || []);
+      setIsLoading(false);
+      return;
+    }
     try {
       if (isRegister) {
         await authService.register(username, password, 'admin');

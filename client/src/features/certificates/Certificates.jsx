@@ -6,6 +6,8 @@ import { CERTIFICATE_STATUSES, CERTIFICATE_STATUS_LABELS } from '@lib/constants/
 import { formatDate } from '@/lib/utils/date.js';
 import { toDateInput } from '@/lib/utils/date.js';
 import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
+import { showError, showSuccess, showFieldErrors } from '@/lib/toast.js';
+import { certificateSchema } from '@/lib/validation/forms.js';
 import Modal from '@components/ui/Modal.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
@@ -36,6 +38,7 @@ export default function Certificates() {
   const [certificateFile, setCertificateFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const {
     search,
@@ -76,41 +79,62 @@ export default function Certificates() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setUploading(true);
+    setFieldErrors({});
     try {
+      const basePayload = {
+        product_name: formData.product_name,
+        certificate_number: formData.certificate_number || null,
+        issue_date: formData.issue_date || null,
+        expiry_date: formData.expiry_date,
+        item_type_id: formData.item_type_id || null,
+      };
+      const result = certificateSchema.safeParse(basePayload);
+      if (!result.success) {
+        const fieldError = {};
+        (result.error?.issues || []).forEach((err) => {
+          fieldError[err.path.join('.')] = err.message;
+        });
+        setFieldErrors(fieldError);
+        showFieldErrors(result.error?.issues || []);
+        return;
+      }
       if (editingCertificate) {
         if (certificateFile) {
           const fd = new FormData();
           fd.append('certificate', certificateFile);
-          fd.append('product_name', formData.product_name);
-          fd.append('certificate_number', formData.certificate_number || '');
-          fd.append('issue_date', formData.issue_date || '');
-          fd.append('expiry_date', formData.expiry_date || '');
-          fd.append('item_type_id', formData.item_type_id || '');
+          fd.append('product_name', result.data.product_name);
+          fd.append('certificate_number', result.data.certificate_number || '');
+          fd.append('issue_date', result.data.issue_date || '');
+          fd.append('expiry_date', result.data.expiry_date || '');
+          fd.append('item_type_id', result.data.item_type_id || '');
           await uploadService.uploadCertificate(fd);
         } else {
-          await certificatesService.update(editingCertificate.id, formData);
+          await certificatesService.update(editingCertificate.id, result.data);
         }
         setEditingCertificate(null);
       } else {
         if (certificateFile) {
           const fd = new FormData();
           fd.append('certificate', certificateFile);
-          fd.append('product_name', formData.product_name);
-          fd.append('certificate_number', formData.certificate_number || '');
-          fd.append('issue_date', formData.issue_date || '');
-          fd.append('expiry_date', formData.expiry_date || '');
-          fd.append('item_type_id', formData.item_type_id || '');
+          fd.append('product_name', result.data.product_name);
+          fd.append('certificate_number', result.data.certificate_number || '');
+          fd.append('issue_date', result.data.issue_date || '');
+          fd.append('expiry_date', result.data.expiry_date || '');
+          fd.append('item_type_id', result.data.item_type_id || '');
           await uploadService.uploadCertificate(fd);
         } else {
-          await certificatesService.create(formData);
+          await certificatesService.create(result.data);
         }
       }
+      const action = editingCertificate ? 'обновлён' : 'добавлен';
+      showSuccess(`Сертификат "${result.data.product_name}" ${action}`);
       setFormData({ product_name: '', certificate_number: '', issue_date: '', expiry_date: '', item_type_id: '' });
       setCertificateFile(null);
       setShowModal(false);
+      setFieldErrors({});
       fetchCertificates();
     } catch (err) {
-      alert(err.response?.data?.error || 'Ошибка загрузки');
+      showError(err.response?.data?.error || 'Не удалось сохранить сертификат');
     } finally {
       setUploading(false);
     }
@@ -145,6 +169,7 @@ export default function Certificates() {
     setEditingCertificate(null);
     setFormData({ product_name: '', certificate_number: '', issue_date: '', expiry_date: '', item_type_id: '' });
     setCertificateFile(null);
+    setFieldErrors({});
   };
 
   const baseCerts = showExpired
@@ -289,7 +314,10 @@ export default function Certificates() {
                 value={formData.product_name}
                 onChange={(e) => setFormData({...formData, product_name: e.target.value})}
                 required
+                aria-invalid={Boolean(fieldErrors.product_name)}
+                aria-describedby={fieldErrors.product_name ? 'product-error' : undefined}
               />
+              {fieldErrors.product_name && <div id="product-error" className={styles.fieldError} role="alert">{fieldErrors.product_name}</div>}
             </div>
             <div className={`form-group ${styles.field}`}>
               <label>Номер сертификата</label>
@@ -317,7 +345,10 @@ export default function Certificates() {
                 value={formData.expiry_date}
                 onChange={(e) => setFormData({...formData, expiry_date: e.target.value})}
                 required
+                aria-invalid={Boolean(fieldErrors.expiry_date)}
+                aria-describedby={fieldErrors.expiry_date ? 'expiry-error' : undefined}
               />
+              {fieldErrors.expiry_date && <div id="expiry-error" className={styles.fieldError} role="alert">{fieldErrors.expiry_date}</div>}
             </div>
             <div className={`form-group ${styles.field}`}>
               <label>Позиция номенклатуры</label>

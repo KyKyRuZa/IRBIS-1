@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { sitesService } from '@lib/services/sites.service.js';
 import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
+import { showError, showSuccess, showFieldErrors } from '@/lib/toast.js';
+import { siteSchema } from '@/lib/validation/forms.js';
 import Modal from '@components/ui/Modal.jsx';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
@@ -24,6 +26,7 @@ export default function Object() {
     responsible_person: ''
   });
   const [currentPage, setCurrentPage] = useState(1);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const {
     search,
@@ -57,15 +60,32 @@ export default function Object() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (editingSite) {
-      await sitesService.update(editingSite.id, formData);
-      setEditingSite(null);
-    } else {
-      await sitesService.create(formData);
+    setFieldErrors({});
+    const result = siteSchema.safeParse(formData);
+    if (!result.success) {
+      const fieldError = {};
+      (result.error?.issues || []).forEach((err) => {
+        fieldError[err.path.join('.')] = err.message;
+      });
+      setFieldErrors(fieldError);
+      showFieldErrors(result.error?.issues || []);
+      return;
     }
-    setFormData({ name: '', responsible_person: '' });
-    setShowModal(false);
-    fetchSites();
+    try {
+      if (editingSite) {
+        await sitesService.update(editingSite.id, result.data);
+        setEditingSite(null);
+        showSuccess('Объект обновлён');
+      } else {
+        await sitesService.create(result.data);
+        showSuccess('Объект добавлен');
+      }
+      setFormData({ name: '', responsible_person: '' });
+      setShowModal(false);
+      fetchSites();
+    } catch (err) {
+      showError(err.response?.data?.error || 'Не удалось сохранить объект');
+    }
   };
 
   const handleEdit = (site) => {
@@ -89,6 +109,7 @@ export default function Object() {
     setShowModal(false);
     setEditingSite(null);
     setFormData({ name: '', responsible_person: '' });
+    setFieldErrors({});
   };
 
   const filteredSites = useFilteredList(sites, {
@@ -198,7 +219,10 @@ export default function Object() {
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
                 required
+                aria-invalid={Boolean(fieldErrors.name)}
+                aria-describedby={fieldErrors.name ? 'name-error' : undefined}
               />
+              {fieldErrors.name && <div id="name-error" className={styles.fieldError} role="alert">{fieldErrors.name}</div>}
             </div>
             <div className={`form-group ${styles.field}`}>
               <label>Ответственный</label>

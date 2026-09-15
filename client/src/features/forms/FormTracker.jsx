@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { formsService } from '@lib/services/forms.service.js';
 import { employeesService } from '@/lib/services/employees.service.js';
 import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
+import { showError, showSuccess, showFieldErrors } from '@/lib/toast.js';
+import { formTrackerSchema, formTakeSchema } from '@/lib/validation/forms.js';
 import Pagination from '@/components/ui/Pagination.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
 import SortableTh from '@/components/ui/SortableTh.jsx';
@@ -82,8 +84,13 @@ export default function FormTracker() {
 
   const handleAddForm = async (e) => {
     e.preventDefault();
-    if (!formName) return;
-    await formsService.create({ name: formName, description: formDesc });
+    const result = formTrackerSchema.safeParse({ name: formName, description: formDesc });
+    if (!result.success) {
+      showFieldErrors(result.error?.issues || []);
+      return;
+    }
+    await formsService.create(result.data);
+    showSuccess(`Форма "${result.data.name}" добавлена`);
     setFormName('');
     setFormDesc('');
     setShowAddModal(false);
@@ -92,11 +99,13 @@ export default function FormTracker() {
 
   const handleTakeForm = async (e) => {
     e.preventDefault();
-    if (!selectedEmployee || !selectedForm) return;
-    await formsService.take({
-      employee_id: selectedEmployee,
-      form_id: selectedForm
-    });
+    const result = formTakeSchema.safeParse({ employee_id: selectedEmployee, form_id: selectedForm });
+    if (!result.success) {
+      showFieldErrors(result.error?.issues || []);
+      return;
+    }
+    await formsService.take(result.data);
+    showSuccess('Форма отмечена взятой');
     setSelectedEmployee('');
     setSelectedForm('');
     setShowTakeModal(false);

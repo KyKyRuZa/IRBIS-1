@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { itemsService } from '@lib/services/items.service.js';
-import { certificatesService } from '@lib/services/certificates.service.js';
-import { ITEM_CATEGORIES } from '@lib/constants/item-categories.js';
-import { SEASONALITY } from '@lib/constants/seasonality.js';
-import { CERTIFICATE_STATUSES, CERTIFICATE_STATUS_LABELS } from '@lib/constants/certificate-statuses.js';
+import { certificatesService } from '@/lib/services/certificates.service.js';
+import { ITEM_CATEGORIES } from '@/lib/constants/item-categories.js';
+import { SEASONALITY } from '@/lib/constants/seasonality.js';
+import { CERTIFICATE_STATUSES, CERTIFICATE_STATUS_LABELS } from '@/lib/constants/certificate-statuses.js';
 import { formatDate } from '@/lib/utils/date.js';
 import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
+import { showError, showSuccess, showFieldErrors } from '@/lib/toast.js';
+import { itemSchema } from '@/lib/validation/forms.js';
 import Modal from '@components/ui/Modal.jsx';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
@@ -32,6 +34,8 @@ export default function ItemCatalog() {
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [fieldErrors, setFieldErrors] = useState({});
+
   const [formData, setFormData] = useState({
     name: '',
     category: 'consumable',
@@ -97,17 +101,34 @@ export default function ItemCatalog() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFieldErrors({});
     const data = { ...formData };
     if (data.default_wear_time === '') data.default_wear_time = null;
-    if (editingItem) {
-      await itemsService.update(editingItem.id, data);
-      setEditingItem(null);
-    } else {
-      await itemsService.create(data);
+    const result = itemSchema.safeParse(data);
+    if (!result.success) {
+      const fieldError = {};
+      (result.error?.issues || []).forEach((err) => {
+        fieldError[err.path.join('.')] = err.message;
+      });
+      setFieldErrors(fieldError);
+      showFieldErrors(result.error?.issues || []);
+      return;
     }
-    setFormData({ name: '', category: 'consumable', unit: 'шт', default_wear_time: '', seasonality: 'year_round', requires_certificate: false });
-    setShowModal(false);
-    fetchItems();
+    try {
+      if (editingItem) {
+        await itemsService.update(editingItem.id, result.data);
+        setEditingItem(null);
+        showSuccess('Позиция обновлена');
+      } else {
+        await itemsService.create(result.data);
+        showSuccess('Позиция добавлена');
+      }
+      setFormData({ name: '', category: 'consumable', unit: 'шт', default_wear_time: '', seasonality: 'year_round', requires_certificate: false });
+      setShowModal(false);
+      fetchItems();
+    } catch (err) {
+      showError(err.response?.data?.error || 'Не удалось сохранить позицию');
+    }
   };
 
   const handleEdit = (item) => {
@@ -139,6 +160,7 @@ export default function ItemCatalog() {
     setEditingItem(null);
     setShowModal(false);
     setFormData({ name: '', category: 'consumable', unit: 'шт', default_wear_time: '', seasonality: 'year_round', requires_certificate: false });
+    setFieldErrors({});
   };
 
   const showDetails = async (item) => {
@@ -350,7 +372,10 @@ export default function ItemCatalog() {
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
                 required
+                aria-invalid={Boolean(fieldErrors.name)}
+                aria-describedby={fieldErrors.name ? 'item-name-error' : undefined}
               />
+              {fieldErrors.name && <div id="item-name-error" className={styles.fieldError} role="alert">{fieldErrors.name}</div>}
             </div>
             <div className={`form-group ${styles.field}`}>
               <label>Категория *</label>
@@ -365,11 +390,14 @@ export default function ItemCatalog() {
                     requires_certificate: cat === 'siz' ? true : formData.requires_certificate
                   });
                 }}
+                aria-invalid={Boolean(fieldErrors.category)}
+                aria-describedby={fieldErrors.category ? 'item-category-error' : undefined}
               >
                 {Object.entries(categories).map(([key, label]) => (
                   <option key={key} value={key}>{label}</option>
                 ))}
               </select>
+              {fieldErrors.category && <div id="item-category-error" className={styles.fieldError} role="alert">{fieldErrors.category}</div>}
             </div>
             <div className={`form-group ${styles.field}`}>
               <label>Единица измерения</label>

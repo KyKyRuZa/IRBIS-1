@@ -4,6 +4,8 @@ import { itemsService } from '@/lib/services/items.service.js';
 import { ITEM_CATEGORIES } from '@/lib/constants/item-categories.js';
 import { useResource } from '@/hooks/useResource.js';
 import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
+import { showError, showSuccess, showFieldErrors } from '@/lib/toast.js';
+import { normSchema } from '@/lib/validation/forms.js';
 import Modal from '@/components/ui/Modal.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
@@ -71,17 +73,28 @@ export default function IssueNorms() {
     setSubmitError('');
     try {
       const payload = buildPayload();
-      if (editingNorm) {
-        await normsService.update(editingNorm.id, payload);
-        setEditingNorm(null);
-      } else {
-        await normsService.create(payload);
+      const result = normSchema.safeParse(payload);
+      if (!result.success) {
+        const fieldError = {};
+        (result.error?.issues || []).forEach((err) => {
+          fieldError[err.path.join('.')] = err.message;
+        });
+        showFieldErrors(result.error?.issues || []);
+        return;
       }
-    setFormData({ item_type_id: '', period_months: '', quantity: 1, position: '' });
+      if (editingNorm) {
+        await normsService.update(editingNorm.id, result.data);
+        setEditingNorm(null);
+        showSuccess('Норма обновлена');
+      } else {
+        await normsService.create(result.data);
+        showSuccess('Норма добавлена');
+      }
+      setFormData({ item_type_id: '', period_months: '', quantity: 1, position: '' });
       setShowModal(false);
       refetch();
     } catch (err) {
-      setSubmitError(err.response?.data?.error || 'Не удалось сохранить норму');
+      showError(err.response?.data?.error || 'Не удалось сохранить норму');
     }
   };
 
@@ -222,7 +235,7 @@ export default function IssueNorms() {
 
       <Modal isOpen={showModal} onClose={handleClose} title={editingNorm ? 'Редактировать норму' : 'Добавить норму'}>
         <form onSubmit={handleSubmit} className={styles.formSection}>
-          {submitError && <div className={styles.error}>{submitError}</div>}
+          {submitError && <div className={styles.error} role="alert">{submitError}</div>}
           <div className={styles.formGrid}>
             <div className={`form-group ${styles.field}`}>
               <label>Наименование *</label>
