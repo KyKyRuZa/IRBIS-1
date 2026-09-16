@@ -6,6 +6,7 @@ import { certificatesService } from '@/lib/services/certificates.service.js';
 import { issuesService } from '@/lib/services/issues.service.js';
 import { uploadService } from '@/lib/services/upload.service.js';
 import { useAuth } from '@/hooks/useAuth.js';
+import { useLocation } from 'react-router-dom';
 import { ISSUE_STATUSES, ISSUE_STATUS_LABELS } from '@/lib/constants/issue-statuses.js';
 import { ISSUE_METHODS, ISSUE_METHOD_VALUES } from '@/lib/constants/issue-methods.js';
 import { useResource } from '@/hooks/useResource.js';
@@ -37,6 +38,8 @@ const formInitialState = {
 
 export default function IssueForm() {
   const { isAdmin } = useAuth();
+  const location = useLocation();
+
   const [employees, setEmployees] = useState([]);
   const [items, setItems] = useState([]);
   const [sites, setSites] = useState([]);
@@ -96,12 +99,18 @@ export default function IssueForm() {
     filters.date_from !== '' || filters.date_to !== '';
 
   useEffect(() => {
-    // Load all employees (any status) so an issue can be reassigned to anyone,
-    // not just the currently active ones.
     employeesService.list().then(setEmployees);
     itemsService.list().then(setItems);
     sitesService.list().then(setSites);
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const employeeId = params.get('employee_id');
+    if (employeeId) {
+      setFilter('employee_id', employeeId);
+    }
+  }, [location.search]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -493,13 +502,13 @@ export default function IssueForm() {
                            )}
                          </td>
                         <td>
-                          {record.status === ISSUE_STATUSES.issued && isAdmin && (
-                            <div className="action-buttons">
-                              <button className="btn" onClick={() => handleEdit(record)}>Редактировать</button>
-                              <button className="btn btn-danger" onClick={() => setDeleteId(record.id)}>Удалить</button>
-                              <button className="btn btn-secondary" onClick={() => setDisposeId(record.id)}>Списать</button>
-                            </div>
-                          )}
+                           {(record.status === ISSUE_STATUSES.issued || record.status === ISSUE_STATUSES.due_for_disposal) && isAdmin && (
+                             <div className="action-buttons">
+                               <button className="btn" onClick={() => handleEdit(record)}>Редактировать</button>
+                               <button className="btn btn-danger" onClick={() => setDeleteId(record.id)}>Удалить</button>
+                               <button className="btn btn-secondary" onClick={() => setDisposeId(record.id)}>Списать</button>
+                             </div>
+                           )}
                         </td>
                       </tr>
                     ))}

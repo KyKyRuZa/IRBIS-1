@@ -1,0 +1,128 @@
+.page {
+  padding: 24px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.item {
+  position: relative;
+  padding: 14px 16px;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.item:last-child {
+  border-bottom: none;
+}
+
+.item:hover {
+  background-color: #f9fafb;
+}
+
+.itemUnread {
+  background-color: #eff6ff;
+}
+
+.itemUnread:hover {
+  background-color: #dbeafe;
+}
+
+.itemHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.severityBadge {
+  display: inline-flex;
+  align-items: center;
+  text-transform: capitalize;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.severityWarning {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.severityDanger {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.severityInfo {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.itemDate {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.itemMessage {
+  font-size: 14px;
+  color: #111827;
+  line-height: 1.45;
+}
+
+.unreadDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #2563eb;
+  flex-shrink: 0;
+}
+
+.itemActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.itemAction {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2563eb;
+  cursor: pointer;
+}

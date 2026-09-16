@@ -1,0 +1,511 @@
+/* Основной контейнер */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 260px;
+  height: 100vh;
+  background-color: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: visible; /* ИЗМЕНЕНО: было hidden — чтобы кнопка не обрезалась */
+  box-sizing: border-box;
+}
+
+.sidebarCollapsed {
+  width: 72px;
+}
+
+.sidebarInner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 16px 12px;
+  overflow: visible;
+}
+
+/* Скрываем скроллбар для чистоты */
+.sidebarInner::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+/* --- Header --- */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  min-height: 32px;
+  gap: 6px;
+  padding: 6px 0;
+  overflow: visible; /* ИЗМЕНЕНО: было hidden — чтобы кнопка не обрезалась */
+  position: relative;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #111827;
+  overflow: hidden;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.brandIconWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.brandImage {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  display: block;
+}
+
+.brandIcon {
+  color: #2563eb;
+}
+
+.brandText {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  transition: opacity 0.2s;
+}
+
+.sidebarCollapsed .brandText {
+  opacity: 0;
+  width: 0;
+  display: none;
+}
+
+/* --- Кнопка сворачивания (поверх границы, как на макете) --- */
+.collapseBtn {
+  position: absolute;
+  top: 50%;
+  right: -25px; /* Сдвигаем вправо, чтобы перекрывала границу сайдбара */
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: #374151;
+  cursor: pointer;
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease;
+}
+
+.collapseBtn:hover {
+  background-color: #f9fafb;
+  color: #111827;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+}
+
+.sidebarCollapsed .header {
+  justify-content: center;
+}
+
+.sidebarCollapsed .brand {
+  flex: 0 0 auto;
+}
+
+/* --- Поиск --- */
+.searchSection {
+  margin-bottom: 16px;
+}
+
+.searchBtn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: #6b7280;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.searchBtn:hover {
+  background-color: #f9fafb;
+}
+
+.searchIcon {
+  flex-shrink: 0;
+}
+
+.searchText {
+  transition: opacity 0.2s;
+}
+
+.sidebarCollapsed .searchBtn {
+  padding: 10px;
+  justify-content: center;
+}
+.sidebarCollapsed .searchText {
+  display: none;
+}
+
+/* --- Уведомления --- */
+.quickLinks {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.quickLink {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-decoration: none;
+}
+
+.quickLink:hover {
+  background-color: #f3f4f6;
+}
+
+.quickLinkLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.sidebarCollapsed .quickLink {
+  justify-content: center;
+  padding: 10px;
+}
+.sidebarCollapsed .quickLinkLeft span,
+.sidebarCollapsed .badge {
+  display: none;
+}
+
+/* --- Разделитель --- */
+.divider {
+  height: 1px;
+  background-color: #e5e7eb;
+  margin: 12px 0;
+  flex-shrink: 0;
+}
+
+/* --- Главное меню --- */
+.menuSection {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 8px;
+}
+
+.sectionTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  padding: 0 12px 8px;
+  text-transform: capitalize;
+  white-space: nowrap;
+  transition: opacity 0.2s;
+}
+
+.sidebarCollapsed .sectionTitle {
+  opacity: 0;
+  height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #374151;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  border: 1px solid transparent;
+}
+
+.navItem:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+/* Активное состояние (Dashboard) */
+.navItemActive {
+  background-color: #ffffff;
+  border-color: #e5e7eb;
+  color: #111827;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.navIconWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.navItemIcon {
+  opacity: 0.8;
+}
+
+.navItemLabel {
+  transition: opacity 0.2s;
+}
+
+.sidebarCollapsed .navItem {
+  justify-content: center;
+  padding: 10px;
+}
+.sidebarCollapsed .navItemLabel {
+  display: none;
+}
+.sidebarCollapsed .navItemActive {
+  border-color: #e5e7eb;
+}
+
+/* --- Нижняя секция (Dark mode) --- */
+.spacer {
+  flex: 1;
+}
+
+.bottomSection {
+  margin-bottom: 8px;
+}
+
+.darkModeBtn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.darkModeBtn:hover {
+  background-color: #f3f4f6;
+}
+
+.sidebarCollapsed .darkModeBtn {
+  justify-content: center;
+  padding: 10px;
+}
+.sidebarCollapsed .darkModeBtn .navItemLabel {
+  display: none;
+}
+
+/* --- Профиль --- */
+.userProfile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-top: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.userProfile:hover {
+  background-color: #f9fafb;
+}
+
+.userAvatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #e5e7eb;
+  color: #6b7280;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.userAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.userInfo {
+  flex: 1;
+  overflow: hidden;
+  transition: opacity 0.2s;
+}
+
+.userName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userRole {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.userChevron {
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.sidebarCollapsed .userProfile {
+  justify-content: center;
+  padding: 12px 0;
+  border-top: none;
+}
+.sidebarCollapsed .userInfo,
+.sidebarCollapsed .userChevron,
+.sidebarCollapsed .userAvatar{
+  display: none;
+}
+
+/* ================= Мобильная версия ================= */
+.mobileTrigger {
+  display: none;
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1001;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 32px;
+  height: 24px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 5px 6px;
+  cursor: pointer;
+}
+
+.mobileTriggerHidden {
+  display: none !important;
+}
+
+.burgerLine {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background-color: #374151;
+  border-radius: 2px;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 999;
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .mobileTrigger {
+    display: flex;
+  }
+  .backdrop {
+    display: block;
+  }
+  .collapseBtn {
+    display: none !important;
+  }
+  .sidebar {
+    transform: translateX(-100%);
+    overflow: visible; /* ИЗМЕНЕНО: чтобы кнопка не обрезалась на мобильных */
+  }
+  .sidebarOpen {
+    transform: translateX(0);
+    box-shadow: 4px 0 12px rgba(0, 0, 0, 0.1);
+  }
+  .sidebarCollapsed {
+    width: 260px; /* На мобильных не сворачиваем */
+  }
+  .sidebarCollapsed .brandText,
+  .sidebarCollapsed .searchText,
+  .sidebarCollapsed .navItemLabel,
+  .sidebarCollapsed .userInfo,
+  .sidebarCollapsed .sectionTitle,
+  .sidebarCollapsed .quickLinkLeft span,
+  .sidebarCollapsed .badge,
+  .sidebarCollapsed .userChevron {
+    display: block; /* Возвращаем текст */
+  }
+  .sidebarCollapsed .searchBtn,
+  .sidebarCollapsed .quickLink,
+  .sidebarCollapsed .navItem,
+  .sidebarCollapsed .darkModeBtn,
+  .sidebarCollapsed .userProfile {
+    justify-content: flex-start; /* Возвращаем выравнивание */
+    padding: 10px 12px;
+  }
+  .sidebarCollapsed .header {
+    justify-content: space-between;
+  }
+  .sidebarCollapsed .collapseBtn {
+    display: flex;
+  }
+}

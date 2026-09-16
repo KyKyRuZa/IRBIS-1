@@ -205,7 +205,7 @@ export async function dispose(req, res, next) {
   try {
     const current = await getIssueRecordById(req.params.id);
     if (!current) return res.status(404).json({ error: 'Record not found' });
-    if (current.status !== 'issued') {
+    if (!['issued', 'due_for_disposal'].includes(current.status)) {
       return res.status(409).json({ error: `Cannot dispose a record with status '${current.status}'` });
     }
     const record = await disposeIssueRecord(req.params.id);

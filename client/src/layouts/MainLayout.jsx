@@ -1,5 +1,6 @@
+import { useState, useCallback } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import Header from '@components/Header.jsx';
+import Sidebar from '@components/Sidebar.jsx';
 import styles from '@styles/App.module.css';
 
 function getPageClass(pathname) {
@@ -12,19 +13,29 @@ function getPageClass(pathname) {
   if (pathname === '/certificates') return 'page-certificates';
   if (pathname === '/reports') return 'page-reports';
   if (pathname === '/forms') return 'page-forms';
+  if (pathname === '/notifications') return 'page-notifications';
   return 'page-employees';
 }
 
 export default function MainLayout() {
   const location = useLocation();
   const pageClass = getPageClass(location.pathname);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const toggleSidebar = useCallback(() => {
+    setSidebarCollapsed(prev => !prev);
+  }, []);
+
+  if (location.pathname === '/login') {
+    return <Outlet />;
+  }
 
   return (
-    <>
-      <Header />
-      <main className={`${styles.container} ${pageClass}`}>
+    <div className={`${styles.layout} ${pageClass}`}>
+      <Sidebar collapsed={sidebarCollapsed} onToggleCollapse={toggleSidebar} />
+      <main className={`${styles.main} ${sidebarCollapsed ? styles.mainExpanded : ''}`}>
         <Outlet />
       </main>
-    </>
+    </div>
   );
 }

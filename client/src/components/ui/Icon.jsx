@@ -1,40 +1,83 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faRightFromBracket, faBell } from '@fortawesome/free-solid-svg-icons';
+import {
+  // Существующие иконки
+  faUsers,
+  faClipboardList,
+  faBuilding,
+  faBox,
+  faRuler,
+  faCertificate,
+  faChartBar,
+  faFileAlt,
+  faUser,
+  faBell,
+  faRightFromBracket,
+  faChevronDown,
+  faChevronLeft,
+  faChevronRight,
+
+  // Новые иконки для сайдбара
+  faAsterisk,
+  faTableColumns,
+  faMagnifyingGlass,
+  faTableCells,
+  faChartSimple,
+  faChartLine,
+  faFileLines,
+  faFileInvoice,
+  faIndustry,
+  faTrash,
+  faMoon,
+  faSort
+} from '@fortawesome/free-solid-svg-icons';
 import styles from '@styles/Icon.module.css';
 
 const ICONS = {
-  bell: <FontAwesomeIcon icon={faBell} />,
-  user: (
-    <path
-      d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
-      fill="currentColor"
-    />
-  ),
-  logout: <FontAwesomeIcon icon={faRightFromBracket} />,
-  bellDot: (
-    <>
-      <FontAwesomeIcon icon={faBell} />
-      <circle cx="17" cy="5" r="2" fill="currentColor" />
-    </>
-  ),
-  chevronDown: (
-    <path
-      d="M7 10l5 5 5-5z"
-      fill="currentColor"
-    />
-  ),
+  // Существующие
+  users: faUsers,
+  issue: faClipboardList,
+  objects: faBuilding,
+  items: faBox,
+  norms: faRuler,
+  certificates: faCertificate,
+  reports: faChartBar,
+  forms: faFileAlt,
+  user: faUser,
+  bell: faBell,
+  logout: faRightFromBracket,
+  bellDot: faBell,
+  chevronDown: faChevronDown,
+  chevronLeft: faChevronLeft,
+  chevronRight: faChevronRight,
+
+  // Новые (для нового дизайна сайдбара)
+  asterisk: faAsterisk,           // Логотип
+  sidebar: faTableColumns,        // Кнопка сворачивания сайдбара
+  search: faMagnifyingGlass,      // Поиск
+  dashboard: faTableCells,        // Dashboard (сетка)
+  analytics: faChartSimple,       // Product analytics
+  reporting: faChartLine,         // Reporting
+  orders: faFileLines,            // Order summary
+  invoices: faFileInvoice,        // Invoices
+  manufactures: faIndustry,       // Manufactures
+  trash: faTrash,                 // Trash
+  moon: faMoon,                   // Dark mode
+  chevronsUpDown: faSort,         // Иконка сортировки/переключения у профиля
 };
 
 export default function Icon({ name, size = 18, className }) {
   return (
-    <svg
+    <span
       className={`${styles.icon} ${className || ''}`}
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      aria-hidden="true"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: size,
+        height: size
+      }}
     >
-      {ICONS[name]}
-    </svg>
+      <FontAwesomeIcon icon={ICONS[name]} width={size} height={size} />
+    </span>
   );
 }

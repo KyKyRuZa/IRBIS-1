@@ -1,4 +1,28 @@
-.container {
-  max-width: 1500px;
-  margin: 0 auto;
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main {
+  flex: 1;
+  margin-left: 260px;
+  min-height: 100vh;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mainExpanded {
+  margin-left: 72px;
+}
+
+@media (max-width: 1024px) {
+  .main {
+    margin-left: 0;
+    padding-top: 56px;
+  }
+}
+
+@media (max-width: 576px) {
+  .main {
+    padding-top: 52px;
+  }
 }
