@@ -15,9 +15,8 @@ const ADMIN_LINKS = [
   { to: '/items', label: 'Номенклатура', icon: 'items' },
   { to: '/norms', label: 'Нормы выдачи', icon: 'norms' },
   { to: '/certificates', label: 'Сертификаты', icon: 'certificates' },
-  { to: '/reports', label: 'Отчёты', icon: 'reports' },
   { to: '/forms', label: 'Учёт форм', icon: 'forms' },
-  { to: '/notifications', label: 'Уведомления', icon: 'bell' },
+  { to: '/reports', label: 'Аналитика', icon: 'reports' }
 ];
 
 function NavItem({ to, label, icon, isActive, collapsed, onClick }) {

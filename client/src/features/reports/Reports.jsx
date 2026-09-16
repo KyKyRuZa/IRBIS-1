@@ -210,7 +210,7 @@ export default function Reports() {
       <div className={styles.pageHeader}>
         <div className={`${styles.container} ${styles.pageHeaderContent}`}>
           <div className={styles.title}>
-            <h1>Отчёты</h1>
+            <h1>Аналитика</h1>
             <div className={styles.subtitle}>Аналитика, экспорт и сводные данные</div>
           </div>
         </div>

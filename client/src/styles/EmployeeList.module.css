@@ -345,6 +345,14 @@
   color: var(--danger);
 }
 
+.clickableRow {
+  cursor: pointer;
+}
+
+.clickableRow:hover {
+  background: #f6f8fa;
+}
+
 
 /* =========================
    STEPPER

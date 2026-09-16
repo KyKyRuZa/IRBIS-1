@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { employeesService } from '@/lib/services/employees.service.js';
 import { sitesService } from '@/lib/services/sites.service.js';
 import { useAuth } from '@/hooks/useAuth.js';
@@ -23,6 +23,7 @@ import styles from '@styles/EmployeeList.module.css';
 export default function EmployeeList() {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
+  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [step, setStep] = useState(1);
@@ -175,6 +176,10 @@ export default function EmployeeList() {
     setShowModal(true);
   };
 
+  const handleRowClick = (emp) => {
+    navigate(`/employees/${emp.id}`);
+  };
+
   const confirmTerminate = async () => {
     if (!terminateId) return;
     await employeesService.terminate(terminateId);
@@ -292,26 +297,23 @@ export default function EmployeeList() {
                 </thead>
                 <tbody>
                   {paginatedEmployees.map((emp) => (
-                    <tr key={emp.id}>
+                    <tr key={emp.id} onClick={() => handleRowClick(emp)} className={styles.clickableRow}>
                       <td>{emp.full_name}</td>
                       <td>{emp.personnel_number || '-'}</td>
                       <td>{emp.position}</td>
                       <td>{emp.site_name || '-'}</td>
-                      <td className=                        {emp.status === EMPLOYEE_STATUS_VALUES.active ? styles.statusActive : styles.statusTerminated}>
+                      <td className={emp.status === EMPLOYEE_STATUS_VALUES.active ? styles.statusActive : styles.statusTerminated}>
                         {emp.status === EMPLOYEE_STATUS_VALUES.active ? EMPLOYEE_STATUSES.active : EMPLOYEE_STATUSES.terminated}
                       </td>
                     <td>
                       <div className="action-buttons">
-                        <Link to={`/employees/${emp.id}`} className="btn">
-                          Карточка
-                        </Link>
                         {emp.status === EMPLOYEE_STATUS_VALUES.active && (
                           <>
                         {isAdmin && (
                           <>
-                            <button className="btn" onClick={() => handleEdit(emp)}>Редактировать</button>
-                            <button className="btn btn-danger" onClick={() => setDeleteId(emp.id)}>Удалить</button>
-                            <button className="btn btn-secondary" onClick={() => setTerminateId(emp.id)}>Уволить</button>
+                            <button className="btn" onClick={(e) => { e.stopPropagation(); handleEdit(emp); }}>Редактировать</button>
+                            <button className="btn btn-danger" onClick={(e) => { e.stopPropagation(); setDeleteId(emp.id); }}>Удалить</button>
+                            <button className="btn btn-secondary" onClick={(e) => { e.stopPropagation(); setTerminateId(emp.id); }}>Уволить</button>
                           </>
                         )}
                           </>
