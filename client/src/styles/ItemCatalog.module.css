@@ -141,44 +141,8 @@
   font-weight: 500;
 }
 
-.detailPanel {
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  padding: 0 20px;
-  margin-bottom: 0;
-  transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.4s ease,
-              padding 0.5s cubic-bezier(0.4, 0, 0.2, 1),
-              margin-bottom 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.detailPanelOpen {
-  max-height: 2000px;
-  opacity: 1;
-  padding: 20px;
-  margin-bottom: 20px;
-}
-
 .detailCard {
-  background: linear-gradient(135deg, #fafbfc 0%, #ffffff 100%);
-  border: 1px solid var(--border);
-  border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-  position: relative;
-  overflow: hidden;
-}
-
-.detailCard::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: linear-gradient(180deg, var(--primary) 0%, var(--primary-light) 100%);
-  border-radius: 12px 0 0 12px;
 }
 
 .detailHeader {
@@ -224,12 +188,6 @@
   background: white;
   border-radius: 8px;
   border: 1px solid var(--border);
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.detailField:hover {
-  border-color: var(--primary);
-  box-shadow: 0 2px 8px rgba(170, 42, 64, 0.08);
 }
 
 .detailFieldLabel {
@@ -240,10 +198,31 @@
   letter-spacing: 0.5px;
 }
 
-.detailFieldValue {
-  font-size: 15px;
-  color: var(--dark);
-  font-weight: 500;
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 16px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loadingText {
+  color: var(--secondary);
+  font-size: 14px;
 }
 
 .certificatesSection {
@@ -301,33 +280,6 @@
   background: #fafafa;
   border-radius: 8px;
   border: 1px dashed var(--border);
-}
-
-.loadingState {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-  gap: 16px;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--border);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.loadingText {
-  color: var(--secondary);
-  font-size: 14px;
 }
 
 .smallButton {
@@ -402,11 +354,6 @@
   .detailsGrid {
     grid-template-columns: 1fr;
   }
-
-  .tabs {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
 }
 
 @media (max-width: 480px) {
@@ -416,11 +363,5 @@
 
   .detailCard {
     padding: 14px;
-  }
-
-  .detailPanel,
-  .detailPanelOpen {
-    padding-left: 12px;
-    padding-right: 12px;
   }
 }

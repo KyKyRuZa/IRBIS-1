@@ -30,8 +30,7 @@ export default function ItemCatalog() {
   const [category, setCategory] = useState('');
   const [editingItem, setEditingItem] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [detailItem, setDetailItem] = useState(null);
-  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [detailsModal, setDetailsModal] = useState({ open: false, loading: false, item: null });
   const [deleteId, setDeleteId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [fieldErrors, setFieldErrors] = useState({});
@@ -61,17 +60,6 @@ export default function ItemCatalog() {
   useEffect(() => {
     setCurrentPage(1);
   }, [category, items, searchApplied, sort]);
-
-  useEffect(() => {
-    if (detailItem) {
-      setTimeout(() => {
-        const panel = document.getElementById('detail-panel');
-        if (panel) {
-          panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-      }, 100);
-    }
-  }, [detailItem]);
 
   const fetchItems = async () => {
     setLoading(true);
@@ -152,7 +140,7 @@ export default function ItemCatalog() {
     if (!deleteId) return;
     await itemsService.delete(deleteId);
     fetchItems();
-    if (detailItem && detailItem.id === deleteId) setDetailItem(null);
+    if (detailsModal.item && detailsModal.item.id === deleteId) closeDetails();
     setDeleteId(null);
   };
 
@@ -164,19 +152,21 @@ export default function ItemCatalog() {
   };
 
   const showDetails = async (item) => {
-    setIsLoadingDetails(true);
-    setDetailItem(null);
+    setDetailsModal({ open: true, loading: true, item: null });
     try {
       const [itemRes, certRes] = await Promise.all([
         itemsService.get(item.id),
         certificatesService.listByItem(item.id)
       ]);
-      setDetailItem({ ...itemRes, certificates: certRes });
+      setDetailsModal({ open: true, loading: false, item: { ...itemRes, certificates: certRes } });
     } catch (error) {
       console.error('Failed to load item details:', error);
-    } finally {
-      setIsLoadingDetails(false);
+      setDetailsModal({ open: false, loading: false, item: null });
     }
+  };
+
+  const closeDetails = () => {
+    setDetailsModal({ open: false, loading: false, item: null });
   };
 
   return (
@@ -285,44 +275,44 @@ export default function ItemCatalog() {
           )}
         </div>
 
-        <div id="detail-panel" className={`${styles.detailPanel} ${detailItem && !isLoadingDetails ? styles.detailPanelOpen : ''}`}>
-          {isLoadingDetails && (
+        <Modal isOpen={detailsModal.open} onClose={closeDetails} title={detailsModal.item ? detailsModal.item.name : 'Подробнее'}>
+          {detailsModal.loading && (
             <div className={styles.loadingState}>
               <div className={styles.spinner}></div>
               <div className={styles.loadingText}>Загрузка подробных данных...</div>
             </div>
           )}
-          {detailItem && !isLoadingDetails && (
+          {detailsModal.item && !detailsModal.loading && (
             <div className={styles.detailCard}>
               <div className={styles.detailHeader}>
-                <h3 className={styles.detailTitle}>{detailItem.name}</h3>
+                <h3 className={styles.detailTitle}>{detailsModal.item.name}</h3>
               </div>
               <div className={styles.detailsGrid}>
                 <div className={styles.detailField}>
                   <span className={styles.detailFieldLabel}>Категория</span>
-                  <span className={styles.detailFieldValue}>{categories[detailItem.category]}</span>
+                  <span className={styles.detailFieldValue}>{categories[detailsModal.item.category]}</span>
                 </div>
                 <div className={styles.detailField}>
                   <span className={styles.detailFieldLabel}>Единица измерения</span>
-                  <span className={styles.detailFieldValue}>{detailItem.unit || '-'}</span>
+                  <span className={styles.detailFieldValue}>{detailsModal.item.unit || '-'}</span>
                 </div>
                 <div className={styles.detailField}>
                   <span className={styles.detailFieldLabel}>Срок годности</span>
-                  <span className={styles.detailFieldValue}>{detailItem.default_wear_time || '-'} мес.</span>
+                  <span className={styles.detailFieldValue}>{detailsModal.item.default_wear_time || '-'} мес.</span>
                 </div>
                 <div className={styles.detailField}>
                   <span className={styles.detailFieldLabel}>Сезонность</span>
-                  <span className={styles.detailFieldValue}>{seasonality[detailItem.seasonality] || '-'}</span>
+                  <span className={styles.detailFieldValue}>{seasonality[detailsModal.item.seasonality] || '-'}</span>
                 </div>
                 <div className={styles.detailField}>
                   <span className={styles.detailFieldLabel}>Требуется сертификат</span>
-                  <span className={styles.detailFieldValue}>{detailItem.requires_certificate ? 'Да' : 'Нет'}</span>
+                  <span className={styles.detailFieldValue}>{detailsModal.item.requires_certificate ? 'Да' : 'Нет'}</span>
                 </div>
               </div>
 
               <div className={styles.certificatesSection}>
                 <h4 className={styles.certificatesTitle}>Сертификаты</h4>
-                {detailItem.certificates && detailItem.certificates.length > 0 ? (
+                {detailsModal.item.certificates && detailsModal.item.certificates.length > 0 ? (
                    <div className="tableScroll">
                    <table className={`${styles.certificatesTable} table`}>
                      <thead>
@@ -334,7 +324,7 @@ export default function ItemCatalog() {
                       </tr>
                     </thead>
                     <tbody>
-                      {detailItem.certificates.map((cert) => (
+                      {detailsModal.item.certificates.map((cert) => (
                         <tr key={cert.id}>
                           <td>{cert.certificate_number}</td>
                            <td>{formatDate(cert.issue_date)}</td>
@@ -353,12 +343,9 @@ export default function ItemCatalog() {
                   <div className={styles.emptyCertificates}>Сертификаты отсутствуют</div>
                 )}
               </div>
-              <div className={styles.actionButtons}>
-                <button className={`btn btn-secondary`} onClick={() => setDetailItem(null)}>Закрыть</button>
-              </div>
             </div>
           )}
-        </div>
+        </Modal>
       </div>
 
       <Modal isOpen={showModal} onClose={handleCancel} title={editingItem ? 'Редактировать позицию' : 'Новая позиция'}>
