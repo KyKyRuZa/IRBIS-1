@@ -365,3 +365,8 @@
     padding: 14px;
   }
 }
+
+.searchIcon {
+  color: var(--secondary);
+  flex-shrink: 0;
+}

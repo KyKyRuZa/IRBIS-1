@@ -16,8 +16,7 @@ import LoadingState from '@/components/ui/LoadingState.jsx';
 import ErrorState from '@/components/ui/ErrorState.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
 import SortableTh from '@/components/ui/SortableTh.jsx';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUsers } from '@fortawesome/free-solid-svg-icons';
+import Icon from '@components/ui/Icon.jsx';
 import styles from '@styles/EmployeeList.module.css';
 
 export default function EmployeeList() {
@@ -230,7 +229,7 @@ export default function EmployeeList() {
           </div>
           {isAdmin && (
           <button className="btn" onClick={() => setShowModal(true)}>
-            Добавить сотрудника
+            <Icon name="userPlus" size={16} /> Добавить сотрудника
           </button>
           )}
         </div>
@@ -239,6 +238,7 @@ export default function EmployeeList() {
         <div className="card">
           <div className="table-controls">
             <div className="search-box">
+              <Icon name="search" size={16} className={styles.searchIcon} />
               <input
                 type="text"
                 name="search"
@@ -266,7 +266,7 @@ export default function EmployeeList() {
             </div>
             {hasActiveFilters && (
               <button className="btn btn-secondary filter-reset" onClick={resetFilters}>
-                Сбросить
+                <Icon name="rotateCcw" size={16} /> Сбросить
               </button>
             )}
           </div>
@@ -276,10 +276,10 @@ export default function EmployeeList() {
           {!loading && !error && (
             filteredEmployees.length === 0 ? (
               <EmptyState
-                icon={<FontAwesomeIcon icon={faUsers} />}
+                icon={<Icon name="users" size={48} />}
                 title="Сотрудники не найдены"
                 description={hasActiveFilters ? 'По заданным фильтрам ничего не найдено.' : 'В системе пока нет сотрудников. Добавьте первого.'}
-                action={<button className="btn" onClick={() => setShowModal(true)}>Добавить сотрудника</button>}
+                action={<button className="btn" onClick={() => setShowModal(true)}><Icon name="userPlus" size={16} /> Добавить сотрудника</button>}
               />
             ) : (
               <>
@@ -311,9 +311,9 @@ export default function EmployeeList() {
                           <>
                         {isAdmin && (
                           <>
-                            <button className="btn" onClick={(e) => { e.stopPropagation(); handleEdit(emp); }}>Редактировать</button>
-                            <button className="btn btn-danger" onClick={(e) => { e.stopPropagation(); setDeleteId(emp.id); }}>Удалить</button>
-                            <button className="btn btn-secondary" onClick={(e) => { e.stopPropagation(); setTerminateId(emp.id); }}>Уволить</button>
+                            <button className="btn" onClick={(e) => { e.stopPropagation(); handleEdit(emp); }}><Icon name="pencil" size={14} /> Редактировать</button>
+                            <button className="btn btn-danger" onClick={(e) => { e.stopPropagation(); setDeleteId(emp.id); }}><Icon name="trash" size={14} /> Удалить</button>
+                            <button className="btn btn-secondary" onClick={(e) => { e.stopPropagation(); setTerminateId(emp.id); }}><Icon name="userMinus" size={14} /> Уволить</button>
                           </>
                         )}
                           </>

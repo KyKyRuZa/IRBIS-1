@@ -4,14 +4,13 @@ import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
 import { showError, showSuccess, showFieldErrors } from '@/lib/toast.js';
 import { siteSchema } from '@/lib/validation/forms.js';
 import Modal from '@components/ui/Modal.jsx';
-import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
-import Pagination from '@/components/ui/Pagination.jsx';
-import LoadingState from '@/components/ui/LoadingState.jsx';
-import ErrorState from '@/components/ui/ErrorState.jsx';
-import EmptyState from '@/components/ui/EmptyState.jsx';
-import SortableTh from '@/components/ui/SortableTh.jsx';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBuilding } from '@fortawesome/free-solid-svg-icons';
+import ConfirmDialog from '@components/ui/ConfirmDialog.jsx';
+import Pagination from '@components/ui/Pagination.jsx';
+import LoadingState from '@components/ui/LoadingState.jsx';
+import ErrorState from '@components/ui/ErrorState.jsx';
+import EmptyState from '@components/ui/EmptyState.jsx';
+import SortableTh from '@components/ui/SortableTh.jsx';
+import Icon from '@components/ui/Icon.jsx';
 import styles from '@styles/Object.module.css';
 
 export default function Object() {
@@ -142,6 +141,7 @@ export default function Object() {
         <div className="card">
           <div className="table-controls">
             <div className="search-box">
+              <Icon name="search" size={16} className={styles.searchIcon} />
               <input
                 type="text"
                 name="search"
@@ -152,7 +152,7 @@ export default function Object() {
             </div>
             {hasActiveFilters && (
               <button className="btn btn-secondary filter-reset" onClick={resetFilters}>
-                Сбросить
+                <Icon name="rotateCcw" size={16} /> Сбросить
               </button>
             )}
           </div>
@@ -162,10 +162,10 @@ export default function Object() {
           {!loading && !error && (
             filteredSites.length === 0 ? (
               <EmptyState
-                icon={<FontAwesomeIcon icon={faBuilding} />}
+                icon={<Icon name="building2" size={48} />}
                 title="Объекты не найдены"
                 description={hasActiveFilters ? 'По заданным фильтрам ничего не найдено.' : 'Пока не добавлено ни одного объекта.'}
-                action={<button className="btn" onClick={() => { setEditingSite(null); setFormData({ name: '', responsible_person: '' }); setShowModal(true); }}>Добавить объект</button>}
+                action={<button className="btn" onClick={() => { setEditingSite(null); setFormData({ name: '', responsible_person: '' }); setShowModal(true); }}><Icon name="plus" size={16} /> Добавить объект</button>}
               />
             ) : (
               <>
@@ -186,8 +186,8 @@ export default function Object() {
                         <td>{s.responsible_person}</td>
                         <td>
                           <div className="action-buttons">
-                            <button className="btn" onClick={() => handleEdit(s)}>Редактировать</button>
-                            <button className="btn btn-danger" onClick={() => handleDelete(s.id)}>Удалить</button>
+                            <button className="btn" onClick={() => handleEdit(s)}><Icon name="pencil" size={14} /> Редактировать</button>
+                            <button className="btn btn-danger" onClick={() => handleDelete(s.id)}><Icon name="trash" size={14} /> Удалить</button>
                           </div>
                         </td>
                       </tr>

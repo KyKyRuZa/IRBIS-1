@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import Icon from '@components/ui/Icon.jsx';
 import { authService } from '@lib/services/auth.service.js';
 import { useAuth } from '@hooks/useAuth.js';
 import { showError, showFieldErrors } from '@/lib/toast.js';
@@ -80,12 +79,7 @@ export default function Login() {
 
         {error && (
           <div className={styles.error} role="alert">
-            <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
-              <path
-                fill="currentColor"
-                d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 4a1 1 0 011 1v4a1 1 0 11-2 0V7a1 1 0 011-1zm0 9a1.1 1.1 0 110-2.2 1.1 1.1 0 010 2.2z"
-              />
-            </svg>
+            <Icon name="alertTriangle" size={18} />
             <span>{error}</span>
           </div>
         )}
@@ -131,7 +125,7 @@ export default function Login() {
                 aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
                 aria-pressed={showPassword}
               >
-                <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                <Icon name={showPassword ? 'eyeOff' : 'eye'} size={18} />
               </button>
             </div>
           </div>

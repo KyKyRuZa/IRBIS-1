@@ -13,8 +13,7 @@ import LoadingState from '@/components/ui/LoadingState.jsx';
 import ErrorState from '@/components/ui/ErrorState.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
 import SortableTh from '@/components/ui/SortableTh.jsx';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClipboardList } from '@fortawesome/free-solid-svg-icons';
+import Icon from '@components/ui/Icon.jsx';
 import styles from '@styles/IssueNorms.module.css';
 
 const categories = ITEM_CATEGORIES;
@@ -150,7 +149,7 @@ export default function IssueNorms() {
             <div className={styles.subtitle}>Установленные нормы по должностям и периодичности</div>
           </div>
           <button className="btn" onClick={() => { setSubmitError(''); setShowModal(true); }}>
-            Добавить норму
+            <Icon name="plus" size={16} /> Добавить норму
           </button>
         </div>
       </div>
@@ -158,6 +157,7 @@ export default function IssueNorms() {
         <div className="card">
           <div className="table-controls">
             <div className="search-box">
+              <Icon name="search" size={16} className={styles.searchIcon} />
               <input
                 type="text"
                 name="search"
@@ -187,10 +187,10 @@ export default function IssueNorms() {
           {!loading && !error && (
             filteredNorms.length === 0 ? (
               <EmptyState
-                icon={<FontAwesomeIcon icon={faClipboardList} />}
+                icon={<Icon name="clipboardList" size={48} />}
                 title="Нормы не найдены"
                 description={hasActiveFilters ? 'По заданным фильтрам ничего не найдено.' : 'Пока не добавлено ни одной нормы выдачи.'}
-                action={<button className="btn" onClick={() => setShowModal(true)}>Добавить норму</button>}
+                action={<button className="btn" onClick={() => setShowModal(true)}><Icon name="plus" size={16} /> Добавить норму</button>}
               />
             ) : (
               <>
@@ -212,8 +212,8 @@ export default function IssueNorms() {
                       <td>{norm.quantity}</td>
                   <td>
                     <div className="action-buttons">
-                      <button className="btn" onClick={() => handleEdit(norm)}>Редактировать</button>
-                      <button className="btn btn-danger" onClick={() => handleDelete(norm.id)}>Удалить</button>
+                      <button className="btn" onClick={() => handleEdit(norm)}><Icon name="pencil" size={14} /> Редактировать</button>
+                      <button className="btn btn-danger" onClick={() => handleDelete(norm.id)}><Icon name="trash" size={14} /> Удалить</button>
                     </div>
                   </td>
                     </tr>

@@ -9,14 +9,13 @@ import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
 import { showError, showSuccess, showFieldErrors } from '@/lib/toast.js';
 import { itemSchema } from '@/lib/validation/forms.js';
 import Modal from '@components/ui/Modal.jsx';
-import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
-import Pagination from '@/components/ui/Pagination.jsx';
-import LoadingState from '@/components/ui/LoadingState.jsx';
-import ErrorState from '@/components/ui/ErrorState.jsx';
-import EmptyState from '@/components/ui/EmptyState.jsx';
-import SortableTh from '@/components/ui/SortableTh.jsx';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBox } from '@fortawesome/free-solid-svg-icons';
+import ConfirmDialog from '@components/ui/ConfirmDialog.jsx';
+import Pagination from '@components/ui/Pagination.jsx';
+import LoadingState from '@components/ui/LoadingState.jsx';
+import ErrorState from '@components/ui/ErrorState.jsx';
+import EmptyState from '@components/ui/EmptyState.jsx';
+import SortableTh from '@components/ui/SortableTh.jsx';
+import Icon from '@components/ui/Icon.jsx';
 import styles from '@styles/ItemCatalog.module.css';
 
 const categories = ITEM_CATEGORIES;
@@ -186,6 +185,7 @@ export default function ItemCatalog() {
         <div className="card">
           <div className="table-controls">
             <div className="search-box">
+              <Icon name="search" size={16} className={styles.searchIcon} />
               <input
                 type="text"
                 name="search"
@@ -196,7 +196,7 @@ export default function ItemCatalog() {
             </div>
             {hasActiveFilters && (
               <button className="btn btn-secondary filter-reset" onClick={resetFilters}>
-                Сбросить
+                <Icon name="rotateCcw" size={16} /> Сбросить
               </button>
             )}
           </div>
@@ -219,10 +219,10 @@ export default function ItemCatalog() {
           {!loading && !error && (
             filteredItems.length === 0 ? (
               <EmptyState
-                icon={<FontAwesomeIcon icon={faBox} />}
+                icon={<Icon name="package" size={48} />}
                 title="Позиции не найдены"
                 description={hasActiveFilters ? 'По заданным фильтрам ничего не найдено.' : (category ? 'В выбранной категории пока нет позиций.' : 'Номенклатура пуста. Добавьте первую позицию.')}
-                action={<button className="btn" onClick={() => { setEditingItem(null); setFormData({ name: '', category: 'consumable', unit: 'шт', default_wear_time: '', seasonality: 'year_round', requires_certificate: false }); setShowModal(true); }}>Добавить позицию</button>}
+                action={<button className="btn" onClick={() => { setEditingItem(null); setFormData({ name: '', category: 'consumable', unit: 'шт', default_wear_time: '', seasonality: 'year_round', requires_certificate: false }); setShowModal(true); }}><Icon name="plus" size={16} /> Добавить позицию</button>}
               />
             ) : (
               <>
@@ -284,9 +284,6 @@ export default function ItemCatalog() {
           )}
           {detailsModal.item && !detailsModal.loading && (
             <div className={styles.detailCard}>
-              <div className={styles.detailHeader}>
-                <h3 className={styles.detailTitle}>{detailsModal.item.name}</h3>
-              </div>
               <div className={styles.detailsGrid}>
                 <div className={styles.detailField}>
                   <span className={styles.detailFieldLabel}>Категория</span>

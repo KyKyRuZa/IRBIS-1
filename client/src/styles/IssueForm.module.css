@@ -172,6 +172,11 @@
     min-width: 100%;
     width: max-content;
   }
+
+  .searchIcon {
+    color: var(--secondary);
+    flex-shrink: 0;
+  }
 }
 
 @media (max-width: 480px) {

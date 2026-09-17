@@ -10,8 +10,7 @@ import { useTableControls, filterAndSort } from '@/hooks/useTableControls.js';
 import Pagination from '@/components/ui/Pagination.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
 import SortableTh from '@/components/ui/SortableTh.jsx';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChartBar, faClipboardList, faHourglassHalf } from '@fortawesome/free-solid-svg-icons';
+import Icon from '@components/ui/Icon.jsx';
 import styles from '@styles/Reports.module.css';
 
 const TABS = [
@@ -220,6 +219,7 @@ export default function Reports() {
         <div className="card">
           <div className="table-controls">
             <div className="search-box">
+              <Icon name="search" size={16} className={styles.searchIcon} />
               <input
                 type="text"
                 name="search"
@@ -264,7 +264,7 @@ export default function Reports() {
 
             <div className={styles.toolbarRight} ref={exportMenuRef}>
               <button className="btn" onClick={() => setShowExportMenu(!showExportMenu)}>
-                Экспорт
+                <Icon name="download" size={16} /> Экспорт
               </button>
               {showExportMenu && (
                 <div className={styles.exportMenu}>
@@ -279,7 +279,7 @@ export default function Reports() {
 
             {hasActiveFilters && (
               <button className="btn btn-secondary filter-reset" onClick={() => { resetFilters(); resetTableControls(); }}>
-                Сбросить
+                <Icon name="rotateCcw" size={16} /> Сбросить
               </button>
             )}
           </div>
@@ -302,7 +302,7 @@ export default function Reports() {
           {activeTab === 'demand' && (
             <>
               {sortedDemand.length === 0 ? (
-                <EmptyState icon={<FontAwesomeIcon icon={faChartBar} />} title="Нет данных о потребности" description={Boolean(search) ? 'По поиску ничего не найдено.' : 'Добавьте сотрудников, нормы и выдачи, чтобы увидеть потребность в СИЗ.'} />
+                <EmptyState icon={<Icon name="barChart3" size={48} />} title="Нет данных о потребности" description={Boolean(search) ? 'По поиску ничего не найдено.' : 'Добавьте сотрудников, нормы и выдачи, чтобы увидеть потребность в СИЗ.'} />
               ) : (
                 <>
                   <div className="tableScroll">
@@ -340,7 +340,7 @@ export default function Reports() {
           {activeTab === 'records' && (
             <>
               {sortedRecords.length === 0 ? (
-                <EmptyState icon={<FontAwesomeIcon icon={faClipboardList} />} title="Нет записей о выдачах" description={Boolean(search) ? 'По поиску ничего не найдено.' : 'Выдачи сотрудникам ещё не зарегистрированы.'} />
+                <EmptyState icon={<Icon name="clipboardList" size={48} />} title="Нет записей о выдачах" description={Boolean(search) ? 'По поиску ничего не найдено.' : 'Выдачи сотрудникам ещё не зарегистрированы.'} />
               ) : (
                 <>
                   <div className="tableScroll">
@@ -378,7 +378,7 @@ export default function Reports() {
           {activeTab === 'expiring' && (
             <>
               {sortedExpiring.length === 0 ? (
-                <EmptyState icon={<FontAwesomeIcon icon={faHourglassHalf} />} title="Нет истекающих сроков" description={Boolean(search) ? 'По поиску ничего не найдено.' : 'В ближайшие 2 месяца сроки годности не истекают.'} />
+                <EmptyState icon={<Icon name="clock" size={48} />} title="Нет истекающих сроков" description={Boolean(search) ? 'По поиску ничего не найдено.' : 'В ближайшие 2 месяца сроки годности не истекают.'} />
               ) : (
                 <>
                   <p className={styles.sectionSubtitle}>Истекающие сроки годности (в течение 2 месяцев)</p>

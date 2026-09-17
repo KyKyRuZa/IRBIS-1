@@ -1,5 +1,4 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import Icon from '@components/ui/Icon.jsx';
 import styles from '@styles/Pagination.module.css';
 
 export default function Pagination({ totalItems, itemsPerPage = 10, currentPage, onPageChange }) {
@@ -26,7 +25,7 @@ export default function Pagination({ totalItems, itemsPerPage = 10, currentPage,
         onClick={() => onPageChange(currentPage - 1)}
         aria-label="Назад"
       >
-        <FontAwesomeIcon icon={faChevronLeft} />
+        <Icon name="chevronLeft" size={16} />
       </button>
       {startPage > 1 && (
         <>
@@ -55,7 +54,7 @@ export default function Pagination({ totalItems, itemsPerPage = 10, currentPage,
         onClick={() => onPageChange(currentPage + 1)}
         aria-label="Вперёд"
       >
-        <FontAwesomeIcon icon={faChevronRight} />
+        <Icon name="chevronRight" size={16} />
       </button>
     </div>
   );

@@ -7,8 +7,7 @@ import StatusBadge from '@/components/ui/StatusBadge.jsx';
 import Pagination from '@/components/ui/Pagination.jsx';
 import LoadingState from '@/components/ui/LoadingState.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClipboardList, faBox } from '@fortawesome/free-solid-svg-icons';
+import Icon from '@components/ui/Icon.jsx';
 import { exportsService } from '@/lib/services/exports.service.js';
 import { useExport } from '@hooks/useExport.js';
 import styles from '@styles/EmployeeCard.module.css';
@@ -76,9 +75,9 @@ export default function EmployeeCard() {
 
             <div className="card">
               <h3 className={styles.sectionTitle}>Нормы выдачи</h3>
-              {(employee.norms?.length || 0) === 0 ? (
-                <EmptyState icon={<FontAwesomeIcon icon={faClipboardList} />} title="Нормы не заданы" description="Для этого сотрудника пока не установлены нормы выдачи." />
-              ) : (
+               {(employee.norms?.length || 0) === 0 ? (
+                 <EmptyState icon={<Icon name="clipboardList" size={48} />} title="Нормы не заданы" description="Для этого сотрудника пока не установлены нормы выдачи." />
+               ) : (
                 <>
                   <div className="tableScroll">
                   <table className="table">
@@ -112,9 +111,9 @@ export default function EmployeeCard() {
 
             <div className="card">
               <h3 className={styles.sectionTitle}>История выдач</h3>
-              {(employee.history?.length || 0) === 0 ? (
-                <EmptyState icon={<FontAwesomeIcon icon={faBox} />} title="История выдач пуста" description="Сотруднику ещё не выдавались СИЗ." />
-              ) : (
+               {(employee.history?.length || 0) === 0 ? (
+                 <EmptyState icon={<Icon name="package" size={48} />} title="История выдач пуста" description="Сотруднику ещё не выдавались СИЗ." />
+               ) : (
                 <>
                   <div className="tableScroll">
                   <table className="table">

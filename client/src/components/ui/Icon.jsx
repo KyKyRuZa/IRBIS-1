@@ -3,6 +3,7 @@ import {
   ClipboardList,
   Building2,
   Package,
+  PackageOpen,
   Ruler,
   BarChart3,
   FileText,
@@ -22,7 +23,28 @@ import {
   ChevronsUpDown,
   BellDot,
   FileBadge,
-  ClipboardCheck
+  ClipboardCheck,
+  Plus,
+  Download,
+  Pencil,
+  UserPlus,
+  UserMinus,
+  Eye,
+  EyeOff,
+  RotateCcw,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  Check,
+  X,
+  Calendar,
+  Hash,
+  Tag,
+  ArchiveX,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import styles from '@styles/Icon.module.css';
 
@@ -50,7 +72,29 @@ const ICONS = {
   manufactures: Factory,
   trash: Trash2,
   moon: Moon,
-  chevronsUpDown: ChevronsUpDown
+  chevronsUpDown: ChevronsUpDown,
+  plus: Plus,
+  download: Download,
+  pencil: Pencil,
+  userPlus: UserPlus,
+  userMinus: UserMinus,
+  eye: Eye,
+  eyeOff: EyeOff,
+  rotateCcw: RotateCcw,
+  alertTriangle: AlertTriangle,
+  checkCircle2: CheckCircle2,
+  clock: Clock,
+  xCircle: XCircle,
+  check: Check,
+  x: X,
+  calendar: Calendar,
+  hash: Hash,
+  tag: Tag,
+  archiveX: ArchiveX,
+  arrowUpDown: ArrowUpDown,
+  arrowUp: ArrowUp,
+  arrowDown: ArrowDown,
+  packageOpen: PackageOpen
 };
 
 export default function Icon({ name, size = 18, className }) {

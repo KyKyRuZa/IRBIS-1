@@ -8,14 +8,16 @@
   color: var(--primary);
 }
 
-.sort-indicator {
-  display: inline-block;
+.sortIndicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin-left: 4px;
-  font-size: 11px;
   opacity: 0.5;
+  vertical-align: middle;
 }
 
-.sort-indicator.active {
+.sortIndicator.active {
   opacity: 1;
   color: var(--primary);
 }

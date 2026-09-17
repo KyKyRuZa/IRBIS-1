@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Modal from '@components/ui/Modal.jsx';
+import Icon from '@components/ui/Icon.jsx';
 import styles from '@styles/ConfirmDialog.module.css';
 
 export default function ConfirmDialog({ isOpen, onClose, onConfirm, title, message, confirmText = 'Подтвердить', cancelText = 'Отмена' }) {
@@ -19,8 +20,12 @@ export default function ConfirmDialog({ isOpen, onClose, onConfirm, title, messa
     <Modal isOpen={isOpen} onClose={onClose} title={title}>
       <p className={styles.message}>{message}</p>
       <div className={styles.actions}>
-        <button className="btn btn-secondary" onClick={onClose} disabled={loading}>{cancelText}</button>
-        <button className="btn" onClick={handleConfirm} disabled={loading}>{loading ? '...' : confirmText}</button>
+        <button className="btn btn-secondary" onClick={onClose} disabled={loading}>
+          <Icon name="x" size={16} /> {cancelText}
+        </button>
+        <button className="btn" onClick={handleConfirm} disabled={loading}>
+          {loading ? '...' : <><Icon name="check" size={16} /> {confirmText}</>}
+        </button>
       </div>
     </Modal>
   );

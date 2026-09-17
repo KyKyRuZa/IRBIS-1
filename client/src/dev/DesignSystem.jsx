@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faDownload, faTrash, faCheck, faBoxOpen } from '@fortawesome/free-solid-svg-icons';
+import Icon from '@components/ui/Icon.jsx';
 import LoadingState from '@/components/ui/LoadingState.jsx';
 import ErrorState from '@/components/ui/ErrorState.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
@@ -87,10 +86,10 @@ export default function DesignSystem() {
           </div>
           <div className={styles.spacer} />
           <div className={styles.grid}>
-            <button className="btn"><FontAwesomeIcon icon={faPlus} /> Добавить</button>
-            <button className="btn btn-secondary"><FontAwesomeIcon icon={faDownload} /> Скачать</button>
-            <button className="btn btn-danger"><FontAwesomeIcon icon={faTrash} /> Удалить</button>
-            <button className="btn btn-success"><FontAwesomeIcon icon={faCheck} /> Готово</button>
+            <button className="btn"><Icon name="plus" size={16} /> Добавить</button>
+            <button className="btn btn-secondary"><Icon name="download" size={16} /> Скачать</button>
+            <button className="btn btn-danger"><Icon name="trash" size={16} /> Удалить</button>
+            <button className="btn btn-success"><Icon name="check" size={16} /> Готово</button>
           </div>
         </div>
       </section>
@@ -286,7 +285,7 @@ export default function DesignSystem() {
           )}
           {stateKind === 'empty' && (
             <EmptyState
-              icon={<FontAwesomeIcon icon={faBoxOpen} />}
+              icon={<Icon name="packageOpen" size={48} />}
               title="Данных пока нет"
               description="Здесь появятся записи, когда они будут добавлены."
               action={<button className="btn">Добавить запись</button>}

@@ -21,8 +21,7 @@ import LoadingState from '@/components/ui/LoadingState.jsx';
 import ErrorState from '@/components/ui/ErrorState.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
 import SortableTh from '@/components/ui/SortableTh.jsx';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTruckRampBox } from '@fortawesome/free-solid-svg-icons';
+import Icon from '@components/ui/Icon.jsx';
 import styles from '@styles/IssueForm.module.css';
 
 const formInitialState = {
@@ -386,7 +385,7 @@ export default function IssueForm() {
           </div>
           {isAdmin && (
           <button className="btn" onClick={() => setShowModal(true)}>
-            Новая выдача
+            <Icon name="plus" size={16} /> Новая выдача
           </button>
           )}
         </div>
@@ -395,6 +394,7 @@ export default function IssueForm() {
         <div className="card">
           <div className="table-controls">
             <div className="search-box">
+              <Icon name="search" size={16} className={styles.searchIcon} />
               <input
                 type="text"
                 name="search"
@@ -460,10 +460,10 @@ export default function IssueForm() {
           {!loading && !error && (
             filteredRecords.length === 0 ? (
               <EmptyState
-                icon={<FontAwesomeIcon icon={faTruckRampBox} />}
+                icon={<Icon name="package" size={48} />}
                 title="Выдач пока нет"
                 description={hasActiveFilters ? 'По заданным фильтрам ничего не найдено.' : 'Зарегистрируйте первую выдачу спецодежды или СИЗ.'}
-                action={isAdmin ? <button className="btn" onClick={() => setShowModal(true)}>Новая выдача</button> : null}
+                action={isAdmin ? <button className="btn" onClick={() => setShowModal(true)}><Icon name="plus" size={16} /> Новая выдача</button> : null}
               />
             ) : (
               <>
@@ -502,13 +502,13 @@ export default function IssueForm() {
                            )}
                          </td>
                         <td>
-                           {(record.status === ISSUE_STATUSES.issued || record.status === ISSUE_STATUSES.due_for_disposal) && isAdmin && (
-                             <div className="action-buttons">
-                               <button className="btn" onClick={() => handleEdit(record)}>Редактировать</button>
-                               <button className="btn btn-danger" onClick={() => setDeleteId(record.id)}>Удалить</button>
-                               <button className="btn btn-secondary" onClick={() => setDisposeId(record.id)}>Списать</button>
-                             </div>
-                           )}
+                            {(record.status === ISSUE_STATUSES.issued || record.status === ISSUE_STATUSES.due_for_disposal) && isAdmin && (
+                              <div className="action-buttons">
+                                <button className="btn" onClick={() => handleEdit(record)}><Icon name="pencil" size={14} /> Редактировать</button>
+                                <button className="btn btn-danger" onClick={() => setDeleteId(record.id)}><Icon name="trash" size={14} /> Удалить</button>
+                                <button className="btn btn-secondary" onClick={() => setDisposeId(record.id)}><Icon name="archiveX" size={14} /> Списать</button>
+                              </div>
+                            )}
                         </td>
                       </tr>
                     ))}

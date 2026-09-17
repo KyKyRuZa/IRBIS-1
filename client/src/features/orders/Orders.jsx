@@ -5,8 +5,7 @@ import Pagination from '@/components/ui/Pagination.jsx';
 import LoadingState from '@/components/ui/LoadingState.jsx';
 import ErrorState from '@/components/ui/ErrorState.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBuilding } from '@fortawesome/free-solid-svg-icons';
+import Icon from '@components/ui/Icon.jsx';
 import styles from '@styles/Orders.module.css';
 
 export default function Orders() {
@@ -75,6 +74,7 @@ export default function Orders() {
             </div>
             {siteId && (
               <div className="search-box">
+                <Icon name="search" size={16} className={styles.searchIcon} />
                 <input
                   type="text"
                   placeholder="Поиск по сотруднику или должности..."
@@ -87,7 +87,7 @@ export default function Orders() {
 
           {!siteId && (
             <EmptyState
-              icon={<FontAwesomeIcon icon={faBuilding} />}
+              icon={<Icon name="building2" size={48} />}
               title="Выберите объект"
               description="Чтобы увидеть список сотрудников с их размерами, выберите объект выше."
             />
@@ -97,7 +97,7 @@ export default function Orders() {
           {siteId && !loading && error && <ErrorState message={error} />}
           {siteId && !loading && !error && filtered.length === 0 && (
             <EmptyState
-              icon={<FontAwesomeIcon icon={faBuilding} />}
+              icon={<Icon name="building2" size={48} />}
               title="Сотрудники не найдены"
               description={search ? 'Поиск не дал результатов.' : 'На объекте нет активных сотрудников.'}
             />

@@ -187,3 +187,8 @@
     font-size: 12px;
   }
 }
+
+.searchIcon {
+  color: var(--secondary);
+  flex-shrink: 0;
+}

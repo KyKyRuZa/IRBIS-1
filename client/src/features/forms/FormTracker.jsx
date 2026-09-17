@@ -7,8 +7,7 @@ import { formTrackerSchema, formTakeSchema } from '@/lib/validation/forms.js';
 import Pagination from '@/components/ui/Pagination.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
 import SortableTh from '@/components/ui/SortableTh.jsx';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
+import Icon from '@components/ui/Icon.jsx';
 import styles from '@styles/FormTracker.module.css';
 
 export default function FormTracker() {
@@ -144,7 +143,7 @@ export default function FormTracker() {
       </div>
       <div className={styles.content}>
         <div className={styles.toolbar}>
-          <button className="btn" onClick={() => setShowAddModal(true)}>+ Добавить форму</button>
+          <button className="btn" onClick={() => setShowAddModal(true)}><Icon name="plus" size={16} /> Добавить форму</button>
           <button className="btn btn-secondary" onClick={() => setShowTakeModal(true)}>Отметить форму взятой</button>
         </div>
 
@@ -152,6 +151,7 @@ export default function FormTracker() {
           <h2 className={styles.sectionTitle}>История взятия форм</h2>
           <div className="table-controls">
             <div className="search-box">
+              <Icon name="search" size={16} className={styles.searchIcon} />
               <input
                 type="text"
                 name="search"
@@ -170,12 +170,12 @@ export default function FormTracker() {
             </div>
             {hasActiveFilters && (
               <button className="btn btn-secondary filter-reset" onClick={resetFilters}>
-                Сбросить
+                <Icon name="rotateCcw" size={16} /> Сбросить
               </button>
             )}
           </div>
           {filteredRecords.length === 0 ? (
-            <EmptyState icon={<FontAwesomeIcon icon={faPenToSquare} />} title="Нет записей" description={hasActiveFilters ? 'По заданным фильтрам ничего не найдено.' : 'Формы ещё не отмечались как взятые.'} />
+            <EmptyState icon={<Icon name="penSquare" size={48} />} title="Нет записей" description={hasActiveFilters ? 'По заданным фильтрам ничего не найдено.' : 'Формы ещё не отмечались как взятые.'} />
           ) : (
             <>
               <div className="tableScroll">
@@ -218,7 +218,9 @@ export default function FormTracker() {
           <div className={styles.modal} ref={addModalRef}>
             <div className={styles.modalHeader}>
               <h3>Добавить форму</h3>
-              <button className={styles.modalClose} onClick={() => setShowAddModal(false)}>×</button>
+              <button className={styles.modalClose} onClick={() => setShowAddModal(false)} aria-label="Закрыть">
+                <Icon name="x" size={18} />
+              </button>
             </div>
             <form onSubmit={handleAddForm}>
               <div className={styles.modalBody}>
@@ -258,7 +260,9 @@ export default function FormTracker() {
           <div className={styles.modal} ref={takeModalRef}>
             <div className={styles.modalHeader}>
               <h3>Отметить форму взятой</h3>
-              <button className={styles.modalClose} onClick={() => setShowTakeModal(false)}>×</button>
+              <button className={styles.modalClose} onClick={() => setShowTakeModal(false)} aria-label="Закрыть">
+                <Icon name="x" size={18} />
+              </button>
             </div>
             <form onSubmit={handleTakeForm}>
               <div className={styles.modalBody}>

@@ -9,14 +9,13 @@ import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
 import { showError, showSuccess, showFieldErrors } from '@/lib/toast.js';
 import { certificateSchema } from '@/lib/validation/forms.js';
 import Modal from '@components/ui/Modal.jsx';
-import Pagination from '@/components/ui/Pagination.jsx';
-import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
-import LoadingState from '@/components/ui/LoadingState.jsx';
-import ErrorState from '@/components/ui/ErrorState.jsx';
-import EmptyState from '@/components/ui/EmptyState.jsx';
-import SortableTh from '@/components/ui/SortableTh.jsx';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFileLines } from '@fortawesome/free-solid-svg-icons';
+import Pagination from '@components/ui/Pagination.jsx';
+import ConfirmDialog from '@components/ui/ConfirmDialog.jsx';
+import LoadingState from '@components/ui/LoadingState.jsx';
+import ErrorState from '@components/ui/ErrorState.jsx';
+import EmptyState from '@components/ui/EmptyState.jsx';
+import SortableTh from '@components/ui/SortableTh.jsx';
+import Icon from '@components/ui/Icon.jsx';
 import styles from '@styles/Certificates.module.css';
 
 export default function Certificates() {
@@ -207,6 +206,7 @@ export default function Certificates() {
         <div className="card">
           <div className="table-controls">
             <div className="search-box">
+              <Icon name="search" size={16} className={styles.searchIcon} />
               <input
                 type="text"
                 name="search"
@@ -233,7 +233,7 @@ export default function Certificates() {
             </label>
             {(Boolean(search) || filters.status !== '' || showExpired) && (
               <button className="btn btn-secondary filter-reset" onClick={() => { resetFilters(); setShowExpired(false); }}>
-                Сбросить
+                <Icon name="rotateCcw" size={16} /> Сбросить
               </button>
             )}
           </div>
@@ -243,10 +243,10 @@ export default function Certificates() {
           {!loading && !error && (
             filteredCerts.length === 0 ? (
               <EmptyState
-                icon={<FontAwesomeIcon icon={faFileLines} />}
+                icon={<Icon name="fileText" size={48} />}
                 title="Сертификаты не найдены"
                 description={(showExpired || Boolean(search) || filters.status !== '') ? 'По заданным фильтрам ничего не найдено.' : 'Нет активных сертификатов. Добавьте первый.'}
-                action={<button className="btn" onClick={() => setShowModal(true)}>Добавить сертификат</button>}
+                action={<button className="btn" onClick={() => setShowModal(true)}><Icon name="plus" size={16} /> Добавить сертификат</button>}
               />
             ) : (
               <>
@@ -282,8 +282,8 @@ export default function Certificates() {
                           </td>
                           <td>
                           <div className="action-buttons">
-                            <button className="btn" onClick={() => handleEdit(cert)}>Редактировать</button>
-                            <button className="btn btn-danger" onClick={() => handleDelete(cert.id)}>Удалить</button>
+                            <button className="btn" onClick={() => handleEdit(cert)}><Icon name="pencil" size={14} /> Редактировать</button>
+                            <button className="btn btn-danger" onClick={() => handleDelete(cert.id)}><Icon name="trash" size={14} /> Удалить</button>
                           </div>
                         </td>
                       </tr>
