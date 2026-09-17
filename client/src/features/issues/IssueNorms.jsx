@@ -233,7 +233,7 @@ export default function IssueNorms() {
         </div>
       </div>
 
-      <Modal isOpen={showModal} onClose={handleClose} title={editingNorm ? 'Редактировать норму' : 'Добавить норму'}>
+      <Modal isOpen={showModal} onClose={handleClose} title={editingNorm ? 'Редактировать норму' : 'Добавить норму'} size="compact">
         <form onSubmit={handleSubmit} className={styles.formSection}>
           {submitError && <div className={styles.error} role="alert">{submitError}</div>}
           <div className={styles.formGrid}>

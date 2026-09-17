@@ -44,7 +44,9 @@ import {
   ArchiveX,
   ArrowUpDown,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Sliders,
+  Shield
 } from 'lucide-react';
 import styles from '@styles/Icon.module.css';
 
@@ -94,7 +96,10 @@ const ICONS = {
   arrowUpDown: ArrowUpDown,
   arrowUp: ArrowUp,
   arrowDown: ArrowDown,
-  packageOpen: PackageOpen
+  packageOpen: PackageOpen,
+  fileText: FileText,
+  sliders: Sliders,
+  shield: Shield
 };
 
 export default function Icon({ name, size = 18, className }) {

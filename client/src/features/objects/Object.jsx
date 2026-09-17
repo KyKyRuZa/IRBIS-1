@@ -208,7 +208,7 @@ export default function Object() {
         </div>
       </div>
 
-      <Modal isOpen={showModal} onClose={handleClose} title={editingSite ? 'Редактировать объект' : 'Добавить объект'}>
+      <Modal isOpen={showModal} onClose={handleClose} title={editingSite ? 'Редактировать объект' : 'Добавить объект'} size="compact">
         <form onSubmit={handleSubmit} className={styles.formSection}>
           <div className={styles.formGrid}>
             <div className={`form-group ${styles.field}`}>

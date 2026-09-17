@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import Icon from '@components/ui/Icon.jsx';
 import styles from '@styles/Modal.module.css';
 
-export default function Modal({ isOpen, onClose, title, children }) {
+export default function Modal({ isOpen, onClose, title, children, size }) {
   useEffect(() => {
     if (!isOpen) return;
     const handleEsc = (e) => {
@@ -16,7 +16,7 @@ export default function Modal({ isOpen, onClose, title, children }) {
 
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.content} onClick={(e) => e.stopPropagation()}>
+      <div className={`${styles.content} ${size === 'compact' ? styles.compact : ''}`} onClick={(e) => e.stopPropagation()}>
         {title && <h3 className={styles.header}>{title}</h3>}
         <button className={styles.closeButton} onClick={onClose} aria-label="Закрыть">
           <Icon name="x" size={18} />

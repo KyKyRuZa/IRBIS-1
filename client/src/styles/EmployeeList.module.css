@@ -69,6 +69,18 @@
   grid-column: 1 / -1;
 }
 
+.sectionLabel {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6b7280;
+  padding: 10px 0 4px;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 4px;
+}
+
 
 /* =========================
    LABELS
@@ -351,80 +363,6 @@
 
 .clickableRow:hover {
   background: #f6f8fa;
-}
-
-
-/* =========================
-   STEPPER
-   ========================= */
-
-.stepper {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  margin-bottom: 18px;
-  padding: 0 4px;
-}
-
-.step {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.stepCircle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 2px solid #cfd3d8;
-  background: #fff;
-  color: #6b7280;
-  font-size: 13px;
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
-
-.stepActive .stepCircle {
-  border-color: #a92740;
-  background: #a92740;
-  color: #fff;
-}
-
-.stepLabel {
-  font-size: 13px;
-  font-weight: 500;
-  color: #6b7280;
-  transition: color 0.2s ease;
-}
-
-.stepActive .stepLabel {
-  color: #111827;
-  font-weight: 600;
-}
-
-.stepLine {
-  flex: 1;
-  height: 2px;
-  margin: 0 12px;
-  background: #e5e7eb;
-}
-
-.stepContent {
-  animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 

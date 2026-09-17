@@ -303,7 +303,7 @@ export default function Certificates() {
         </div>
       </div>
 
-      <Modal isOpen={showModal} onClose={handleClose} title={editingCertificate ? 'Редактировать сертификат' : 'Добавить сертификат'}>
+      <Modal isOpen={showModal} onClose={handleClose} title={editingCertificate ? 'Редактировать сертификат' : 'Добавить сертификат'} size="compact">
         <form onSubmit={handleSubmit} className={styles.formSection}>
           <div className={styles.formGrid}>
             <div className={`form-group ${styles.field}`}>

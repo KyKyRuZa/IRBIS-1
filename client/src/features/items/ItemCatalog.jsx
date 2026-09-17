@@ -345,7 +345,7 @@ export default function ItemCatalog() {
         </Modal>
       </div>
 
-      <Modal isOpen={showModal} onClose={handleCancel} title={editingItem ? 'Редактировать позицию' : 'Новая позиция'}>
+      <Modal isOpen={showModal} onClose={handleCancel} title={editingItem ? 'Редактировать позицию' : 'Новая позиция'} size="compact">
         <form onSubmit={handleSubmit} className={styles.formSection}>
           <div className={styles.formGrid}>
             <div className={`form-group ${styles.field}`}>
