@@ -54,7 +54,7 @@ function Sidebar({ collapsed, onToggleCollapse }) {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    const fetchNotifications = async () => {
       try {
         const { adminService } = await import('@/lib/services/admin.service.js');
         const data = await adminService.getNotifications();
@@ -62,8 +62,16 @@ function Sidebar({ collapsed, onToggleCollapse }) {
       } catch {
         // ignore
       }
-    })();
-    return () => { cancelled = true; };
+    };
+    fetchNotifications();
+    const intervalId = setInterval(fetchNotifications, 30000);
+    const handleFocus = () => { fetchNotifications(); };
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   const unreadCount = useMemo(
@@ -100,7 +108,7 @@ function Sidebar({ collapsed, onToggleCollapse }) {
           {isAdmin && (
             <Link to="/notifications" className={styles.quickLink} onClick={handleLinkClick} data-label="Уведомления">
               <div className={styles.quickLinkLeft}>
-                <Icon name="bell" size={20} />
+                <Icon name={unreadCount > 0 ? 'bellDot' : 'bell'} size={20} />
                 <span>Уведомления</span>
               </div>
               {unreadCount > 0 && <span className={styles.badge}>{unreadCount}</span>}
