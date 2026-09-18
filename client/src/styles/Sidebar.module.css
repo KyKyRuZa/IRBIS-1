@@ -305,6 +305,7 @@
 }
 
 .sidebarCollapsed .navItem {
+  position: relative;
   justify-content: center;
   padding: 10px;
 }
@@ -313,6 +314,79 @@
 }
 .sidebarCollapsed .navItemActive {
   border-color: #e5e7eb;
+}
+
+.sidebarCollapsed .nav {
+}
+
+.sidebarCollapsed .navItem {
+  position: relative;
+  overflow: visible;
+  justify-content: center;
+  padding: 10px 0;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.sidebarCollapsed .navItem::after {
+  content: attr(data-label);
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 22px;
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  z-index: 1100;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.sidebarCollapsed .navItem:hover::after {
+  opacity: 1;
+}
+
+.sidebarCollapsed .quickLink {
+  position: relative;
+  overflow: visible;
+  justify-content: center;
+  padding: 10px 0;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.sidebarCollapsed .quickLink::after {
+  content: attr(data-label);
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 22px;
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  z-index: 1100;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.sidebarCollapsed .quickLink:hover::after {
+  opacity: 1;
 }
 
 /* --- Нижняя секция (Dark mode) --- */

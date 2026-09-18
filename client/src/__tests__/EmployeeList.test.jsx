@@ -63,13 +63,13 @@ describe('EmployeeList', () => {
   it('renders terminate button for an active employee', async () => {
     employeesService.list.mockResolvedValue([activeEmployee]);
     renderWithRouter(<EmployeeList />);
-    expect(await screen.findByText('Уволить')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Уволить' })).toBeInTheDocument();
   });
 
   it('does not render terminate button for a terminated employee', async () => {
     employeesService.list.mockResolvedValue([terminatedEmployee]);
     renderWithRouter(<EmployeeList />);
     expect(await screen.findByText('Иван Иванов')).toBeInTheDocument();
-    expect(screen.queryByText('Уволить')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Уволить' })).toBeNull();
   });
 });

@@ -5,18 +5,21 @@ import { sitesService } from '@/lib/services/sites.service.js';
 import { useAuth } from '@/hooks/useAuth.js';
 import { toDateInput } from '@/lib/utils/date.js';
 import { useResource } from '@/hooks/useResource.js';
-import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
+import { useTableControls } from '@/hooks/useTableControls.js';
 import { EMPLOYEE_STATUSES, EMPLOYEE_STATUS_VALUES, normalizeEmployeeStatus } from '@/lib/constants/employee-statuses.js';
 import { showError, showSuccess, showFieldErrors } from '@/lib/toast.js';
 import { employeeSchema } from '@/lib/validation/forms.js';
-import Modal from '@/components/ui/Modal.jsx';
-import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
-import Pagination from '@/components/ui/Pagination.jsx';
-import LoadingState from '@/components/ui/LoadingState.jsx';
-import ErrorState from '@/components/ui/ErrorState.jsx';
-import EmptyState from '@/components/ui/EmptyState.jsx';
-import SortableTh from '@/components/ui/SortableTh.jsx';
+import Modal from '@components/ui/Modal.jsx';
+import ConfirmDialog from '@components/ui/ConfirmDialog.jsx';
+import Pagination from '@components/ui/Pagination.jsx';
+import LoadingState from '@components/ui/LoadingState.jsx';
+import ErrorState from '@components/ui/ErrorState.jsx';
+import EmptyState from '@components/ui/EmptyState.jsx';
+import SortableTh from '@components/ui/SortableTh.jsx';
 import Icon from '@components/ui/Icon.jsx';
+import SearchBox from '@components/ui/SearchBox.jsx';
+import FilterSelect from '@components/ui/FilterSelect.jsx';
+import DateRange from '@components/ui/DateRange.jsx';
 import styles from '@styles/EmployeeList.module.css';
 
 export default function EmployeeList() {
@@ -60,7 +63,7 @@ export default function EmployeeList() {
     toggleSort,
     resetFilters
   } = useTableControls({
-    filters: { status: '', site_id: '' },
+    filters: { status: '', site_id: '', gender: '', hire_date_from: '', hire_date_to: '' },
     sort: { key: 'full_name', dir: 'asc' }
   });
 
@@ -152,18 +155,56 @@ export default function EmployeeList() {
     [employees]
   );
 
-  const filteredEmployees = useFilteredList(normalizedEmployees, {
-    search: searchApplied,
-    filters,
-    sort,
-    searchFields: ['full_name', 'personnel_number', 'position', 'site_name']
-  });
+  const filteredEmployees = useMemo(() => {
+    let result = normalizedEmployees;
+    const searchFields = ['full_name', 'personnel_number', 'position', 'site_name'];
+
+    const query = searchApplied.trim().toLowerCase();
+    if (query) {
+      result = result.filter((emp) =>
+        searchFields.some((field) => {
+          const value = emp[field];
+          return value != null && String(value).toLowerCase().includes(query);
+        })
+      );
+    }
+
+    if (filters.status) {
+      result = result.filter((emp) => emp.status === filters.status);
+    }
+    if (filters.site_id) {
+      result = result.filter((emp) => emp.site_id === Number(filters.site_id));
+    }
+    if (filters.gender) {
+      result = result.filter((emp) => emp.gender === filters.gender);
+    }
+    const hireFrom = filters.hire_date_from;
+    const hireTo = filters.hire_date_to;
+    if (hireFrom || hireTo) {
+      result = result.filter((emp) => {
+        if (!emp.hire_date) return false;
+        if (hireFrom && emp.hire_date < hireFrom) return false;
+        if (hireTo && emp.hire_date > hireTo) return false;
+        return true;
+      });
+    }
+
+    if (sort && sort.key) {
+      const { key, dir } = sort;
+      result = [...result].sort((a, b) => {
+        const cmp = String(a[key] || '').localeCompare(String(b[key] || ''), 'ru');
+        return dir === 'desc' ? -cmp : cmp;
+      });
+    }
+
+    return result;
+  }, [normalizedEmployees, searchApplied, filters, sort]);
 
   const totalItems = filteredEmployees.length;
   const startIndex = (currentPage - 1) * 10;
   const paginatedEmployees = filteredEmployees.slice(startIndex, startIndex + 10);
 
-  const hasActiveFilters = Boolean(search) || filters.status !== '' || filters.site_id !== '';
+  const hasActiveFilters = Boolean(search) || filters.status !== '' || filters.site_id !== '' || Boolean(filters.gender) || Boolean(filters.hire_date_from) || Boolean(filters.hire_date_to);
 
   return (
     <div className={styles.pageWrapper}>
@@ -183,33 +224,35 @@ export default function EmployeeList() {
       <div className={styles.container}>
         <div className="card">
           <div className="table-controls">
-            <div className="search-box">
-              <Icon name="search" size={16} className={styles.searchIcon} />
-              <input
-                type="text"
-                name="search"
-                placeholder="Поиск по ФИО, табельному №, должности, объекту..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <div className="filter-field">
-              <label>Статус</label>
-              <select value={filters.status} onChange={(e) => setFilter('status', e.target.value)}>
-                <option value="">Все</option>
-                <option value={EMPLOYEE_STATUS_VALUES.active}>Активные</option>
-                <option value={EMPLOYEE_STATUS_VALUES.terminated}>Уволенные</option>
-              </select>
-            </div>
-            <div className="filter-field">
-              <label>Объект</label>
-              <select value={filters.site_id} onChange={(e) => setFilter('site_id', e.target.value)}>
-                <option value="">Все</option>
-                {sites.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
-              </select>
-            </div>
+            <SearchBox
+              value={search}
+              onChange={setSearch}
+              placeholder="Поиск по ФИО, табельному №, должности, объекту..."
+            />
+            <FilterSelect label="Статус" value={filters.status} onChange={(value) => setFilter('status', value)}>
+              <option value="">Все</option>
+              <option value={EMPLOYEE_STATUS_VALUES.active}>Активные</option>
+              <option value={EMPLOYEE_STATUS_VALUES.terminated}>Уволенные</option>
+            </FilterSelect>
+            <FilterSelect label="Объект" value={filters.site_id} onChange={(value) => setFilter('site_id', value)}>
+              <option value="">Все</option>
+              {sites.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </FilterSelect>
+            <FilterSelect label="Пол" value={filters.gender} onChange={(value) => setFilter('gender', value)}>
+              <option value="">Все</option>
+              <option value="male">Мужской</option>
+              <option value="female">Женский</option>
+            </FilterSelect>
+            <DateRange
+              from={filters.hire_date_from}
+              to={filters.hire_date_to}
+              onFromChange={(value) => setFilter('hire_date_from', value)}
+              onToChange={(value) => setFilter('hire_date_to', value)}
+              fromLabel="Дата приёма с"
+              toLabel="Дата приёма по"
+            />
             {hasActiveFilters && (
               <button className="btn btn-secondary filter-reset" onClick={resetFilters}>
                 <Icon name="rotateCcw" size={16} /> Сбросить
@@ -252,19 +295,19 @@ export default function EmployeeList() {
                         {emp.status === EMPLOYEE_STATUS_VALUES.active ? EMPLOYEE_STATUSES.active : EMPLOYEE_STATUSES.terminated}
                       </td>
                     <td>
-                      <div className="action-buttons">
-                        {emp.status === EMPLOYEE_STATUS_VALUES.active && (
-                          <>
+                        <div className="action-buttons">
+                          {emp.status === EMPLOYEE_STATUS_VALUES.active && (
+                            <>
                         {isAdmin && (
                           <>
-                            <button className="btn" onClick={(e) => { e.stopPropagation(); handleEdit(emp); }}><Icon name="pencil" size={14} /> Редактировать</button>
-                            <button className="btn btn-danger" onClick={(e) => { e.stopPropagation(); setDeleteId(emp.id); }}><Icon name="trash" size={14} /> Удалить</button>
-                            <button className="btn btn-secondary" onClick={(e) => { e.stopPropagation(); setTerminateId(emp.id); }}><Icon name="userMinus" size={14} /> Уволить</button>
+                            <button className="btn action-btn" aria-label="Редактировать" data-tooltip="Редактировать" onClick={(e) => { e.stopPropagation(); handleEdit(emp); }}><Icon name="pencil" size={14} /></button>
+                            <button className="btn btn-danger action-btn" aria-label="Удалить" data-tooltip="Удалить" onClick={(e) => { e.stopPropagation(); setDeleteId(emp.id); }}><Icon name="trash" size={14} /></button>
+                            <button className="btn btn-secondary action-btn" aria-label="Уволить" data-tooltip="Уволить" onClick={(e) => { e.stopPropagation(); setTerminateId(emp.id); }}><Icon name="userMinus" size={14} /></button>
                           </>
                         )}
                           </>
-                        )}
-                      </div>
+                          )}
+                        </div>
                     </td>
                     </tr>
                   ))}

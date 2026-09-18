@@ -56,7 +56,7 @@ describe('EmployeeList (integration)', () => {
   it('renders employee rows returned by the service', async () => {
     renderList();
     expect(await screen.findByText('Иван Иванов')).toBeInTheDocument();
-    expect(screen.getByText('Уволить')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Уволить' })).toBeInTheDocument();
   });
 
   it('renders an error state when the list request fails', async () => {
@@ -73,7 +73,7 @@ describe('EmployeeList (integration)', () => {
     renderList();
     await screen.findByText('Иван Иванов');
 
-    fireEvent.click(screen.getByText('Уволить'));
+    fireEvent.click(screen.getByRole('button', { name: 'Уволить' }));
     fireEvent.click(await screen.findByText('Подтвердить'));
 
     await waitFor(() => expect(employeesService.terminate).toHaveBeenCalledWith(1));
@@ -87,7 +87,7 @@ describe('EmployeeList (integration)', () => {
     renderList();
     await screen.findByText('Иван Иванов');
 
-    fireEvent.click(screen.getByText('Удалить'));
+    fireEvent.click(screen.getByRole('button', { name: 'Удалить' }));
     fireEvent.click(await screen.findByText('Подтвердить'));
 
     await waitFor(() => expect(employeesService.delete).toHaveBeenCalledWith(1));

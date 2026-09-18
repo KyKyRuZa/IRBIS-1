@@ -11,6 +11,9 @@ import Pagination from '@/components/ui/Pagination.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
 import SortableTh from '@/components/ui/SortableTh.jsx';
 import Icon from '@components/ui/Icon.jsx';
+import SearchBox from '@components/ui/SearchBox.jsx';
+import FilterSelect from '@components/ui/FilterSelect.jsx';
+import DateRange from '@components/ui/DateRange.jsx';
 import styles from '@styles/Reports.module.css';
 
 const TABS = [
@@ -25,13 +28,6 @@ export default function Reports() {
   const [sites, setSites] = useState([]);
   const [items, setItems] = useState([]);
   const [demand, setDemand] = useState([]);
-  const [filters, setFilters] = useState({
-    site_id: '',
-    item_type_id: '',
-    date_from: '',
-    date_to: '',
-    status: ''
-  });
   const [activeTab, setActiveTab] = useState('demand');
   const [currentPage, setCurrentPage] = useState(1);
   const [expiringPage, setExpiringPage] = useState(1);
@@ -45,8 +41,19 @@ export default function Reports() {
     setSearch,
     sort,
     toggleSort,
-    resetFilters: resetTableControls
-  } = useTableControls({ sort: null });
+    filters,
+    setFilter,
+    resetFilters
+  } = useTableControls({
+    filters: {
+      site_id: '',
+      item_type_id: '',
+      date_from: '',
+      date_to: '',
+      status: ''
+    },
+    sort: null
+  });
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -89,18 +96,6 @@ export default function Reports() {
     return () => { mounted = false; };
   }, []);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (activeTab === 'records') {
-        fetchRecords();
-      }
-      if (activeTab === 'demand') {
-        fetchDemand();
-      }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [filters.site_id, filters.item_type_id, filters.date_from, filters.date_to, filters.status, activeTab]);
-
   const fetchRecords = async () => {
     const res = await issuesService.list(filters);
     setRecords(res);
@@ -111,16 +106,34 @@ export default function Reports() {
     setDemand(res);
   };
 
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
+  const fetchExpiring = async () => {
+    const res = await issuesService.getExpiring(2, filters);
+    setExpiring(res);
   };
 
-  const resetFilters = () => {
-    setFilters({ site_id: '', item_type_id: '', date_from: '', date_to: '', status: '' });
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (activeTab === 'records') {
+        fetchRecords();
+      }
+      if (activeTab === 'demand') {
+        fetchDemand();
+      }
+      if (activeTab === 'expiring') {
+        fetchExpiring();
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [filters.site_id, filters.item_type_id, filters.date_from, filters.date_to, filters.status, activeTab]);
+
+  const handleReset = () => {
+    resetFilters();
+    setCurrentPage(1);
     setRecordsPage(1);
+    setExpiringPage(1);
     issuesService.list().then(res => setRecords(Array.isArray(res) ? res : []));
     adminService.getDemand('').then(res => setDemand(Array.isArray(res) ? res : []));
+    issuesService.getExpiring(2).then(res => setExpiring(Array.isArray(res) ? res : []));
   };
 
   const formatDate = (dateStr) => dateStr ? new Date(dateStr).toLocaleDateString('ru-RU') : '';
@@ -157,13 +170,13 @@ export default function Reports() {
     setShowExportMenu(false);
     const siteId = prompt('Введите ID объекта для групповой ведомости расходников:');
     if (siteId) {
-      download(() => exportsService.exportGroupConsumables(siteId), `Групповая ведомость расходников ${new Date().toLocaleDateString('ru-RU')}.docx`);
+      download(() => exportsService.exportGroupConsumables(siteId), `Групповая ведомость расходников ${new Date().toLocaleDateString('ru-RU')}.xlsx`);
     }
   };
 
   const handleAllCards = async () => {
     setShowExportMenu(false);
-    download(() => exportsService.exportAllCards(), `Все карточки СИЗ ${new Date().toLocaleDateString('ru-RU')}.docx`);
+    download(() => exportsService.exportAllCards(), `Все карточки СИЗ (Word ZIP)`);
   };
 
   const handleBackup = async () => {
@@ -218,49 +231,32 @@ export default function Reports() {
       <div className={styles.container}>
         <div className="card">
           <div className="table-controls">
-            <div className="search-box">
-              <Icon name="search" size={16} className={styles.searchIcon} />
-              <input
-                type="text"
-                name="search"
-                placeholder="Поиск по таблице..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-
-            <div className="filter-field">
-              <label>Объект</label>
-              <select name="site_id" value={filters.site_id} onChange={handleFilterChange}>
-                <option value="">Все</option>
-                {sites.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-            </div>
-            <div className="filter-field">
-              <label>Вид СИЗ</label>
-              <select name="item_type_id" value={filters.item_type_id} onChange={handleFilterChange}>
-                <option value="">Все</option>
-                {items.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-              </select>
-            </div>
-            <div className="filter-field">
-              <label>С даты</label>
-              <input type="date" name="date_from" value={filters.date_from} onChange={handleFilterChange} />
-            </div>
-            <div className="filter-field">
-              <label>По дату</label>
-              <input type="date" name="date_to" value={filters.date_to} onChange={handleFilterChange} />
-            </div>
-            <div className="filter-field">
-              <label>Статус</label>
-              <select name="status" value={filters.status} onChange={handleFilterChange}>
-                <option value="">Все</option>
-                <option value="issued">Выдано</option>
-                <option value="disposed">Списано</option>
-                <option value="returned">Возвращено</option>
-                <option value="due_for_disposal">Подлежит списанию</option>
-              </select>
-            </div>
+            <SearchBox
+              value={search}
+              onChange={setSearch}
+              placeholder="Поиск по таблице..."
+            />
+            <FilterSelect label="Объект" value={filters.site_id} onChange={(value) => setFilter('site_id', value)}>
+              <option value="">Все</option>
+              {sites.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </FilterSelect>
+            <FilterSelect label="Вид СИЗ" value={filters.item_type_id} onChange={(value) => setFilter('item_type_id', value)}>
+              <option value="">Все</option>
+              {items.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+            </FilterSelect>
+            <DateRange
+              from={filters.date_from}
+              to={filters.date_to}
+              onFromChange={(value) => setFilter('date_from', value)}
+              onToChange={(value) => setFilter('date_to', value)}
+            />
+            <FilterSelect label="Статус" value={filters.status} onChange={(value) => setFilter('status', value)}>
+              <option value="">Все</option>
+              <option value="issued">Выдано</option>
+              <option value="disposed">Списано</option>
+              <option value="returned">Возвращено</option>
+              <option value="due_for_disposal">Подлежит списанию</option>
+            </FilterSelect>
 
             <div className={styles.toolbarRight} ref={exportMenuRef}>
               <button className="btn" onClick={() => setShowExportMenu(!showExportMenu)}>
@@ -278,7 +274,7 @@ export default function Reports() {
             </div>
 
             {hasActiveFilters && (
-              <button className="btn btn-secondary filter-reset" onClick={() => { resetFilters(); resetTableControls(); }}>
+              <button className="btn btn-secondary filter-reset" onClick={handleReset}>
                 <Icon name="rotateCcw" size={16} /> Сбросить
               </button>
             )}
@@ -302,7 +298,7 @@ export default function Reports() {
           {activeTab === 'demand' && (
             <>
               {sortedDemand.length === 0 ? (
-                <EmptyState icon={<Icon name="barChart3" size={48} />} title="Нет данных о потребности" description={Boolean(search) ? 'По поиску ничего не найдено.' : 'Добавьте сотрудников, нормы и выдачи, чтобы увидеть потребность в СИЗ.'} />
+                <EmptyState icon={<Icon name="barChart3" size={48} />} title="Нет данных о потребности" description={Boolean(search) ? 'Поиску ничего не найдено.' : 'Добавьте сотрудников, нормы и выдачи, чтобы увидеть потребность в СИЗ.'} />
               ) : (
                 <>
                   <div className="tableScroll">
@@ -340,7 +336,7 @@ export default function Reports() {
           {activeTab === 'records' && (
             <>
               {sortedRecords.length === 0 ? (
-                <EmptyState icon={<Icon name="clipboardList" size={48} />} title="Нет записей о выдачах" description={Boolean(search) ? 'По поиску ничего не найдено.' : 'Выдачи сотрудникам ещё не зарегистрированы.'} />
+                <EmptyState icon={<Icon name="clipboardList" size={48} />} title="Нет записей о выдачах" description={Boolean(search) ? 'Поиску ничего не найдено.' : 'Выдачи сотрудникам ещё не зарегистрированы.'} />
               ) : (
                 <>
                   <div className="tableScroll">
@@ -378,7 +374,7 @@ export default function Reports() {
           {activeTab === 'expiring' && (
             <>
               {sortedExpiring.length === 0 ? (
-                <EmptyState icon={<Icon name="clock" size={48} />} title="Нет истекающих сроков" description={Boolean(search) ? 'По поиску ничего не найдено.' : 'В ближайшие 2 месяца сроки годности не истекают.'} />
+                <EmptyState icon={<Icon name="clock" size={48} />} title="Нет истекающих сроков" description={Boolean(search) ? 'Поиску ничего не найдено.' : 'В ближайшие 2 месяца сроки годности не истекают.'} />
               ) : (
                 <>
                   <p className={styles.sectionSubtitle}>Истекающие сроки годности (в течение 2 месяцев)</p>
@@ -399,7 +395,7 @@ export default function Reports() {
                           <td>{r.full_name}</td>
                           <td>{r.item_type_name}</td>
                           <td>{new Date(r.issue_date).toLocaleDateString()}</td>
-                          <td>{new Date(r.expiry_date).toLocaleDateString()}</td>
+                          <td>{r.expiry_date ? new Date(r.expiry_date).toLocaleDateString() : '-'}</td>
                         </tr>
                       ))}
                     </tbody>

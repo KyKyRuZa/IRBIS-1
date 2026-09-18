@@ -28,6 +28,6 @@ export const issuesService = {
   returnItem: (id) =>
     api.patch(`/api/issues/${id}/return`).then(r => r.data),
 
-  getExpiring: (months = 2) =>
-    api.get('/api/issues/expiring', { params: { months } }).then(r => r.data),
+  getExpiring: (months = 2, filters = {}) =>
+    api.get('/api/issues/expiring', { params: { ...filters, months } }).then(r => r.data),
 };

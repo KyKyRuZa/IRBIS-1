@@ -6,6 +6,8 @@ import LoadingState from '@/components/ui/LoadingState.jsx';
 import ErrorState from '@/components/ui/ErrorState.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
 import Icon from '@components/ui/Icon.jsx';
+import SearchBox from '@components/ui/SearchBox.jsx';
+import FilterSelect from '@components/ui/FilterSelect.jsx';
 import styles from '@styles/Orders.module.css';
 
 export default function Orders() {
@@ -63,25 +65,18 @@ export default function Orders() {
       <div className={styles.container}>
         <div className="card">
           <div className="table-controls">
-            <div className="filter-field">
-              <label>Объект</label>
-              <select value={siteId} onChange={(e) => setSiteId(e.target.value)}>
-                <option value="">Выберите объект...</option>
-                {sites.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
-              </select>
-            </div>
+            <FilterSelect label="Объект" value={siteId} onChange={setSiteId}>
+              <option value="">Выберите объект...</option>
+              {sites.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </FilterSelect>
             {siteId && (
-              <div className="search-box">
-                <Icon name="search" size={16} className={styles.searchIcon} />
-                <input
-                  type="text"
-                  placeholder="Поиск по сотруднику или должности..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
+              <SearchBox
+                value={search}
+                onChange={setSearch}
+                placeholder="Поиск по сотруднику или должности..."
+              />
             )}
           </div>
 

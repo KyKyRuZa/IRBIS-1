@@ -25,7 +25,7 @@ function NavItem({ to, label, icon, isActive, collapsed, onClick }) {
       to={to}
       className={`${styles.navItem} ${isActive ? styles.navItemActive : ''}`}
       onClick={onClick}
-      title={collapsed ? label : undefined}
+      data-label={label}
     >
       <div className={styles.navIconWrap}>
         <Icon name={icon} size={20} className={styles.navItemIcon} />
@@ -98,7 +98,7 @@ function Sidebar({ collapsed, onToggleCollapse }) {
 
           {/* Notifications quick link */}
           {isAdmin && (
-            <Link to="/notifications" className={styles.quickLink} onClick={handleLinkClick}>
+            <Link to="/notifications" className={styles.quickLink} onClick={handleLinkClick} data-label="Уведомления">
               <div className={styles.quickLinkLeft}>
                 <Icon name="bell" size={20} />
                 <span>Уведомления</span>

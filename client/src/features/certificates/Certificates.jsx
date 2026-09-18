@@ -16,6 +16,8 @@ import ErrorState from '@components/ui/ErrorState.jsx';
 import EmptyState from '@components/ui/EmptyState.jsx';
 import SortableTh from '@components/ui/SortableTh.jsx';
 import Icon from '@components/ui/Icon.jsx';
+import SearchBox from '@components/ui/SearchBox.jsx';
+import FilterSelect from '@components/ui/FilterSelect.jsx';
 import styles from '@styles/Certificates.module.css';
 
 export default function Certificates() {
@@ -205,25 +207,17 @@ export default function Certificates() {
       <div className={styles.container}>
         <div className="card">
           <div className="table-controls">
-            <div className="search-box">
-              <Icon name="search" size={16} className={styles.searchIcon} />
-              <input
-                type="text"
-                name="search"
-                placeholder="Поиск по продукции или номеру..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <div className="filter-field">
-              <label>Статус</label>
-              <select value={filters.status} onChange={(e) => setFilter('status', e.target.value)}>
-                <option value="">Все</option>
-                <option value={CERTIFICATE_STATUSES.active}>{CERTIFICATE_STATUS_LABELS.active}</option>
-                <option value={CERTIFICATE_STATUSES.expiring}>{CERTIFICATE_STATUS_LABELS.expiring}</option>
-                <option value={CERTIFICATE_STATUSES.expired}>{CERTIFICATE_STATUS_LABELS.expired}</option>
-              </select>
-            </div>
+            <SearchBox
+              value={search}
+              onChange={setSearch}
+              placeholder="Поиск по продукции или номеру..."
+            />
+            <FilterSelect label="Статус" value={filters.status} onChange={(value) => setFilter('status', value)}>
+              <option value="">Все</option>
+              <option value={CERTIFICATE_STATUSES.active}>{CERTIFICATE_STATUS_LABELS.active}</option>
+              <option value={CERTIFICATE_STATUSES.expiring}>{CERTIFICATE_STATUS_LABELS.expiring}</option>
+              <option value={CERTIFICATE_STATUSES.expired}>{CERTIFICATE_STATUS_LABELS.expired}</option>
+            </FilterSelect>
             <label className={styles.checkboxLabel}>
               <input
                 type="checkbox"
@@ -282,8 +276,8 @@ export default function Certificates() {
                           </td>
                           <td>
                           <div className="action-buttons">
-                            <button className="btn" onClick={() => handleEdit(cert)}><Icon name="pencil" size={14} /> Редактировать</button>
-                            <button className="btn btn-danger" onClick={() => handleDelete(cert.id)}><Icon name="trash" size={14} /> Удалить</button>
+                            <button className="btn action-btn" aria-label="Редактировать" data-tooltip="Редактировать" onClick={() => handleEdit(cert)}><Icon name="pencil" size={14} /></button>
+                            <button className="btn btn-danger action-btn" aria-label="Удалить" data-tooltip="Удалить" onClick={() => handleDelete(cert.id)}><Icon name="trash" size={14} /></button>
                           </div>
                         </td>
                       </tr>

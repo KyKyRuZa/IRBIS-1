@@ -22,6 +22,9 @@ import ErrorState from '@/components/ui/ErrorState.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
 import SortableTh from '@/components/ui/SortableTh.jsx';
 import Icon from '@components/ui/Icon.jsx';
+import SearchBox from '@components/ui/SearchBox.jsx';
+import FilterSelect from '@components/ui/FilterSelect.jsx';
+import DateRange from '@components/ui/DateRange.jsx';
 import styles from '@styles/IssueForm.module.css';
 
 const formInitialState = {
@@ -393,61 +396,42 @@ export default function IssueForm() {
       <div className={styles.container}>
         <div className="card">
           <div className="table-controls">
-            <div className="search-box">
-              <Icon name="search" size={16} className={styles.searchIcon} />
-              <input
-                type="text"
-                name="search"
-                placeholder="Поиск по сотруднику или наименованию..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <div className="filter-field">
-              <label>Сотрудник</label>
-              <select value={filters.employee_id} onChange={(e) => setFilter('employee_id', e.target.value)}>
-                <option value="">Все</option>
-                {employees.map((emp) => (
-                  <option key={emp.id} value={emp.id}>{emp.full_name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="filter-field">
-              <label>Объект</label>
-              <select value={filters.site_id} onChange={(e) => setFilter('site_id', e.target.value)}>
-                <option value="">Все</option>
-                {sites.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="filter-field">
-              <label>Наименование</label>
-              <select value={filters.item_type_id} onChange={(e) => setFilter('item_type_id', e.target.value)}>
-                <option value="">Все</option>
-                {items.map((item) => (
-                  <option key={item.id} value={item.id}>{item.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="filter-field">
-              <label>Статус</label>
-              <select value={filters.status} onChange={(e) => setFilter('status', e.target.value)}>
-                <option value="">Все</option>
-                <option value={ISSUE_STATUSES.issued}>{ISSUE_STATUS_LABELS.issued}</option>
-                <option value={ISSUE_STATUSES.disposed}>{ISSUE_STATUS_LABELS.disposed}</option>
-                <option value={ISSUE_STATUSES.returned}>{ISSUE_STATUS_LABELS.returned}</option>
-                <option value={ISSUE_STATUSES.due_for_disposal}>{ISSUE_STATUS_LABELS.due_for_disposal}</option>
-              </select>
-            </div>
-            <div className="filter-field">
-              <label>Дата с</label>
-              <input type="date" value={filters.date_from} onChange={(e) => setFilter('date_from', e.target.value)} />
-            </div>
-            <div className="filter-field">
-              <label>Дата по</label>
-              <input type="date" value={filters.date_to} onChange={(e) => setFilter('date_to', e.target.value)} />
-            </div>
+            <SearchBox
+              value={search}
+              onChange={setSearch}
+              placeholder="Поиск по сотруднику или наименованию..."
+            />
+            <FilterSelect label="Сотрудник" value={filters.employee_id} onChange={(value) => setFilter('employee_id', value)}>
+              <option value="">Все</option>
+              {employees.map((emp) => (
+                <option key={emp.id} value={emp.id}>{emp.full_name}</option>
+              ))}
+            </FilterSelect>
+            <FilterSelect label="Объект" value={filters.site_id} onChange={(value) => setFilter('site_id', value)}>
+              <option value="">Все</option>
+              {sites.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </FilterSelect>
+            <FilterSelect label="Наименование" value={filters.item_type_id} onChange={(value) => setFilter('item_type_id', value)}>
+              <option value="">Все</option>
+              {items.map((item) => (
+                <option key={item.id} value={item.id}>{item.name}</option>
+              ))}
+            </FilterSelect>
+            <FilterSelect label="Статус" value={filters.status} onChange={(value) => setFilter('status', value)}>
+              <option value="">Все</option>
+              <option value={ISSUE_STATUSES.issued}>{ISSUE_STATUS_LABELS.issued}</option>
+              <option value={ISSUE_STATUSES.disposed}>{ISSUE_STATUS_LABELS.disposed}</option>
+              <option value={ISSUE_STATUSES.returned}>{ISSUE_STATUS_LABELS.returned}</option>
+              <option value={ISSUE_STATUSES.due_for_disposal}>{ISSUE_STATUS_LABELS.due_for_disposal}</option>
+            </FilterSelect>
+            <DateRange
+              from={filters.date_from}
+              to={filters.date_to}
+              onFromChange={(value) => setFilter('date_from', value)}
+              onToChange={(value) => setFilter('date_to', value)}
+            />
             {hasActiveFilters && (
               <button className="btn btn-secondary filter-reset" onClick={resetFilters}>
                 Сбросить
@@ -502,13 +486,13 @@ export default function IssueForm() {
                            )}
                          </td>
                         <td>
-                            {(record.status === ISSUE_STATUSES.issued || record.status === ISSUE_STATUSES.due_for_disposal) && isAdmin && (
-                              <div className="action-buttons">
-                                <button className="btn" onClick={() => handleEdit(record)}><Icon name="pencil" size={14} /> Редактировать</button>
-                                <button className="btn btn-danger" onClick={() => setDeleteId(record.id)}><Icon name="trash" size={14} /> Удалить</button>
-                                <button className="btn btn-secondary" onClick={() => setDisposeId(record.id)}><Icon name="archiveX" size={14} /> Списать</button>
-                              </div>
-                            )}
+                             {(record.status === ISSUE_STATUSES.issued || record.status === ISSUE_STATUSES.due_for_disposal) && isAdmin && (
+                               <div className="action-buttons">
+                                 <button className="btn action-btn" aria-label="Редактировать" data-tooltip="Редактировать" onClick={() => handleEdit(record)}><Icon name="pencil" size={14} /></button>
+                                 <button className="btn btn-danger action-btn" aria-label="Удалить" data-tooltip="Удалить" onClick={() => setDeleteId(record.id)}><Icon name="trash" size={14} /></button>
+                                 <button className="btn btn-secondary action-btn" aria-label="Списать" data-tooltip="Списать" onClick={() => setDisposeId(record.id)}><Icon name="archiveX" size={14} /></button>
+                               </div>
+                             )}
                         </td>
                       </tr>
                     ))}

@@ -1,0 +1,51 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 120px;
+  min-width: 120px;
+}
+
+.iconLabel {
+  visibility: hidden;
+}
+
+.inputWrap {
+  position: relative;
+}
+
+.inputWrap .icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--secondary);
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inputWrap input {
+  width: 100%;
+  padding: 8px 12px 8px 32px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+  box-sizing: border-box;
+}
+
+.inputWrap input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+@media (max-width: 768px) {
+  .root {
+    flex-wrap: wrap;
+  }
+  .inputWrap input {
+    width: 100%;
+  }
+}

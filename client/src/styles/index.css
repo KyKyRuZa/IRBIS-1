@@ -184,44 +184,31 @@ body {
   color: white;
 }
 
-.search-box {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  align-items: center;
-}
-
-.search-box input {
-  flex: 1;
-  padding: 8px 12px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-}
-
-.searchIcon {
-  color: var(--secondary);
-  flex-shrink: 0;
-}
-
 .table-controls {
   display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 10px;
+  flex-wrap: nowrap;
   align-items: flex-end;
   margin-bottom: 20px;
+  overflow-x: auto;
 }
 
-.table-controls .search-box {
-  flex: 1;
-  min-width: 220px;
-  margin-bottom: 0;
+.table-controls > * {
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .filter-field {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  min-width: 160px;
+  flex: 1 1 120px;
+  min-width: 120px;
+}
+
+.filter-field.date-range {
+  flex: 1 1 180px;
+  min-width: 170px;
 }
 
 .filter-field label {
@@ -231,22 +218,39 @@ body {
 }
 
 .filter-field select,
-.filter-field input {
-  padding: 8px 12px;
+.filter-field input[type="date"] {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+  width: 100%;
+  min-width: 0;
+}
+
+.filter-field select:focus,
+.filter-field input[type="date"]:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.date-range-inputs {
+  display: flex;
+  gap: 6px;
+}
+
+.date-range-inputs input {
+  width: 100%;
+  min-width: 0;
+  padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: 4px;
   font-size: 14px;
   background: white;
 }
 
-.filter-field select:focus,
-.filter-field input:focus {
-  outline: none;
-  border-color: var(--primary);
-}
-
 .filter-reset {
-  align-self: flex-end;
+  flex-shrink: 0;
 }
 
 .sortable {
@@ -357,7 +361,39 @@ body {
   text-decoration: none;
 }
 
-.page-wrapper .search-box input:focus,
+.action-btn {
+  padding: 6px;
+  min-width: 32px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.action-btn[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background: #1f2937;
+  color: #fff;
+  font-size: 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  z-index: 50;
+}
+
+.action-btn[data-tooltip]:hover::after {
+  opacity: 1;
+}
+
 .page-wrapper .form-control:focus {
   border-color: var(--page-accent);
 }
@@ -396,14 +432,6 @@ body {
   .action-buttons {
     flex-wrap: wrap;
     gap: 6px;
-  }
-
-  .search-box {
-    flex-wrap: wrap;
-  }
-
-  .search-box input {
-    width: 100%;
   }
 }
 

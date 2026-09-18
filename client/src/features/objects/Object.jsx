@@ -1,16 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { sitesService } from '@lib/services/sites.service.js';
 import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
 import { showError, showSuccess, showFieldErrors } from '@/lib/toast.js';
 import { siteSchema } from '@/lib/validation/forms.js';
 import Modal from '@components/ui/Modal.jsx';
 import ConfirmDialog from '@components/ui/ConfirmDialog.jsx';
-import Pagination from '@components/ui/Pagination.jsx';
-import LoadingState from '@components/ui/LoadingState.jsx';
-import ErrorState from '@components/ui/ErrorState.jsx';
-import EmptyState from '@components/ui/EmptyState.jsx';
-import SortableTh from '@components/ui/SortableTh.jsx';
+import Pagination from '@/components/ui/Pagination.jsx';
+import LoadingState from '@/components/ui/LoadingState.jsx';
+import ErrorState from '@/components/ui/ErrorState.jsx';
+import EmptyState from '@/components/ui/EmptyState.jsx';
+import SortableTh from '@/components/ui/SortableTh.jsx';
 import Icon from '@components/ui/Icon.jsx';
+import SearchBox from '@components/ui/SearchBox.jsx';
+import FilterSelect from '@components/ui/FilterSelect.jsx';
 import styles from '@styles/Object.module.css';
 
 export default function Object() {
@@ -31,10 +33,15 @@ export default function Object() {
     search,
     searchApplied,
     setSearch,
+    filters,
+    setFilter,
     sort,
     toggleSort,
     resetFilters
-  } = useTableControls({ sort: { key: 'name', dir: 'asc' } });
+  } = useTableControls({
+    filters: { responsible_person: '' },
+    sort: { key: 'name', dir: 'asc' }
+  });
 
   const fetchSites = async () => {
     setLoading(true);
@@ -55,7 +62,29 @@ export default function Object() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchApplied, sort, sites]);
+  }, [searchApplied, filters, sort, sites]);
+
+  const responsiblePersonOptions = useMemo(() => {
+    const map = new Map();
+    sites.forEach((s) => {
+      const val = s.responsible_person || '';
+      if (val) map.set(val, val);
+    });
+    return Array.from(map.values()).sort((a, b) => a.localeCompare(b, 'ru'));
+  }, [sites]);
+
+  const filteredSites = useFilteredList(sites, {
+    search: searchApplied,
+    filters,
+    sort,
+    searchFields: ['name', 'responsible_person']
+  });
+
+  const totalItems = filteredSites.length;
+  const startIndex = (currentPage - 1) * 10;
+  const paginatedSites = filteredSites.slice(startIndex, startIndex + 10);
+
+  const hasActiveFilters = Boolean(search) || filters.responsible_person !== '';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -111,19 +140,6 @@ export default function Object() {
     setFieldErrors({});
   };
 
-  const filteredSites = useFilteredList(sites, {
-    search: searchApplied,
-    filters: {},
-    sort,
-    searchFields: ['name', 'responsible_person']
-  });
-
-  const totalItems = filteredSites.length;
-  const startIndex = (currentPage - 1) * 10;
-  const paginatedSites = filteredSites.slice(startIndex, startIndex + 10);
-
-  const hasActiveFilters = Boolean(search);
-
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.pageHeader}>
@@ -140,16 +156,17 @@ export default function Object() {
       <div className={styles.container}>
         <div className="card">
           <div className="table-controls">
-            <div className="search-box">
-              <Icon name="search" size={16} className={styles.searchIcon} />
-              <input
-                type="text"
-                name="search"
-                placeholder="Поиск по названию или ответственному..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+            <SearchBox
+              value={search}
+              onChange={setSearch}
+              placeholder="Поиск по названию или ответственному..."
+            />
+            <FilterSelect label="Ответственный" value={filters.responsible_person} onChange={(value) => setFilter('responsible_person', value)}>
+              <option value="">Все</option>
+              {responsiblePersonOptions.map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </FilterSelect>
             {hasActiveFilters && (
               <button className="btn btn-secondary filter-reset" onClick={resetFilters}>
                 <Icon name="rotateCcw" size={16} /> Сбросить
@@ -186,8 +203,8 @@ export default function Object() {
                         <td>{s.responsible_person}</td>
                         <td>
                           <div className="action-buttons">
-                            <button className="btn" onClick={() => handleEdit(s)}><Icon name="pencil" size={14} /> Редактировать</button>
-                            <button className="btn btn-danger" onClick={() => handleDelete(s.id)}><Icon name="trash" size={14} /> Удалить</button>
+                            <button className="btn action-btn" aria-label="Редактировать" data-tooltip="Редактировать" onClick={() => handleEdit(s)}><Icon name="pencil" size={14} /></button>
+                            <button className="btn btn-danger action-btn" aria-label="Удалить" data-tooltip="Удалить" onClick={() => handleDelete(s.id)}><Icon name="trash" size={14} /></button>
                           </div>
                         </td>
                       </tr>

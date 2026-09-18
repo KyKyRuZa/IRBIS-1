@@ -8,6 +8,8 @@ import Pagination from '@/components/ui/Pagination.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
 import SortableTh from '@/components/ui/SortableTh.jsx';
 import Icon from '@components/ui/Icon.jsx';
+import SearchBox from '@components/ui/SearchBox.jsx';
+import DateRange from '@components/ui/DateRange.jsx';
 import styles from '@styles/FormTracker.module.css';
 
 export default function FormTracker() {
@@ -150,24 +152,17 @@ export default function FormTracker() {
         <div className="card">
           <h2 className={styles.sectionTitle}>История взятия форм</h2>
           <div className="table-controls">
-            <div className="search-box">
-              <Icon name="search" size={16} className={styles.searchIcon} />
-              <input
-                type="text"
-                name="search"
-                placeholder="Поиск по сотруднику, должности или форме..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <div className="filter-field">
-              <label>Дата с</label>
-              <input type="date" value={filters.date_from} onChange={(e) => setFilter('date_from', e.target.value)} />
-            </div>
-            <div className="filter-field">
-              <label>Дата по</label>
-              <input type="date" value={filters.date_to} onChange={(e) => setFilter('date_to', e.target.value)} />
-            </div>
+            <SearchBox
+              value={search}
+              onChange={setSearch}
+              placeholder="Поиск по сотруднику, должности или форме..."
+            />
+            <DateRange
+              from={filters.date_from}
+              to={filters.date_to}
+              onFromChange={(value) => setFilter('date_from', value)}
+              onToChange={(value) => setFilter('date_to', value)}
+            />
             {hasActiveFilters && (
               <button className="btn btn-secondary filter-reset" onClick={resetFilters}>
                 <Icon name="rotateCcw" size={16} /> Сбросить

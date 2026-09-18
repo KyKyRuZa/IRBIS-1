@@ -1,19 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { normsService } from '@/lib/services/norms.service.js';
 import { itemsService } from '@/lib/services/items.service.js';
 import { ITEM_CATEGORIES } from '@/lib/constants/item-categories.js';
 import { useResource } from '@/hooks/useResource.js';
-import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
+import { useTableControls } from '@/hooks/useTableControls.js';
 import { showError, showSuccess, showFieldErrors } from '@/lib/toast.js';
 import { normSchema } from '@/lib/validation/forms.js';
-import Modal from '@/components/ui/Modal.jsx';
-import Pagination from '@/components/ui/Pagination.jsx';
-import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
-import LoadingState from '@/components/ui/LoadingState.jsx';
-import ErrorState from '@/components/ui/ErrorState.jsx';
-import EmptyState from '@/components/ui/EmptyState.jsx';
-import SortableTh from '@/components/ui/SortableTh.jsx';
+import Modal from '@components/ui/Modal.jsx';
+import Pagination from '@components/ui/Pagination.jsx';
+import ConfirmDialog from '@components/ui/ConfirmDialog.jsx';
+import LoadingState from '@components/ui/LoadingState.jsx';
+import ErrorState from '@components/ui/ErrorState.jsx';
+import EmptyState from '@components/ui/EmptyState.jsx';
+import SortableTh from '@components/ui/SortableTh.jsx';
 import Icon from '@components/ui/Icon.jsx';
+import SearchBox from '@components/ui/SearchBox.jsx';
+import FilterSelect from '@components/ui/FilterSelect.jsx';
 import styles from '@styles/IssueNorms.module.css';
 
 const categories = ITEM_CATEGORIES;
@@ -44,7 +46,7 @@ export default function IssueNorms() {
     toggleSort,
     resetFilters
   } = useTableControls({
-    filters: { item_type_id: '' },
+    filters: { item_type_id: '', period_months_from: '', period_months_to: '', quantity_from: '', quantity_to: '' },
     sort: { key: 'item_type_name', dir: 'asc' }
   });
 
@@ -127,18 +129,65 @@ export default function IssueNorms() {
     setFormData({ item_type_id: '', period_months: '', quantity: 1, position: '' });
   };
 
-  const filteredNorms = useFilteredList(norms, {
-    search: searchApplied,
-    filters: { item_type_id: filters.item_type_id },
-    sort,
-    searchFields: ['item_type_name', 'position']
-  });
+  const filteredNorms = useMemo(() => {
+    let result = norms;
+
+    const query = searchApplied.trim().toLowerCase();
+    if (query) {
+      result = result.filter((norm) =>
+        String(norm.item_type_name || '').toLowerCase().includes(query) ||
+        String(norm.position || '').toLowerCase().includes(query)
+      );
+    }
+
+    if (filters.item_type_id) {
+      result = result.filter((norm) => norm.item_type_id === Number(filters.item_type_id));
+    }
+
+    if (filters.period_months_from !== '' || filters.period_months_to !== '') {
+      const periodFrom = Number(filters.period_months_from);
+      const periodTo = Number(filters.period_months_to);
+      if (!Number.isNaN(periodFrom) || !Number.isNaN(periodTo)) {
+        result = result.filter((norm) => {
+          const val = Number(norm.period_months);
+          if (Number.isNaN(val)) return false;
+          if (!Number.isNaN(periodFrom) && val < periodFrom) return false;
+          if (!Number.isNaN(periodTo) && val > periodTo) return false;
+          return true;
+        });
+      }
+    }
+
+    if (filters.quantity_from !== '' || filters.quantity_to !== '') {
+      const qtyFrom = Number(filters.quantity_from);
+      const qtyTo = Number(filters.quantity_to);
+      if (!Number.isNaN(qtyFrom) || !Number.isNaN(qtyTo)) {
+        result = result.filter((norm) => {
+          const val = Number(norm.quantity);
+          if (Number.isNaN(val)) return false;
+          if (!Number.isNaN(qtyFrom) && val < qtyFrom) return false;
+          if (!Number.isNaN(qtyTo) && val > qtyTo) return false;
+          return true;
+        });
+      }
+    }
+
+    if (sort && sort.key) {
+      const { key, dir } = sort;
+      result = [...result].sort((a, b) => {
+        const cmp = String(a[key] || '').localeCompare(String(b[key] || ''), 'ru');
+        return dir === 'desc' ? -cmp : cmp;
+      });
+    }
+
+    return result;
+  }, [norms, searchApplied, filters, sort]);
 
   const totalItems = filteredNorms.length;
   const startIndex = (currentPage - 1) * 10;
   const paginatedNorms = filteredNorms.slice(startIndex, startIndex + 10);
 
-  const hasActiveFilters = Boolean(search) || filters.item_type_id !== '';
+  const hasActiveFilters = Boolean(search) || filters.item_type_id !== '' || Boolean(filters.period_months_from) || Boolean(filters.period_months_to) || Boolean(filters.quantity_from) || Boolean(filters.quantity_to);
 
   return (
     <div className={styles.pageWrapper}>
@@ -156,24 +205,32 @@ export default function IssueNorms() {
       <div className={styles.container}>
         <div className="card">
           <div className="table-controls">
-            <div className="search-box">
-              <Icon name="search" size={16} className={styles.searchIcon} />
-              <input
-                type="text"
-                name="search"
-                placeholder="Поиск по наименованию или должности..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+            <SearchBox
+              value={search}
+              onChange={setSearch}
+              placeholder="Поиск по наименованию или должности..."
+            />
+            <FilterSelect label="Наименование" value={filters.item_type_id} onChange={(value) => setFilter('item_type_id', value)}>
+              <option value="">Все</option>
+              {items.map((item) => (
+                <option key={item.id} value={item.id}>{item.name}</option>
+              ))}
+            </FilterSelect>
+            <div className="filter-field">
+              <label>Период от (мес)</label>
+              <input type="number" value={filters.period_months_from} onChange={(e) => setFilter('period_months_from', e.target.value)} />
             </div>
             <div className="filter-field">
-              <label>Наименование</label>
-              <select value={filters.item_type_id} onChange={(e) => setFilter('item_type_id', e.target.value)}>
-                <option value="">Все</option>
-                {items.map((item) => (
-                  <option key={item.id} value={item.id}>{item.name}</option>
-                ))}
-              </select>
+              <label>Период до (мес)</label>
+              <input type="number" value={filters.period_months_to} onChange={(e) => setFilter('period_months_to', e.target.value)} />
+            </div>
+            <div className="filter-field">
+              <label>Кол-во от</label>
+              <input type="number" value={filters.quantity_from} onChange={(e) => setFilter('quantity_from', e.target.value)} />
+            </div>
+            <div className="filter-field">
+              <label>Кол-во до</label>
+              <input type="number" value={filters.quantity_to} onChange={(e) => setFilter('quantity_to', e.target.value)} />
             </div>
             {hasActiveFilters && (
               <button className="btn btn-secondary filter-reset" onClick={resetFilters}>
@@ -212,8 +269,8 @@ export default function IssueNorms() {
                       <td>{norm.quantity}</td>
                   <td>
                     <div className="action-buttons">
-                      <button className="btn" onClick={() => handleEdit(norm)}><Icon name="pencil" size={14} /> Редактировать</button>
-                      <button className="btn btn-danger" onClick={() => handleDelete(norm.id)}><Icon name="trash" size={14} /> Удалить</button>
+                      <button className="btn action-btn" aria-label="Редактировать" data-tooltip="Редактировать" onClick={() => handleEdit(norm)}><Icon name="pencil" size={14} /></button>
+                      <button className="btn btn-danger action-btn" aria-label="Удалить" data-tooltip="Удалить" onClick={() => handleDelete(norm.id)}><Icon name="trash" size={14} /></button>
                     </div>
                   </td>
                     </tr>
