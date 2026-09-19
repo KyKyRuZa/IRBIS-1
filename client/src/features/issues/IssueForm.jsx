@@ -433,9 +433,9 @@ export default function IssueForm() {
               onToChange={(value) => setFilter('date_to', value)}
             />
             {hasActiveFilters && (
-               <button className="btn btn-secondary filter-reset" onClick={resetFilters}>
-                 <Icon name="rotateCcw" size={16} /> Сбросить
-               </button>
+              <button className="btn btn-secondary filter-reset" onClick={resetFilters}>
+                <Icon name="rotateCcw" size={16} /> Сбросить
+              </button>
             )}
           </div>
 
@@ -489,8 +489,8 @@ export default function IssueForm() {
                                  <button className="btn action-btn" aria-label="Редактировать" data-tooltip="Редактировать" onClick={() => handleEdit(record)}><Icon name="pencil" size={14} /></button>
                                  <button className="btn btn-danger action-btn" aria-label="Удалить" data-tooltip="Удалить" onClick={() => setDeleteId(record.id)}><Icon name="trash" size={14} /></button>
                                  <button className="btn btn-secondary action-btn" aria-label="Списать" data-tooltip="Списать" onClick={() => setDisposeId(record.id)}><Icon name="archiveX" size={14} /></button>
-                               </div>
-                             )}
+                </div>
+            )}
                         </td>
                       </tr>
                     ))}
@@ -520,9 +520,7 @@ export default function IssueForm() {
                 checked={issueMode === 'single'}
                 onChange={() => { setIssueMode('single'); setBatchItems([]); }}
               />
-              <Icon name="user" size={22} className={styles.modeCardIcon} />
               <span className={styles.modeCardTitle}>Одиночная</span>
-              <span className={styles.modeCardDesc}>Один сотрудник, одна позиция</span>
             </label>
             <label className={`${styles.modeCard} ${issueMode === 'group' ? styles.active : ''}`}>
               <input
@@ -532,9 +530,7 @@ export default function IssueForm() {
                 checked={issueMode === 'group'}
                 onChange={() => { setIssueMode('group'); setBatchItems([]); }}
               />
-              <Icon name="users" size={22} className={styles.modeCardIcon} />
               <span className={styles.modeCardTitle}>Групповая</span>
-              <span className={styles.modeCardDesc}>Всем сотрудникам объекта</span>
             </label>
             <label className={`${styles.modeCard} ${issueMode === 'batch-single' ? styles.active : ''}`}>
               <input
@@ -544,23 +540,12 @@ export default function IssueForm() {
                 checked={issueMode === 'batch-single'}
                 onChange={() => { setIssueMode('batch-single'); setBatchItems([emptyBatchItem()]); }}
               />
-              <Icon name="packageOpen" size={22} className={styles.modeCardIcon} />
               <span className={styles.modeCardTitle}>Несколько позиций</span>
-              <span className={styles.modeCardDesc}>Сотруднику, много позиций</span>
             </label>
           </div>
 
-          {editingRecord && issueMode === 'group' && (
-            <div className={styles.warning}>
-              Режим «Групповая выдача» создаст новую выдачу всем сотрудникам объекта на основе
-              выбранного наименования и количества. Текущая запись не будет изменена.
-            </div>
-          )}
-
-          <div className={styles.section}>
-            <div className={styles.sectionTitle}>Контекст выдачи</div>
-            <div className={styles.formGrid}>
-              {issueMode === 'group' && (
+          <div className={styles.formGrid}>
+            {issueMode === 'group' && (
                 <div className={`form-group ${styles.field}`}>
                   <label>Объект *</label>
                   <select
@@ -578,8 +563,8 @@ export default function IssueForm() {
                   </select>
                   {fieldErrors.site_id && <div id="site-error" className={styles.fieldError} role="alert">{fieldErrors.site_id}</div>}
                 </div>
-              )}
-              {(issueMode === 'single' || issueMode === 'batch-single') && (
+            )}
+            {(issueMode === 'single' || issueMode === 'batch-single') && (
                 <div className={`form-group ${styles.field}`}>
                   <label>Сотрудник *</label>
                   <select
@@ -597,8 +582,8 @@ export default function IssueForm() {
                   </select>
                   {fieldErrors.employee_id && <div id="employee-error" className={styles.fieldError} role="alert">{fieldErrors.employee_id}</div>}
                 </div>
-              )}
-              {(issueMode === 'single' || issueMode === 'group') && (
+            )}
+            {(issueMode === 'single' || issueMode === 'group') && (
                 <div className={`form-group ${styles.field}`}>
                   <label>Наименование *</label>
                   <select
@@ -616,14 +601,11 @@ export default function IssueForm() {
                   </select>
                   {fieldErrors.item_type_id && <div id="item-type-error" className={styles.fieldError} role="alert">{fieldErrors.item_type_id}</div>}
                 </div>
-              )}
-            </div>
+            )}
           </div>
 
           {issueMode !== 'batch-single' && (
-          <div className={styles.section}>
-            <div className={styles.sectionTitle}>Параметры выдачи</div>
-              <div className={styles.formGrid}>
+            <div className={styles.formGrid}>
                 <div className={`form-group ${styles.field}`}>
                   <label>Способ выдачи</label>
                   <div className={styles.radioGroup}>
@@ -678,15 +660,12 @@ export default function IssueForm() {
                   {fieldErrors.certificate_id && <div id="cert-error" className={styles.fieldError} role="alert">{fieldErrors.certificate_id}</div>}
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
           {issueMode !== 'batch-single' && (
-          <div className={styles.section}>
-            <div className={styles.sectionTitle}>Срок носки</div>
-              <div className={styles.formGrid}>
-                <div className={`form-group ${styles.field}`}>
-                  <label>Срок носки (мес.) — оставьте пустым для значения по умолчанию</label>
+            <div className={styles.formGrid}>
+              <div className={`form-group ${styles.field}`}>
+                <label>Срок носки (мес.)</label>
                   <input
                     type="number"
                     className="form-control"
@@ -697,15 +676,13 @@ export default function IssueForm() {
                     aria-describedby={fieldErrors.wear_time_override ? 'wear-error' : undefined}
                   />
                   {fieldErrors.wear_time_override && <div id="wear-error" className={styles.fieldError} role="alert">{fieldErrors.wear_time_override}</div>}
-                </div>
+                 </div>
               </div>
-            </div>
-          )}
+             )}
 
           {issueMode === 'batch-single' && (
           <div className={styles.section}>
-            <div className={styles.sectionTitle}>Позиции выдачи</div>
-              <table className={`table ${styles.batchTable}`} style={{ marginBottom: 8 }}>
+            <table className={`table ${styles.batchTable}`} style={{ marginBottom: 8 }}>
                 <thead>
                   <tr>
                     <th>Наименование</th>
@@ -808,7 +785,6 @@ export default function IssueForm() {
           )}
 
           <div className={styles.section}>
-            <div className={styles.sectionTitle}>Дополнительно</div>
             <div className={styles.formGrid}>
               <div className={`form-group ${styles.field} ${styles.fullWidth}`}>
                 <label>Примечание</label>

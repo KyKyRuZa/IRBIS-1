@@ -189,41 +189,42 @@
 
 /* ===== ИСПРАВЛЕННЫЙ МОДАЛ — НОВЫЕ КЛАССЫ ===== */
 .modeCards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-bottom: 20px;
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  background: var(--light);
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
 }
 
 .modeCard {
   position: relative;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 14px 8px;
-  border: 2px solid var(--border);
-  border-radius: 8px;
+  padding: 8px 14px;
+  border-radius: 6px;
   cursor: pointer;
   text-align: center;
-  background: white;
+  background: transparent;
   font-size: 13px;
   font-weight: 500;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
   color: var(--secondary);
+  flex: 1;
 }
 
 .modeCard:hover {
-  border-color: var(--primary-light);
-  background: #fafafa;
+  background: white;
 }
 
 .modeCard.active {
-  border-color: var(--primary);
-  background: #fef2f4;
+  background: white;
   color: var(--primary-dark);
-  box-shadow: 0 0 0 1px var(--primary);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  font-weight: 600;
 }
 
 .modeCard input[type="radio"] {
@@ -236,7 +237,7 @@
 
 .modeCardIcon {
   color: var(--secondary);
-  transition: color 0.2s;
+  transition: color 0.15s ease;
 }
 
 .modeCard.active .modeCardIcon {
@@ -245,30 +246,19 @@
 
 .modeCardTitle {
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .modeCardDesc {
-  font-size: 11px;
-  opacity: 0.85;
-  line-height: 1.3;
+  display: none;
 }
 
 .section {
-  margin-bottom: 16px;
-  padding: 16px;
+  margin-bottom: 10px;
 }
 
 .sectionTitle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--dark);
-  margin-bottom: 14px;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
+  display: none;
 }
 
 .formGrid {
