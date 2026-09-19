@@ -200,7 +200,7 @@ export default function Certificates() {
             <div className={styles.subtitle}>Контроль сроков действия и файлов сертификатов</div>
           </div>
           <button className="btn" onClick={() => setShowModal(true)}>
-            Добавить сертификат
+            <Icon name="plus" size={16} /> Добавить сертификат
           </button>
         </div>
       </div>
@@ -254,7 +254,7 @@ export default function Certificates() {
                       <SortableTh label="Дата выдачи" sortKey="issue_date" sort={sort} onSort={toggleSort} />
                       <SortableTh label="Срок действия" sortKey="expiry_date" sort={sort} onSort={toggleSort} />
                       <SortableTh label="Статус" sortKey="status" sort={sort} onSort={toggleSort} />
-                      <th>Файл</th>
+                      <th>Сертификат</th>
                       <th>Действия</th>
                     </tr>
                   </thead>

@@ -356,6 +356,30 @@
   color: var(--danger);
 }
 
+.statusBadgeActive {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #dcfce7;
+  color: #166534;
+  line-height: 1.4;
+}
+
+.statusBadgeTerminated {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #fee2e2;
+  color: #991b1b;
+  line-height: 1.4;
+}
+
 .clickableRow {
   cursor: pointer;
 }

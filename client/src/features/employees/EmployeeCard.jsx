@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { employeesService } from '@/lib/services/employees.service.js';
 import { EMPLOYEE_STATUSES, EMPLOYEE_STATUS_VALUES, normalizeEmployeeStatus } from '@/lib/constants/employee-statuses.js';
 import { ISSUE_STATUSES, ISSUE_STATUS_LABELS } from '@/lib/constants/issue-statuses.js';
@@ -14,6 +14,7 @@ import styles from '@styles/EmployeeCard.module.css';
 
 export default function EmployeeCard() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [employee, setEmployee] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [currentPageNorms, setCurrentPageNorms] = useState(1);
@@ -35,7 +36,12 @@ export default function EmployeeCard() {
       <div className={styles.pageHeader}>
         <div className={`${styles.container} ${styles.pageHeaderContent}`}>
           <div className={styles.title}>
-            <h1>Личная карточка сотрудника</h1>
+            <button type="button" className={styles.backButton} onClick={() => navigate(-1)}>
+              <Icon name="chevronLeft" size={20} />
+            </button>
+            <div>
+              <h1>Личная карточка сотрудника</h1>
+            </div>
           </div>
         </div>
       </div>
@@ -59,7 +65,7 @@ export default function EmployeeCard() {
                     <p><strong>Размер головного убора:</strong> {employee.hat_size || '-'}</p>
                     <p><strong>Размер СИЗОД:</strong> {employee.respirator_size || '-'}</p>
                     <p><strong>Размер СИЗ рук:</strong> {employee.gloves_size || '-'}</p>
-                    <p><strong>Статус:</strong> {normalizeEmployeeStatus(employee.status) === EMPLOYEE_STATUS_VALUES.active ? EMPLOYEE_STATUSES.active : EMPLOYEE_STATUSES.terminated}</p>
+                    <p><strong>Статус:</strong> {normalizeEmployeeStatus(employee.status) === EMPLOYEE_STATUS_VALUES.active ? <span className={styles.statusBadgeActive}>{EMPLOYEE_STATUSES.active}</span> : <span className={styles.statusBadgeTerminated}>{EMPLOYEE_STATUSES.terminated}</span>}</p>
                   </div>
                 </div>
               </div>

@@ -233,9 +233,9 @@ export default function IssueNorms() {
               <input type="number" value={filters.quantity_to} onChange={(e) => setFilter('quantity_to', e.target.value)} />
             </div>
             {hasActiveFilters && (
-              <button className="btn btn-secondary filter-reset" onClick={resetFilters}>
-                Сбросить
-              </button>
+               <button className="btn btn-secondary filter-reset" onClick={resetFilters}>
+                 <Icon name="rotateCcw" size={16} /> Сбросить
+               </button>
             )}
           </div>
 

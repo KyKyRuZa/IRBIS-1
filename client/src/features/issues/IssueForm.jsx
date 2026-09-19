@@ -433,9 +433,9 @@ export default function IssueForm() {
               onToChange={(value) => setFilter('date_to', value)}
             />
             {hasActiveFilters && (
-              <button className="btn btn-secondary filter-reset" onClick={resetFilters}>
-                Сбросить
-              </button>
+               <button className="btn btn-secondary filter-reset" onClick={resetFilters}>
+                 <Icon name="rotateCcw" size={16} /> Сбросить
+               </button>
             )}
           </div>
 
@@ -455,7 +455,6 @@ export default function IssueForm() {
                  <table className="table">
                    <thead>
                     <tr>
-                      <SortableTh label="Дата" sortKey="issue_date" sort={sort} onSort={toggleSort} />
                       <SortableTh label="Сотрудник" sortKey="full_name" sort={sort} onSort={toggleSort} />
                       <SortableTh label="Наименование" sortKey="item_type_name" sort={sort} onSort={toggleSort} />
                       <SortableTh label="Кол-во" sortKey="quantity" sort={sort} onSort={toggleSort} />
@@ -467,7 +466,6 @@ export default function IssueForm() {
                   <tbody>
                     {paginatedRecords.map((record) => (
                       <tr key={record.id}>
-                        <td>{new Date(record.issue_date).toLocaleDateString()}</td>
                         <td>{record.full_name}</td>
                         <td>{record.item_type_name}</td>
                         <td>{record.quantity}</td>
@@ -792,7 +790,7 @@ export default function IssueForm() {
                   ).flat()}
                 </div>
               )}
-              <button type="button" className="btn btn-secondary" onClick={addBatchItem}>+ Добавить позицию</button>
+              <button type="button" className="btn btn-secondary" onClick={addBatchItem}><Icon name="plus" size={16} /> Добавить позицию</button>
             </div>
           )}
 

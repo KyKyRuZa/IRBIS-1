@@ -218,7 +218,7 @@ export default function ItemCatalog() {
             <div className={styles.subtitle}>Справочник спецодежды, обуви и СИЗ</div>
           </div>
           <button className="btn" onClick={() => { setEditingItem(null); setFormData({ name: '', category: 'consumable', unit: 'шт', default_wear_time: '', seasonality: 'year_round', requires_certificate: false }); setShowModal(true); }}>
-            Добавить позицию
+            <Icon name="plus" size={16} /> Добавить позицию
           </button>
         </div>
       </div>

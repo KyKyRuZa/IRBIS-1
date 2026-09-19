@@ -12,11 +12,10 @@ const STATUS_STYLES = {
 };
 
 export default function StatusBadge({ status }) {
-  const style = STATUS_STYLES[status] || { className: '', label: status, icon: null };
+  const style = STATUS_STYLES[status] || { className: '', label: status };
   if (!status) return null;
   return (
     <span className={`${styles.badge} ${styles[style.className]}`}>
-      {style.icon && <Icon name={style.icon} size={14} />}
       {style.label}
     </span>
   );

@@ -271,6 +271,7 @@ body {
 
 .filter-reset {
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .sortable {

@@ -23,8 +23,55 @@
 
 .title {
   display:flex;
+  align-items: center;
+  gap: 10px;
   margin: 0;
   font-size: 28px;
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.backButton:hover {
+  background: var(--light);
+  color: var(--dark);
+  border-color: var(--secondary);
+}
+
+.statusBadgeActive {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #dcfce7;
+  color: #166534;
+  line-height: 1.4;
+}
+
+.statusBadgeTerminated {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #fee2e2;
+  color: #991b1b;
+  line-height: 1.4;
 }
 
 .subtitle {

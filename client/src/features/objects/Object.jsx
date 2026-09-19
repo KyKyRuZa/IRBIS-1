@@ -149,7 +149,7 @@ export default function Object() {
             <div className={styles.subtitle}>Список АЗС и подразделений</div>
           </div>
           <button className="btn" onClick={() => { setEditingSite(null); setFormData({ name: '', responsible_person: '' }); setShowModal(true); }}>
-            Добавить объект
+            <Icon name="plus" size={16} /> Добавить объект
           </button>
         </div>
       </div>

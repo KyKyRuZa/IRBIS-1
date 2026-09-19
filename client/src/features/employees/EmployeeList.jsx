@@ -291,8 +291,12 @@ export default function EmployeeList() {
                       <td>{emp.personnel_number || '-'}</td>
                       <td>{emp.position}</td>
                       <td>{emp.site_name || '-'}</td>
-                      <td className={emp.status === EMPLOYEE_STATUS_VALUES.active ? styles.statusActive : styles.statusTerminated}>
-                        {emp.status === EMPLOYEE_STATUS_VALUES.active ? EMPLOYEE_STATUSES.active : EMPLOYEE_STATUSES.terminated}
+                      <td>
+                        {emp.status === EMPLOYEE_STATUS_VALUES.active ? (
+                          <span className={styles.statusBadgeActive}>{EMPLOYEE_STATUSES.active}</span>
+                        ) : (
+                          <span className={styles.statusBadgeTerminated}>{EMPLOYEE_STATUSES.terminated}</span>
+                        )}
                       </td>
                     <td>
                         <div className="action-buttons">
