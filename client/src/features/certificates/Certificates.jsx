@@ -174,8 +174,8 @@ export default function Certificates() {
   };
 
   const baseCerts = showExpired
-    ? certificates
-    : certificates.filter(c => c.status !== CERTIFICATE_STATUSES.expired);
+    ? certificates.filter(c => c.status === CERTIFICATE_STATUSES.expired)
+    : certificates;
 
   const filteredCerts = useFilteredList(baseCerts, {
     search,
@@ -223,7 +223,8 @@ export default function Certificates() {
                 type="checkbox"
                 checked={showExpired}
                 onChange={(e) => setShowExpired(e.target.checked)}
-              /> Показать просроченные
+              />
+              <span>Показать просроченные</span>
             </label>
             {(Boolean(search) || filters.status !== '' || showExpired) && (
               <button className="btn btn-secondary filter-reset" onClick={() => { resetFilters(); setShowExpired(false); }}>

@@ -133,23 +133,22 @@ export default function FormTracker() {
 
   const hasActiveFilters = Boolean(search) || filters.date_from !== '' || filters.date_to !== '';
 
-  return (
-    <div className={styles.pageWrapper}>
-      <div className={styles.pageHeader}>
-        <div className={`${styles.container} ${styles.pageHeaderContent}`}>
-          <div className={styles.title}>
-            <h1>Учёт форм</h1>
-            <div className={styles.subtitle}>Административная панель учёта бланков и документов</div>
-          </div>
-        </div>
-      </div>
-      <div className={styles.content}>
-        <div className={styles.toolbar}>
-          <button className="btn" onClick={() => setShowAddModal(true)}><Icon name="plus" size={16} /> Добавить форму</button>
-          <button className="btn btn-secondary" onClick={() => setShowTakeModal(true)}>Отметить форму взятой</button>
-        </div>
-
-        <div className="card">
+   return (
+     <div className={styles.pageWrapper}>
+       <div className={styles.pageHeader}>
+         <div className={`${styles.container} ${styles.pageHeaderContent}`}>
+           <div className={styles.title}>
+             <h1>Учёт форм</h1>
+             <div className={styles.subtitle}>Административная панель учёта бланков и документов</div>
+           </div>
+           <div className={styles.toolbar}>
+             <button className="btn" onClick={() => setShowAddModal(true)}><Icon name="plus" size={16} /> Добавить форму</button>
+             <button className="btn btn-secondary" onClick={() => setShowTakeModal(true)}>Отметить форму взятой</button>
+           </div>
+         </div>
+       </div>
+       <div className={styles.content}>
+         <div className="card">
           <h2 className={styles.sectionTitle}>История взятия форм</h2>
           <div className="table-controls">
             <SearchBox

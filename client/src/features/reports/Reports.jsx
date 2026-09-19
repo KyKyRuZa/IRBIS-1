@@ -5,15 +5,16 @@ import { issuesService } from '@/lib/services/issues.service.js';
 import { reportsService } from '@/lib/services/reports.service.js';
 import { exportsService } from '@/lib/services/exports.service.js';
 import { adminService } from '@/lib/services/admin.service.js';
+import { ITEM_CATEGORIES } from '@/lib/constants/item-categories.js';
 import { useExport } from '@hooks/useExport.js';
 import { useTableControls, filterAndSort } from '@/hooks/useTableControls.js';
 import Pagination from '@/components/ui/Pagination.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
 import SortableTh from '@/components/ui/SortableTh.jsx';
 import Icon from '@components/ui/Icon.jsx';
-import SearchBox from '@components/ui/SearchBox.jsx';
-import FilterSelect from '@components/ui/FilterSelect.jsx';
-import DateRange from '@components/ui/DateRange.jsx';
+import SearchBox from '@/components/ui/SearchBox.jsx';
+import FilterSelect from '@/components/ui/FilterSelect.jsx';
+import DateRange from '@/components/ui/DateRange.jsx';
 import styles from '@styles/Reports.module.css';
 
 const TABS = [
@@ -317,7 +318,7 @@ export default function Reports() {
                       {paginatedDemand.map((d) => (
                         <tr key={d.item_type_id}>
                           <td>{d.item_name}</td>
-                          <td>{d.category}</td>
+                           <td>{ITEM_CATEGORIES[d.category] || d.category}</td>
                           <td>{d.in_use_qty}</td>
                           <td>{d.norm_qty}</td>
                           <td className={styles.demandValue}>{d.demand_qty}</td>

@@ -216,19 +216,19 @@ export default function IssueNorms() {
                 <option key={item.id} value={item.id}>{item.name}</option>
               ))}
             </FilterSelect>
-            <div className="filter-field">
+            <div className="filter-field narrow">
               <label>Период от (мес)</label>
               <input type="number" value={filters.period_months_from} onChange={(e) => setFilter('period_months_from', e.target.value)} />
             </div>
-            <div className="filter-field">
+            <div className="filter-field narrow">
               <label>Период до (мес)</label>
               <input type="number" value={filters.period_months_to} onChange={(e) => setFilter('period_months_to', e.target.value)} />
             </div>
-            <div className="filter-field">
+            <div className="filter-field narrow">
               <label>Кол-во от</label>
               <input type="number" value={filters.quantity_from} onChange={(e) => setFilter('quantity_from', e.target.value)} />
             </div>
-            <div className="filter-field">
+            <div className="filter-field narrow">
               <label>Кол-во до</label>
               <input type="number" value={filters.quantity_to} onChange={(e) => setFilter('quantity_to', e.target.value)} />
             </div>

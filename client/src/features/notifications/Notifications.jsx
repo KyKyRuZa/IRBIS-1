@@ -42,6 +42,7 @@ function NotificationsPage() {
     try {
       await adminService.markNotificationRead(id);
       setItems(prev => prev.map(n => (n.id === id ? { ...n, read: true } : n)));
+      window.dispatchEvent(new Event('notifications:updated'));
     } catch {
       // ignore
     }
@@ -51,6 +52,7 @@ function NotificationsPage() {
     try {
       await adminService.markAllNotificationsRead();
       setItems(prev => prev.map(n => ({ ...n, read: true })));
+      window.dispatchEvent(new Event('notifications:updated'));
     } catch {
       // ignore
     }

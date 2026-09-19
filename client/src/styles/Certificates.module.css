@@ -27,8 +27,8 @@
 }
 
 .subtitle {
-  opacity: 0.9;
-  font-size: 14px;
+  color: #6b7280;
+  font-size: 18px;
   margin-top: 5px;
 }
 
@@ -71,14 +71,6 @@
 .tableWrapper {
   margin-top: 20px;
   padding: 10px 0;
-}
-
-.checkboxLabel {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  cursor: pointer;
 }
 
 .error {
@@ -147,7 +139,7 @@
   }
 
   .subtitle {
-    font-size: 13px;
+    font-size: 15px;
   }
 
   .tableWrapper {

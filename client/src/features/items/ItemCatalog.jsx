@@ -241,11 +241,11 @@ export default function ItemCatalog() {
               <option value="true">Требуется</option>
               <option value="false">Не требуется</option>
             </FilterSelect>
-            <div className="filter-field">
+            <div className="filter-field narrow">
               <label>Срок от (мес)</label>
               <input type="number" value={filters.default_wear_time_from} onChange={(e) => setFilter('default_wear_time_from', e.target.value)} />
             </div>
-            <div className="filter-field">
+            <div className="filter-field narrow">
               <label>Срок до (мес)</label>
               <input type="number" value={filters.default_wear_time_to} onChange={(e) => setFilter('default_wear_time_to', e.target.value)} />
             </div>

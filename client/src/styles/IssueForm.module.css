@@ -27,8 +27,8 @@
 }
 
 .subtitle {
-  opacity: 0.9;
-  font-size: 14px;
+  color: #6b7280;
+  font-size: 18px;
   margin-top: 5px;
 }
 
@@ -158,7 +158,7 @@
   }
 
   .subtitle {
-    font-size: 13px;
+    font-size: 15px;
   }
 
   .radioGroup {

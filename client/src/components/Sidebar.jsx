@@ -54,7 +54,7 @@ function Sidebar({ collapsed, onToggleCollapse }) {
 
   useEffect(() => {
     let cancelled = false;
-    const fetchNotifications = async () => {
+    const load = async () => {
       try {
         const { adminService } = await import('@/lib/services/admin.service.js');
         const data = await adminService.getNotifications();
@@ -63,14 +63,17 @@ function Sidebar({ collapsed, onToggleCollapse }) {
         // ignore
       }
     };
-    fetchNotifications();
-    const intervalId = setInterval(fetchNotifications, 30000);
-    const handleFocus = () => { fetchNotifications(); };
+    load();
+    const intervalId = setInterval(load, 30000);
+    const handleFocus = () => { load(); };
+    const handleNotificationsUpdated = () => { load(); };
     window.addEventListener('focus', handleFocus);
+    window.addEventListener('notifications:updated', handleNotificationsUpdated);
     return () => {
       cancelled = true;
       clearInterval(intervalId);
       window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('notifications:updated', handleNotificationsUpdated);
     };
   }, []);
 

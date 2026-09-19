@@ -92,6 +92,17 @@ body {
   background: var(--success);
 }
 
+.btn-outline {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn-outline:hover {
+  background: var(--surface-hover);
+  border-color: var(--secondary);
+}
+
 .btn-danger {
   background: var(--danger);
 }
@@ -204,11 +215,18 @@ body {
   gap: 4px;
   flex: 1 1 120px;
   min-width: 120px;
+  max-width: 150px;
 }
 
 .filter-field.date-range {
   flex: 1 1 180px;
   min-width: 170px;
+  max-width: 290px;
+}
+
+.filter-field.narrow {
+  flex: 0 1 80px;
+  min-width: 100px;
 }
 
 .filter-field label {
@@ -218,7 +236,8 @@ body {
 }
 
 .filter-field select,
-.filter-field input[type="date"] {
+.filter-field input[type="date"],
+.filter-field input[type="number"] {
   padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: 4px;
@@ -229,7 +248,8 @@ body {
 }
 
 .filter-field select:focus,
-.filter-field input[type="date"]:focus {
+.filter-field input[type="date"]:focus,
+.filter-field input[type="number"]:focus {
   outline: none;
   border-color: var(--primary);
 }
@@ -324,8 +344,8 @@ body {
 }
 
 .page-wrapper .page-header .page-subtitle {
-  opacity: 0.9;
-  font-size: 14px;
+  color: #6b7280;
+  font-size: 18px;
   margin-top: 5px;
 }
 
