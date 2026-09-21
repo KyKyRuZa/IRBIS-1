@@ -1,7 +1,7 @@
 import { childLogger } from '../utils/logger.js';
 const log = childLogger('site');
 
-import { createSite, getAllSites, getSiteById, updateSite as updateSiteModel, deleteSite as deleteSiteModel } from '../models/employeeModel.js';
+import { createSite, getAllSites, getSiteById, updateSite as updateSiteModel, deleteSite as deleteSiteModel } from '../models/siteModel.js';
 
 export async function addSite(req, res, next) {
   try {
