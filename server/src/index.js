@@ -36,6 +36,24 @@ const loginLimiter = rateLimit({
   message: { error: 'Too many login attempts, please try again later' },
 });
 
+const registerLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => rateLimitDisabled,
+  message: { error: 'Too many registration attempts, please try again later' },
+});
+
+const refreshLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => rateLimitDisabled,
+  message: { error: 'Too many refresh attempts, please try again later' },
+});
+
 const globalLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
   max: 600,
@@ -81,6 +99,8 @@ app.use('/certs', express.static('certs', {
 app.use('/api', globalLimiter);
 
 app.use('/api/auth/login', loginLimiter);
+app.use('/api/auth/register', registerLimiter);
+app.use('/api/auth/refresh', refreshLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/sites', siteRoutes);

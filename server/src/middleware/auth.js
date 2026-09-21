@@ -4,7 +4,7 @@ import { childLogger } from '../utils/logger.js';
 
 const log = childLogger('authMiddleware');
 
-export function cookiesMiddleware(req, res, next) {
+export async function cookiesMiddleware(req, res, next) {
   const header = req.headers.cookie;
   req.cookies = {};
   if (!header) return next();
@@ -13,7 +13,13 @@ export function cookiesMiddleware(req, res, next) {
     if (idx === -1) continue;
     const key = pair.slice(0, idx).trim();
     const value = pair.slice(idx + 1).trim();
-    if (key) req.cookies[key] = decodeURIComponent(value);
+    if (key) {
+      try {
+        req.cookies[key] = decodeURIComponent(value);
+      } catch {
+        req.cookies[key] = value;
+      }
+    }
   }
   next();
 }
@@ -42,21 +48,4 @@ export function adminOnly(req, res, next) {
     return res.status(403).json({ error: 'Admin access required' });
   }
   next();
-}
-
-export async function registerGuard(req, res, next) {
-  const token = req.cookies?.access_token || req.headers.authorization?.replace('Bearer ', '');
-  if (token) {
-    return authMiddleware(req, res, () => adminOnly(req, res, next));
-  }
-  try {
-    const { rows } = await pool.query('SELECT COUNT(*)::int AS count FROM users');
-    if (rows[0].count === 0) {
-      req.body = { ...req.body, role: 'admin' };
-      return next();
-    }
-    return res.status(401).json({ error: 'Authentication required' });
-  } catch (err) {
-    next(err);
-  }
 }

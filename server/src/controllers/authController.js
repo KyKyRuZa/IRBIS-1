@@ -1,7 +1,7 @@
 import crypto from 'crypto';
-import pool from '../models/db.js';
+import { prisma, pool } from '../models/db.js';
 import bcrypt from 'bcrypt';
-import { LoginSchema, RegisterSchema, ChangePasswordSchema } from '../validation/index.js';
+import { LoginSchema, ChangePasswordSchema } from '../validation/index.js';
 import { childLogger } from '../utils/logger.js';
 
 const log = childLogger('auth');
@@ -120,27 +120,6 @@ export async function me(req, res, next) {
       return res.status(401).json({ error: 'User not found' });
     }
     res.json(publicUser(user));
-  } catch (error) {
-    log.error(error);
-    next(error);
-  }
-}
-
-export async function register(req, res, next) {
-  try {
-    const { username, password, role } = RegisterSchema.parse(req.body);
-
-    const existing = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
-    if (existing.rows.length > 0) {
-      return res.status(400).json({ error: 'User already exists' });
-    }
-    const hash = await bcrypt.hash(password, 10);
-    const result = await pool.query(
-      'INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3) RETURNING *',
-      [username, hash, role || 'user']
-    );
-    res.status(201).json({ id: result.rows[0].id, username: result.rows[0].username, role: result.rows[0].role });
-    log.info({ username, role: role || 'user' }, 'User registered');
   } catch (error) {
     log.error(error);
     next(error);

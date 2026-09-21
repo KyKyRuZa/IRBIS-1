@@ -55,53 +55,6 @@ describe('Auth', () => {
     });
   });
 
-  describe('POST /api/auth/register', () => {
-    it('creates the first admin when the database is empty', async () => {
-      const res = await request(app)
-        .post('/api/auth/register')
-        .send({ username: 'firstadmin', password: 'secret' });
-      expect(res.status).toBe(201);
-      expect(res.body.role).toBe('admin');
-    });
-
-    it('rejects registration without a token when users already exist', async () => {
-      await loginAs('admin');
-      const res = await request(app)
-        .post('/api/auth/register')
-        .send({ username: 'second', password: 'secret' });
-      expect(res.status).toBe(401);
-    });
-
-    it('rejects registration by a non-admin user', async () => {
-      await loginAs('admin');
-      const user = await loginAs('user');
-      const res = await user
-        .post('/api/auth/register')
-        .send({ username: 'third', password: 'secret' });
-      expect(res.status).toBe(403);
-    });
-
-    it('validates required fields', async () => {
-      const res = await request(app)
-        .post('/api/auth/register')
-        .send({ username: 'onlyuser' });
-      expect(res.status).toBe(400);
-    });
-
-    it('rejects duplicate username', async () => {
-      const res1 = await request(app)
-        .post('/api/auth/register')
-        .send({ username: 'dup', password: 'secret' });
-      expect(res1.status).toBe(201);
-      // DB now has a user, so open registration is blocked; use admin token
-      const admin = await loginAs('admin');
-      const res2 = await admin
-        .post('/api/auth/register')
-        .send({ username: 'dup', password: 'secret' });
-      expect(res2.status).toBe(400);
-    });
-  });
-
   describe('POST /api/auth/change-password', () => {
     it('requires authentication', async () => {
       const res = await request(app)
