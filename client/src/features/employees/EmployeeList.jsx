@@ -110,7 +110,7 @@ export default function EmployeeList() {
     setFormData({
       full_name: emp.full_name,
       position: emp.position,
-      site_id: emp.site_id || '',
+      site_id: emp.site_id != null ? String(emp.site_id) : '',
       gender: emp.gender || '',
       hire_date: toDateInput(emp.hire_date),
       clothing_size: emp.clothing_size || '',
@@ -237,7 +237,7 @@ export default function EmployeeList() {
             <FilterSelect label="Объект" value={filters.site_id} onChange={(value) => setFilter('site_id', value)}>
               <option value="">Все</option>
               {sites.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
+                <option key={s.id} value={String(s.id)}>{s.name}</option>
               ))}
             </FilterSelect>
             <FilterSelect label="Пол" value={filters.gender} onChange={(value) => setFilter('gender', value)}>
@@ -391,7 +391,7 @@ export default function EmployeeList() {
               >
                 <option value="">Выберите объект</option>
                 {sites.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
+                  <option key={s.id} value={String(s.id)}>{s.name}</option>
                 ))}
               </select>
             </div>

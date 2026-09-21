@@ -290,6 +290,7 @@ export default function IssueForm() {
 
   const handleEdit = (record) => {
     setEditingRecord(record);
+    setIssueMode('single');
     setSelectedEmployee(
       record.employee_id
         ? { id: record.employee_id, full_name: record.full_name, position: record.position }
@@ -511,6 +512,7 @@ export default function IssueForm() {
 
       <Modal isOpen={showModal} onClose={handleClose} title={editingRecord && issueMode !== 'group' ? 'Редактировать выдачу' : 'Выдача спецодежды и СИЗ'}>
         <form onSubmit={editingRecord && issueMode !== 'group' ? handleUpdate : handleSubmit} className={styles.formSection}>
+          {!editingRecord && (
           <div className={styles.modeCards}>
             <label className={`${styles.modeCard} ${issueMode === 'single' ? styles.active : ''}`}>
               <input
@@ -543,6 +545,7 @@ export default function IssueForm() {
               <span className={styles.modeCardTitle}>Несколько позиций</span>
             </label>
           </div>
+          )}
 
           <div className={styles.formGrid}>
             {issueMode === 'group' && (
