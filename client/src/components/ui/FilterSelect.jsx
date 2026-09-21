@@ -1,10 +1,12 @@
+import Dropdown from '@components/ui/Dropdown.jsx';
+
 export default function FilterSelect({ label, value, onChange, children, className }) {
   return (
     <div className={`filter-field ${className || ''}`}>
       <label>{label}</label>
-      <select value={value} onChange={(e) => onChange(e.target.value)}>
+      <Dropdown value={value} onChange={onChange}>
         {children}
-      </select>
+      </Dropdown>
     </div>
   );
 }
