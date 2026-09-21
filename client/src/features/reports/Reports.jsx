@@ -239,11 +239,11 @@ export default function Reports() {
             />
             <FilterSelect label="Объект" value={filters.site_id} onChange={(value) => setFilter('site_id', value)}>
               <option value="">Все</option>
-              {sites.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              {sites.map((s) => <option key={s.id} value={String(s.id)}>{s.name}</option>)}
             </FilterSelect>
             <FilterSelect label="Вид СИЗ" value={filters.item_type_id} onChange={(value) => setFilter('item_type_id', value)}>
               <option value="">Все</option>
-              {items.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+              {items.map((item) => <option key={item.id} value={String(item.id)}>{item.name}</option>)}
             </FilterSelect>
             <DateRange
               from={filters.date_from}

@@ -68,7 +68,7 @@ export default function Orders() {
             <FilterSelect label="Объект" value={siteId} onChange={setSiteId}>
               <option value="">Выберите объект...</option>
               {sites.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
+                <option key={s.id} value={String(s.id)}>{s.name}</option>
               ))}
             </FilterSelect>
             {siteId && (

@@ -271,7 +271,7 @@ export default function EmployeeList() {
                 action={<button className="btn" onClick={() => setShowModal(true)}><Icon name="userPlus" size={16} /> Добавить сотрудника</button>}
               />
             ) : (
-              <>
+               <>
                  <div className="tableScroll">
                  <table className="table">
                 <thead>

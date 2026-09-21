@@ -405,7 +405,7 @@ export default function IssueForm() {
             <FilterSelect label="Сотрудник" value={filters.employee_id} onChange={(value) => setFilter('employee_id', value)}>
               <option value="">Все</option>
               {employees.map((emp) => (
-                <option key={emp.id} value={emp.id}>{emp.full_name}</option>
+                <option key={emp.id} value={String(emp.id)}>{emp.full_name}</option>
               ))}
             </FilterSelect>
             <FilterSelect label="Объект" value={filters.site_id} onChange={(value) => setFilter('site_id', value)}>
@@ -561,7 +561,7 @@ export default function IssueForm() {
                   >
                     <option value="">Выберите объект...</option>
                     {sites.map((s) => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
+                <option key={s.id} value={String(s.id)}>{s.name}</option>
                     ))}
                   </select>
                   {fieldErrors.site_id && <div id="site-error" className={styles.fieldError} role="alert">{fieldErrors.site_id}</div>}
@@ -708,7 +708,7 @@ export default function IssueForm() {
                         >
                           <option value="">Выберите...</option>
                           {items.map((item) => (
-                            <option key={item.id} value={item.id}>{item.name}</option>
+                <option key={item.id} value={String(item.id)}>{item.name}</option>
                           ))}
                         </select>
                       </td>
