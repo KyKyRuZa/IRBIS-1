@@ -104,6 +104,11 @@ export const FormSchema = z.object({
   description: z.string().optional().nullable(),
 });
 
+export const FormUpdateSchema = z.object({
+  name: z.string().min(1, 'Введите название формы').optional(),
+  description: z.string().optional().nullable(),
+});
+
 export const FormTakeSchema = z.object({
   employee_id: z.preprocess(toNum, z.number().int().positive('Некорректный сотрудник')),
   form_id: z.preprocess(toNum, z.number().int().positive('Некорректная форма')),

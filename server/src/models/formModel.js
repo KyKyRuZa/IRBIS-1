@@ -8,6 +8,24 @@ export async function createForm(name, description) {
   return result.rows[0];
 }
 
+export async function getFormById(id) {
+  const result = await pool.query('SELECT * FROM forms WHERE id = $1', [id]);
+  return result.rows[0];
+}
+
+export async function updateForm(id, name, description) {
+  const result = await pool.query(
+    'UPDATE forms SET name = $1, description = $2 WHERE id = $3 RETURNING *',
+    [name, description, id]
+  );
+  return result.rows[0];
+}
+
+export async function deleteForm(id) {
+  const result = await pool.query('DELETE FROM forms WHERE id = $1 RETURNING id', [id]);
+  return result.rows[0] || null;
+}
+
 export async function getAllForms() {
   const result = await pool.query('SELECT * FROM forms ORDER BY id');
   return result.rows;
@@ -15,10 +33,12 @@ export async function getAllForms() {
 
 export async function recordFormTaken(employeeId, formId) {
   const result = await pool.query(
-    'INSERT INTO form_taken (employee_id, form_id) VALUES ($1, $2) RETURNING *',
+    `INSERT INTO form_taken (employee_id, form_id) 
+     VALUES ($1, $2) 
+     ON CONFLICT (employee_id, form_id) DO NOTHING RETURNING *`,
     [employeeId, formId]
   );
-  return result.rows[0];
+  return result.rows[0] || null;
 }
 
 export async function getFormTakenRecords() {

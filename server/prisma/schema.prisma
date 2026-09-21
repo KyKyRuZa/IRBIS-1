@@ -177,6 +177,7 @@ model FormTaken {
 
   @@index([employeeId])
   @@index([formId])
+  @@unique([employeeId, formId])
   @@map("form_taken")
 }
 

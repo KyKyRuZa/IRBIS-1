@@ -94,6 +94,11 @@ export const formTrackerSchema = z.object({
   description: z.string().optional().nullable(),
 });
 
+export const formUpdateSchema = z.object({
+  name: z.string().min(1, 'Введите название формы').optional(),
+  description: z.string().optional().nullable(),
+});
+
 export const formTakeSchema = z.object({
   employee_id: z.string().min(1, 'Выберите сотрудника'),
   form_id: z.string().min(1, 'Выберите форму'),

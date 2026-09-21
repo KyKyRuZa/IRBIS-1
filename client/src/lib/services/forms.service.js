@@ -4,8 +4,17 @@ export const formsService = {
   list: () =>
     api.get('/api/forms').then(r => r.data),
 
+  get: (id) =>
+    api.get(`/api/forms/${id}`).then(r => r.data),
+
   create: (data) =>
     api.post('/api/forms', data).then(r => r.data),
+
+  update: (id, data) =>
+    api.put(`/api/forms/${id}`, data).then(r => r.data),
+
+  delete: (id) =>
+    api.delete(`/api/forms/${id}`).then(r => r.data),
 
   take: (data) =>
     api.post('/api/forms/take', data).then(r => r.data),

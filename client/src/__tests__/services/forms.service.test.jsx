@@ -15,7 +15,10 @@ vi.mock('@/lib/api.js', () => {
 
 const specs = [
   { name: 'list', http: 'get', args: [], expected: ['/api/forms'], sample: [{ id: 1 }] },
+  { name: 'get', http: 'get', args: [1], expected: ['/api/forms/1'], sample: { id: 1 } },
   { name: 'create', http: 'post', args: [{ name: 'x' }], expected: ['/api/forms', { name: 'x' }], sample: { id: 1 } },
+  { name: 'update', http: 'put', args: [1, { name: 'y' }], expected: ['/api/forms/1', { name: 'y' }], sample: { id: 1 } },
+  { name: 'delete', http: 'delete', args: [1], expected: ['/api/forms/1'], sample: { id: 1 } },
   { name: 'take', http: 'post', args: [{ employee_id: 1 }], expected: ['/api/forms/take', { employee_id: 1 }], sample: { id: 1 } },
   { name: 'listTaken', http: 'get', args: [], expected: ['/api/forms/taken'], sample: [{ id: 1 }] },
   { name: 'listTakenByEmployee', http: 'get', args: [1], expected: ['/api/forms/taken/1'], sample: [{ id: 1 }] },
