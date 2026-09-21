@@ -433,14 +433,13 @@ body {
   }
 }
 
-/* Телефоны — таблицы на всю ширину экрана со скроллом по горизонтали */
+/* Телефоны — таблицы скроллятся по горизонтали если не умещаются; фильтры (.table-controls) остаются на месте */
 @media (max-width: 768px) {
   .table {
-    min-width: 100%;
     width: max-content;
+    min-width: 0;
   }
 
-  /* Отдельный скролл-контейнер таблицы — фильтры (.table-controls) остаются на месте */
   .tableScroll {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;

@@ -7,4 +7,17 @@
   display: flex;
   gap: 10px;
   justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
 }

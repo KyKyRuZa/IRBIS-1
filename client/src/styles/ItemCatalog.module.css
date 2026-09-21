@@ -101,7 +101,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding-top: 4px;
+  padding-top: 20px;
   font-size: 14px;
 }
 
@@ -343,8 +343,8 @@
   }
 
   .certificatesTable {
-    min-width: 100%;
     width: max-content;
+    min-width: 0;
   }
 
   .detailCard {

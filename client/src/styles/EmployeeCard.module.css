@@ -198,8 +198,8 @@
   }
 
   .dataTable {
-    min-width: 100%;
     width: max-content;
+    min-width: 0;
   }
 }
 
