@@ -6,11 +6,11 @@ function badRequest(message) {
   return error;
 }
 
-export async function createIssueRecord(employeeId, itemTypeId, quantity, issueDate, expiryDate, certificateId, reorderDate, wearTimeOverride, issueMethod) {
+export async function createIssueRecord(employeeId, itemTypeId, quantity, issueDate, expiryDate, certificateId, reorderDate, wearTimeOverride, notes, issueMethod, signaturePath, signatureDate) {
   const result = await pool.query(
-    `INSERT INTO issue_records (employee_id, item_type_id, quantity, issue_date, expiry_date, certificate_id, reorder_date, wear_time_override_months, issue_method) 
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-    [employeeId, itemTypeId, quantity, issueDate, expiryDate, certificateId, reorderDate, wearTimeOverride, issueMethod]
+    `INSERT INTO issue_records (employee_id, item_type_id, quantity, issue_date, expiry_date, certificate_id, reorder_date, wear_time_override_months, notes, issue_method, signature_path, signature_date) 
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
+    [employeeId, itemTypeId, quantity, issueDate, expiryDate, certificateId, reorderDate, wearTimeOverride, notes, issueMethod, signaturePath, signatureDate]
   );
   return result.rows[0];
 }
@@ -59,10 +59,10 @@ export async function disposeIssueRecord(id) {
   return result.rows[0];
 }
 
-export async function returnIssueRecord(id, returnDate, returnQuantity) {
+export async function returnIssueRecord(id, returnDate, returnQuantity, status = 'returned') {
   const result = await pool.query(
-    "UPDATE issue_records SET status='returned', return_date=$1, return_quantity=$2 WHERE id=$3 RETURNING *",
-    [returnDate, returnQuantity, id]
+    "UPDATE issue_records SET status=$1, return_date=$2, return_quantity=$3 WHERE id=$4 RETURNING *",
+    [status, returnDate, returnQuantity, id]
   );
   return result.rows[0];
 }
@@ -125,9 +125,17 @@ export async function updateIssueRecord(id, data) {
   if (!current) return null;
 
   const patch = {};
-  const whitelist = ['employee_id', 'item_type_id', 'quantity', 'issue_date', 'expiry_date', 'certificate_id', 'notes', 'status', 'issue_method'];
+  const whitelist = ['employee_id', 'item_type_id', 'quantity', 'issue_date', 'expiry_date', 'certificate_id', 'notes', 'issue_method'];
+  const allowedStatuses = ['issued', 'disposed', 'returned', 'due_for_disposal'];
   for (const key of whitelist) {
     if (Object.prototype.hasOwnProperty.call(data, key)) patch[key] = data[key];
+  }
+  if (Object.prototype.hasOwnProperty.call(data, 'status')) {
+    const s = String(data.status).toLowerCase();
+    if (!allowedStatuses.includes(s)) {
+      throw badRequest(`Недопустимый статус: ${data.status}`);
+    }
+    patch.status = s;
   }
   // The API sends `wear_time_override`; the column is `wear_time_override_months`.
   if (Object.prototype.hasOwnProperty.call(data, 'wear_time_override')) {
@@ -157,7 +165,7 @@ export async function updateIssueRecord(id, data) {
     patch.wear_time_override_months = parsedWear;
   }
 
-  if (Object.prototype.hasOwnProperty.call(patch, 'item_type_id') || Object.prototype.hasOwnProperty.call(patch, 'wear_time_override_months')) {
+  if ((Object.prototype.hasOwnProperty.call(patch, 'item_type_id') || Object.prototype.hasOwnProperty.call(patch, 'wear_time_override_months')) && !Object.prototype.hasOwnProperty.call(patch, 'expiry_date')) {
     const item = await pool.query('SELECT * FROM item_types WHERE id=$1', [itemTypeId]);
     const effectiveWear = wearTime ? Number(wearTime) : (item.rows[0]?.default_wear_time_months || null);
     const issueDate = patch.issue_date ?? current.issue_date;

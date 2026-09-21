@@ -90,15 +90,16 @@ describe('Issues (issue records)', () => {
       .send({ quantity: 3 });
     expect(upd.status).toBe(200);
 
+    const ret = await request(app)
+      .patch(`${base}/${s.id}/return`)
+      .set(authHeaders('admin', 1))
+      .send({ return_quantity: 1 });
+    expect(ret.status).toBe(200);
+
     const dispose = await request(app)
       .patch(`${base}/${s.id}/dispose`)
       .set(authHeaders('admin', 1));
     expect(dispose.status).toBe(200);
-
-    const ret = await request(app)
-      .patch(`${base}/${s.id}/return`)
-      .set(authHeaders('admin', 1));
-    expect(ret.status).toBe(200);
   });
 
   it('lists expiring issues with a `days` filter', async () => {

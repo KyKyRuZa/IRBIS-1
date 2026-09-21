@@ -27,7 +27,6 @@ export async function addCertificate(req, res, next) {
 
 export async function listCertificates(req, res, next) {
   try {
-    await updateCertificateStatus();
     const certificates = await getAllCertificates();
     res.json(certificates);
   } catch (error) {

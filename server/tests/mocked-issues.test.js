@@ -147,7 +147,7 @@ describe('issueRecordModel (mocked db)', () => {
   });
 
   it('createIssueRecord stores issue_method', async () => {
-    const row = await createIssueRecord(1, 1, 1, '2025-01-01', '2025-07-01', null, '2024-11-01', null, 'dosator');
+    const row = await createIssueRecord(1, 1, 1, '2025-01-01', '2025-07-01', null, '2024-11-01', null, null, 'dosator');
     expect(row.issue_method).toBe('dosator');
   });
 

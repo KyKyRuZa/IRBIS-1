@@ -17,12 +17,23 @@ import {
 } from '../models/issueRecordModel.js';
 import pool from '../models/db.js';
 
+function localDate(date) {
+  const d = date ? new Date(date) : new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export async function issueItem(req, res, next) {
   try {
     const { employee_id, item_type_id, quantity, issue_date, certificate_id, wear_time_override, signature_path, signature_date, notes, issue_method } = req.body;
     if (!employee_id || !item_type_id) {
       return res.status(400).json({ error: 'employee_id and item_type_id are required' });
     }
+    const emp = await pool.query('SELECT id FROM employees WHERE id=$1', [employee_id]);
+    if (!emp.rows[0]) return res.status(404).json({ error: 'Employee not found' });
+
     const item = await pool.query('SELECT * FROM item_types WHERE id = $1', [item_type_id]);
     if (!item.rows[0]) return res.status(404).json({ error: 'Item type not found' });
 
@@ -40,16 +51,16 @@ export async function issueItem(req, res, next) {
     }
 
     const record = await createIssueRecord(
-      employee_id, item_type_id, quantity || 1, issue_date || new Date().toISOString().split('T')[0],
+      employee_id, item_type_id, quantity || 1, issue_date || localDate(),
       expiryDate ? expiryDate.toISOString().split('T')[0] : null,
       certificate_id || null,
       reorderDate ? reorderDate.toISOString().split('T')[0] : null,
       wear_time_override || null,
-      issue_method || null
+      notes || null,
+      issue_method || null,
+      signature_path || null,
+      signature_date || null
     );
-    if (signature_path || signature_date) {
-      await pool.query('UPDATE issue_records SET signature_path=$1, signature_date=$2 WHERE id=$3', [signature_path || null, signature_date || null, record.id]);
-    }
     res.status(201).json(record);
   } catch (error) {
     log.error(error);
@@ -72,7 +83,7 @@ export async function batchIssue(req, res, next) {
     if (!item.rows[0]) return res.status(404).json({ error: 'Item type not found' });
 
     const wearTime = wear_time_override ? Number(wear_time_override) : (item.rows[0].default_wear_time_months || null);
-    const issueDate = issue_date || new Date().toISOString().split('T')[0];
+    const issueDate = issue_date || localDate();
     let expiryDate = null;
     if (wearTime) {
       expiryDate = new Date(issueDate);
@@ -113,10 +124,12 @@ export async function batchIssueSingle(req, res, next) {
     const emp = await pool.query('SELECT id FROM employees WHERE id=$1', [employee_id]);
     if (!emp.rows[0]) return res.status(404).json({ error: 'Employee not found' });
 
-    const issueDate = issue_date || new Date().toISOString().split('T')[0];
+    const issueDate = issue_date || localDate();
     const enriched = [];
     for (const entry of items) {
-      if (!entry.item_type_id) continue;
+      if (!entry.item_type_id) {
+        return res.status(400).json({ error: 'All items must have item_type_id' });
+      }
       const item = await pool.query('SELECT * FROM item_types WHERE id = $1', [entry.item_type_id]);
       if (!item.rows[0]) return res.status(404).json({ error: `Item type ${entry.item_type_id} not found` });
 
@@ -181,7 +194,7 @@ export async function listIssues(req, res, next) {
     }
     if (status) {
       query += ` AND r.status = $${paramIndex++}`;
-      params.push(status);
+      params.push(status.toLowerCase());
     }
     if (date_from) {
       query += ` AND r.issue_date >= $${paramIndex++}`;
@@ -192,7 +205,7 @@ export async function listIssues(req, res, next) {
       params.push(date_to);
     }
 
-    query += ' ORDER BY r.issue_date DESC';
+    query += ' ORDER BY r.issue_date DESC, r.id DESC';
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (error) {
@@ -222,14 +235,21 @@ export async function returnItem(req, res, next) {
     const { return_date, return_quantity } = req.body;
     const current = await getIssueRecordById(req.params.id);
     if (!current) return res.status(404).json({ error: 'Record not found' });
-    if (current.status !== 'issued') {
+    if (!['issued', 'due_for_disposal'].includes(current.status)) {
       return res.status(409).json({ error: `Cannot return a record with status '${current.status}'` });
     }
     const qty = Number(return_quantity) || 0;
-    if (qty > Number(current.quantity)) {
-      return res.status(400).json({ error: 'return_quantity exceeds issued quantity' });
+    if (qty <= 0) {
+      return res.status(400).json({ error: 'return_quantity must be greater than 0' });
     }
-    const record = await returnIssueRecord(req.params.id, return_date || new Date().toISOString().split('T')[0], qty);
+    const alreadyReturned = Number(current.return_quantity) || 0;
+    const remaining = Number(current.quantity) - alreadyReturned;
+    if (qty > remaining) {
+      return res.status(400).json({ error: `return_quantity exceeds remaining quantity (${remaining})` });
+    }
+    const newReturnQty = alreadyReturned + qty;
+    const newStatus = newReturnQty >= Number(current.quantity) ? 'returned' : 'issued';
+    const record = await returnIssueRecord(req.params.id, return_date || localDate(), newReturnQty, newStatus);
     if (!record) return res.status(404).json({ error: 'Record not found' });
     res.json(record);
   } catch (error) {
