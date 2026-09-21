@@ -81,9 +81,15 @@ export async function editEmployee(req, res, next) {
   try {
     const data = { ...req.body };
     if (data.site_id === '' || data.site_id === null || data.site_id === undefined) data.site_id = null;
-    else data.site_id = Number(data.site_id);
+    else {
+      const parsedSite = Number(data.site_id);
+      data.site_id = Number.isFinite(parsedSite) ? parsedSite : null;
+    }
     if (data.height === '' || data.height === null || data.height === undefined) data.height = null;
-    else data.height = Number(data.height);
+    else {
+      const parsedHeight = Number(data.height);
+      data.height = Number.isFinite(parsedHeight) ? parsedHeight : null;
+    }
     ['hire_date', 'position_change_date'].forEach(f => {
       if (data[f] === '' || data[f] === null || data[f] === undefined) data[f] = null;
     });

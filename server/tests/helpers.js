@@ -178,10 +178,9 @@ export async function createIssue(overrides = {}) {
 }
 
 export async function createForm(overrides = {}) {
-  const employee_id = overrides.employee_id ?? (await createEmployee()).id;
   return adminPost(
     '/api/forms',
-    { name: 'Safety Form', description: 'Monthly safety acknowledgement', employee_id, ...overrides },
+    { name: 'Safety Form', description: 'Monthly safety acknowledgement', ...overrides },
     'createForm'
   );
 }

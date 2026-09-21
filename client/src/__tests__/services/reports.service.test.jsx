@@ -16,7 +16,7 @@ vi.mock('@/lib/api.js', () => {
 const specs = [
   { name: 'exportExcel', http: 'get', args: [{ site_id: 1 }], expected: ['/api/reports/excel', { params: { site_id: 1 }, responseType: 'blob' }], sample: 'blob' },
   { name: 'getDemand', http: 'get', args: [1], expected: ['/api/reports/demand', { params: { site_id: 1 } }], sample: [{ id: 1 }] },
-  { name: 'exportDemandExcel', http: 'get', args: [1], expected: ['/api/reports/demand/excel', { params: { site_id: 1 } }], sample: 'blob' },
+  { name: 'exportDemandExcel', http: 'get', args: [1], expected: ['/api/reports/demand/excel', { params: { site_id: 1 }, responseType: 'blob' }], sample: 'blob' },
   { name: 'exportIssuesReport', http: 'get', args: [], expected: ['/api/reports/issues-report', { responseType: 'blob' }], sample: 'blob' },
   { name: 'exportExpiringReport', http: 'get', args: [], expected: ['/api/reports/expiring-report', { responseType: 'blob' }], sample: 'blob' },
 ];

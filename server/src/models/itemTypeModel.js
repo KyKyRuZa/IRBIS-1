@@ -41,15 +41,11 @@ export async function updateItemType(id, data) {
   return result.rows[0];
 }
 
-export async function getItemTypesByCertificate(filter) {
-  let query = 'SELECT * FROM item_types';
-  const params = [];
-  
-  if (filter) {
-    query += ' WHERE requires_certificate = true';
-  }
-  query += ' ORDER BY name';
-  const result = await pool.query(query, params);
+export async function getItemTypesByCertificate(requiresCertificate = true) {
+  const result = await pool.query(
+    'SELECT * FROM item_types WHERE requires_certificate = $1 ORDER BY name',
+    [requiresCertificate]
+  );
   return result.rows;
 }
 

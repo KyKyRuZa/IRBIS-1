@@ -8,12 +8,12 @@ process.env.NODE_ENV = 'test';
 // development database is never touched by the test suite.
 process.env.DATABASE_URL =
   process.env.TEST_DATABASE_URL ||
-  'postgresql://postgres:postgres@postgres:5432/irbis_test';
+  'postgresql://postgres:postgres@localhost:5433/irbis_test';
 
 // Fixed secret so tokens generated in tests are deterministic.
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret-irbis';
 
-// Required by pushController at module load time.
+process.env.UPLOAD_DIR = '/tmp/irbis-uploads-test';
 process.env.VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || 'test-vapid-public-key';
 process.env.VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || 'test-vapid-private-key';
 

@@ -30,6 +30,33 @@ describe('Forms', () => {
     expect(Array.isArray(list.body)).toBe(true);
   });
 
+  it('gets, updates, and deletes a form (admin)', async () => {
+    const form = await createForm({ name: 'Original', description: 'desc' });
+
+    const getRes = await request(app)
+      .get(`${base}/${form.id}`)
+      .set(authHeaders('admin', 1));
+    expect(getRes.status).toBe(200);
+    expect(getRes.body.name).toBe('Original');
+
+    const updateRes = await request(app)
+      .put(`${base}/${form.id}`)
+      .set(authHeaders('admin', 1))
+      .send({ name: 'Updated', description: 'new desc' });
+    expect(updateRes.status).toBe(200);
+    expect(updateRes.body.name).toBe('Updated');
+
+    const deleteRes = await request(app)
+      .delete(`${base}/${form.id}`)
+      .set(authHeaders('admin', 1));
+    expect(deleteRes.status).toBe(200);
+
+    const getAfterDelete = await request(app)
+      .get(`${base}/${form.id}`)
+      .set(authHeaders('admin', 1));
+    expect(getAfterDelete.status).toBe(404);
+  });
+
   it('takes a form for the requesting employee', async () => {
     const emp = await createEmployee();
     const form = await createForm({ employee_id: emp.id });
