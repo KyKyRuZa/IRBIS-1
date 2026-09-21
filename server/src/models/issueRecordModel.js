@@ -102,7 +102,6 @@ export async function getExpiringItems(monthsAhead = 2) {
     JOIN employees e ON r.employee_id = e.id
     JOIN item_types it ON r.item_type_id = it.id
     WHERE r.expiry_date <= NOW() + make_interval(months => $1)
-      AND r.status = 'issued'
     ORDER BY r.expiry_date
   `, [monthsAhead]);
   return result.rows;
@@ -189,6 +188,13 @@ export async function updateIssueRecord(id, data) {
     [...values, id]
   );
   return result.rows[0];
+}
+
+export async function updateExpiredIssueRecordsStatus() {
+  const result = await pool.query(
+    `UPDATE issue_records SET status='due_for_disposal' WHERE status='issued' AND expiry_date < NOW() RETURNING id`,
+  );
+  return result.rows;
 }
 
 export async function batchIssueRecordsForEmployee(employeeId, records, issueDate) {

@@ -20,6 +20,8 @@ import logRoutes from './routes/logRoutes.js';
 import { logger, runWithRequestContext, getRequestLogger } from './utils/logger.js';
 import { initDB, pool } from './models/db.js';
 import { aggregateNotifications } from './services/notificationService.js';
+import { updateExpiredIssueRecordsStatus } from './models/issueRecordModel.js';
+import { updateCertificateStatus } from './models/certificateModel.js';
 import { cookiesMiddleware } from './middleware/auth.js';
 
 import rateLimit from 'express-rate-limit';
@@ -155,9 +157,18 @@ process.on('SIGINT', gracefulShutdown);
 
 if (process.env.NODE_ENV !== 'test') {
   initDB().then(() => {
-    aggregateNotifications().catch(err => logger.error(err, 'Initial notification aggregation failed'));
-    cron.schedule('0 8 * * *', () => {
-      aggregateNotifications().catch(err => logger.error(err, 'Notification job failed'));
+    updateExpiredIssueRecordsStatus()
+      .then(() => updateCertificateStatus())
+      .then(() => aggregateNotifications())
+      .catch(err => logger.error(err, 'Initial startup failed'));
+    cron.schedule('0 8 * * *', async () => {
+      try {
+        await updateExpiredIssueRecordsStatus();
+        await updateCertificateStatus();
+        await aggregateNotifications();
+      } catch (err) {
+        logger.error(err, 'Scheduled job failed');
+      }
     });
     app.listen(PORT, () => {
       logger.info(`Server running on port ${PORT}`);

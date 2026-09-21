@@ -432,7 +432,6 @@ export async function exportExpiringReport(req, res, next) {
       JOIN item_types it ON r.item_type_id = it.id
       LEFT JOIN sites s ON e.site_id = s.id
       WHERE r.expiry_date <= NOW() + make_interval(months => $1)
-        AND r.status = 'issued'
       ORDER BY r.expiry_date ASC
     `, [months]);
 

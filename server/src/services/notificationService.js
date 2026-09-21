@@ -38,7 +38,6 @@ export async function aggregateNotifications() {
     JOIN employees e ON r.employee_id = e.id
     JOIN item_types it ON r.item_type_id = it.id
     WHERE r.expiry_date < NOW()
-      AND r.status = 'issued'
   `);
   expiredItems.rows.forEach(r => {
     notifications.push({
