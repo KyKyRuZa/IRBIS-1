@@ -197,29 +197,21 @@ body {
 
 .table-controls {
   display: flex;
-  gap: 10px;
-  flex-wrap: nowrap;
+  gap: 12px;
+  flex-wrap: wrap;
   align-items: flex-end;
   margin-bottom: 20px;
-  overflow-x: auto;
-}
-
-.table-controls > * {
-  flex-shrink: 1;
-  min-width: 0;
 }
 
 .filter-field {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  flex: 1 1 120px;
-  min-width: 120px;
-  max-width: 150px;
+  min-width: 160px;
 }
 
 .filter-field.date-range {
-  flex: 1 1 180px;
+  flex: 1 1;
   min-width: 170px;
   max-width: 290px;
 }
@@ -432,12 +424,11 @@ body {
     flex-wrap: wrap;
   }
 }
-
 /* Телефоны — таблицы скроллятся по горизонтали если не умещаются; фильтры (.table-controls) остаются на месте */
 @media (max-width: 768px) {
   .table {
     width: max-content;
-    min-width: 0;
+    min-width: 100%;
   }
 
   .tableScroll {
@@ -453,6 +444,14 @@ body {
     flex-wrap: wrap;
     gap: 6px;
   }
+
+  .table-controls {
+    gap: 8px;
+  }
+
+  .filter-field {
+    min-width: 140px;
+  }
 }
 
 
@@ -465,5 +464,14 @@ body {
   .btn {
     padding: 9px 16px;
     font-size: 13px;
+  }
+
+  .table-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-field {
+    min-width: 100%;
   }
 }
