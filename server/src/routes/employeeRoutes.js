@@ -9,11 +9,11 @@ const router = Router();
 router.use(authMiddleware);
 
 router.post('/', adminOnly, validate(EmployeeSchema), registerEmployee);
-router.get('/', adminOnly, listEmployees);
-router.get('/:id', adminOnly, getEmployee);
+router.get('/', listEmployees);
+router.get('/:id', getEmployee);
 router.put('/:id', adminOnly, validate(EmployeeUpdateSchema), editEmployee);
 router.patch('/:id/terminate', adminOnly, fireEmployee);
 router.delete('/:id', adminOnly, deleteEmployee);
-router.get('/site/:siteId/sizes', adminOnly, getEmployeesSizesBySite);
+router.get('/site/:siteId/sizes', getEmployeesSizesBySite);
 
 export default router;
