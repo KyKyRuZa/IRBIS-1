@@ -148,7 +148,7 @@ export default function Certificates() {
       certificate_number: cert.certificate_number || '',
       issue_date: toDateInput(cert.issue_date),
       expiry_date: toDateInput(cert.expiry_date),
-      item_type_id: cert.item_type_id || ''
+      item_type_id: cert.item_type_id ? String(cert.item_type_id) : ''
     });
     setCertificateFile(null);
     setShowModal(true);
