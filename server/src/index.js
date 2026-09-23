@@ -22,7 +22,7 @@ import { initDB, pool } from './models/db.js';
 import { aggregateNotifications } from './services/notificationService.js';
 import { updateExpiredIssueRecordsStatus } from './models/issueRecordModel.js';
 import { updateCertificateStatus } from './models/certificateModel.js';
-import { cookiesMiddleware } from './middleware/auth.js';
+import { cookiesMiddleware, authMiddleware } from './middleware/auth.js';
 
 import rateLimit from 'express-rate-limit';
 
