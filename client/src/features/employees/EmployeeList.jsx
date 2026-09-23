@@ -274,22 +274,31 @@ export default function EmployeeList() {
                <>
                  <div className="tableScroll">
                  <table className="table">
-                <thead>
-                  <tr>
-                    <SortableTh label="ФИО" sortKey="full_name" sort={sort} onSort={toggleSort} />
-                    <SortableTh label="Табельный №" sortKey="personnel_number" sort={sort} onSort={toggleSort} />
-                    <SortableTh label="Должность" sortKey="position" sort={sort} onSort={toggleSort} />
-                    <SortableTh label="Объект" sortKey="site_name" sort={sort} onSort={toggleSort} />
-                    <SortableTh label="Статус" sortKey="status" sort={sort} onSort={toggleSort} />
-                    <SortableTh label="Рост" sortKey="height" sort={sort} onSort={toggleSort} />
-                    <SortableTh label="Размер одежды" sortKey="clothing_size" sort={sort} onSort={toggleSort} />
-                    <SortableTh label="Размер обуви" sortKey="shoe_size" sort={sort} onSort={toggleSort} />
-                    <SortableTh label="Размер головного убора" sortKey="hat_size" sort={sort} onSort={toggleSort} />
-                    <SortableTh label="Размер СИЗОД" sortKey="respirator_size" sort={sort} onSort={toggleSort} />
-                    <SortableTh label="Размер СИЗ рук" sortKey="gloves_size" sort={sort} onSort={toggleSort} />
-                    <th>Действия</th>
-                  </tr>
-                </thead>
+                   <thead className="text-sm text-gray-700 bg-gray-50">
+                     <tr>
+                       <SortableTh rowSpan={2} label="ФИО"         sortKey="full_name"        sort={sort} onSort={toggleSort} />
+                       <SortableTh rowSpan={2} label="Табельный №" sortKey="personnel_number" sort={sort} onSort={toggleSort} />
+                       <SortableTh rowSpan={2} label="Должность"   sortKey="position"         sort={sort} onSort={toggleSort} />
+                       <SortableTh rowSpan={2} label="Объект"      sortKey="site_name"        sort={sort} onSort={toggleSort} />
+
+                       <th
+                         colSpan={6}
+                         className="td-center"
+                       >
+                         Размеры
+                       </th>
+                       <SortableTh rowSpan={2} label="Статус" sortKey="status" sort={sort} onSort={toggleSort} />
+                       <th rowSpan={2}>Действия</th>
+                     </tr>
+                     <tr>
+                       <SortableTh label="Рост"      sortKey="height"          sort={sort} onSort={toggleSort} className="border-l border-gray-200" />
+                       <SortableTh label="Одежда"    sortKey="clothing_size"   sort={sort} onSort={toggleSort} />
+                       <SortableTh label="Обувь"     sortKey="shoe_size"       sort={sort} onSort={toggleSort} />
+                       <SortableTh label="Головной"  sortKey="hat_size"        sort={sort} onSort={toggleSort} />
+                       <SortableTh label="СИЗОД"     sortKey="respirator_size" sort={sort} onSort={toggleSort} />
+                       <SortableTh label="СИЗ рук"   sortKey="gloves_size"     sort={sort} onSort={toggleSort} className="border-r border-gray-200" />
+                     </tr>
+                   </thead>
                 <tbody>
                   {paginatedEmployees.map((emp) => (
                     <tr key={emp.id} onClick={() => handleRowClick(emp)} className={styles.clickableRow}>
@@ -297,6 +306,12 @@ export default function EmployeeList() {
                       <td>{emp.personnel_number || '-'}</td>
                       <td>{emp.position}</td>
                       <td>{emp.site_name || '-'}</td>
+                      <td>{emp.height || '-'} см</td>
+                      <td>{emp.clothing_size || '-'}</td>
+                      <td>{emp.shoe_size || '-'}</td>
+                      <td>{emp.hat_size || '-'}</td>
+                      <td>{emp.respirator_size || '-'}</td>
+                      <td>{emp.gloves_size || '-'}</td>
                       <td>
                         {emp.status === EMPLOYEE_STATUS_VALUES.active ? (
                           <span className={styles.statusBadgeActive}>{EMPLOYEE_STATUSES.active}</span>
@@ -304,12 +319,6 @@ export default function EmployeeList() {
                           <span className={styles.statusBadgeTerminated}>{EMPLOYEE_STATUSES.terminated}</span>
                         )}
                       </td>
-                      <td>{emp.height || '-'} см</td>
-                      <td>{emp.clothing_size || '-'}</td>
-                      <td>{emp.shoe_size || '-'}</td>
-                      <td>{emp.hat_size || '-'}</td>
-                      <td>{emp.respirator_size || '-'}</td>
-                      <td>{emp.gloves_size || '-'}</td>
                     <td>
                         <div className="action-buttons">
                           {emp.status === EMPLOYEE_STATUS_VALUES.active && (

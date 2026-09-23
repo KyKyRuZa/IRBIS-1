@@ -142,6 +142,10 @@ body {
   border-bottom: 1px solid var(--border);
 }
 
+.table .td-center {
+  text-align: center;
+}
+
 .table th {
   background: var(--light);
   font-weight: 600;
