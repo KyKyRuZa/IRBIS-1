@@ -73,6 +73,7 @@ function securityHeaders(req, res, next) {
 }
 
 function requestLogger(req, res, next) {
+  if (req.path === '/api/health') return next();
   const reqId = req.headers['x-request-id'] || randomUUID();
   req.id = reqId;
   const log = logger.child({ reqId });
@@ -98,7 +99,6 @@ app.use('/uploads', express.static('uploads', {
 app.use('/certs', express.static('certs', {
   setHeaders: (res) => res.setHeader('X-Content-Type-Options', 'nosniff'),
 }));
-app.use('/api', globalLimiter);
 
 app.get('/api/health', async (req, res) => {
   try {
@@ -109,6 +109,8 @@ app.get('/api/health', async (req, res) => {
     res.status(503).json({ status: 'error', db: 'down' });
   }
 });
+
+app.use('/api', globalLimiter);
 
 app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth/register', registerLimiter);
