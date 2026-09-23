@@ -99,8 +99,8 @@ async function renderTemplate(templatePath, data) {
   const { default: PizZip } = await import('pizzip');
   const zip = new PizZip(content);
   const { default: Docxtemplater } = await import('docxtemplater');
-  const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true, ...data });
-
+  const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+  doc.setData(data);
   await doc.render();
   return doc.getZip().generate({ type: 'nodebuffer' });
 }
@@ -114,8 +114,8 @@ async function loadTemplate(filename, data) {
   const doc = new Docxtemplater(zip, {
     paragraphLoop: true,
     linebreaks: true,
-    ...data,
   });
+  doc.setData(data);
   return doc;
 }
 
@@ -202,7 +202,8 @@ export async function exportEmployeeCard(req, res, next) {
     const { default: PizZip } = await import('pizzip');
     const zip = new PizZip(templateBuffer);
     const { default: Docxtemplater } = await import('docxtemplater');
-    const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true, ...data });
+    const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+    doc.setData(data);
     await doc.render();
     const buffer = doc.getZip().generate({ type: 'nodebuffer' });
 

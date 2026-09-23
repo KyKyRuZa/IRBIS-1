@@ -129,6 +129,7 @@ export default function FormTracker() {
     setShowEditModal(false);
     setEditingForm(null);
     fetchForms();
+    fetchRecords();
   };
 
   const confirmDelete = async () => {
