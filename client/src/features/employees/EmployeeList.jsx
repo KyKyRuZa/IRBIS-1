@@ -157,7 +157,7 @@ export default function EmployeeList() {
 
   const filteredEmployees = useMemo(() => {
     let result = normalizedEmployees;
-    const searchFields = ['full_name', 'personnel_number', 'position', 'site_name'];
+    const searchFields = ['full_name', 'personnel_number', 'position', 'site_name', 'clothing_size', 'shoe_size', 'hat_size', 'respirator_size', 'gloves_size'];
 
     const query = searchApplied.trim().toLowerCase();
     if (query) {
@@ -281,6 +281,12 @@ export default function EmployeeList() {
                     <SortableTh label="Должность" sortKey="position" sort={sort} onSort={toggleSort} />
                     <SortableTh label="Объект" sortKey="site_name" sort={sort} onSort={toggleSort} />
                     <SortableTh label="Статус" sortKey="status" sort={sort} onSort={toggleSort} />
+                    <SortableTh label="Рост" sortKey="height" sort={sort} onSort={toggleSort} />
+                    <SortableTh label="Размер одежды" sortKey="clothing_size" sort={sort} onSort={toggleSort} />
+                    <SortableTh label="Размер обуви" sortKey="shoe_size" sort={sort} onSort={toggleSort} />
+                    <SortableTh label="Размер головного убора" sortKey="hat_size" sort={sort} onSort={toggleSort} />
+                    <SortableTh label="Размер СИЗОД" sortKey="respirator_size" sort={sort} onSort={toggleSort} />
+                    <SortableTh label="Размер СИЗ рук" sortKey="gloves_size" sort={sort} onSort={toggleSort} />
                     <th>Действия</th>
                   </tr>
                 </thead>
@@ -298,6 +304,12 @@ export default function EmployeeList() {
                           <span className={styles.statusBadgeTerminated}>{EMPLOYEE_STATUSES.terminated}</span>
                         )}
                       </td>
+                      <td>{emp.height || '-'} см</td>
+                      <td>{emp.clothing_size || '-'}</td>
+                      <td>{emp.shoe_size || '-'}</td>
+                      <td>{emp.hat_size || '-'}</td>
+                      <td>{emp.respirator_size || '-'}</td>
+                      <td>{emp.gloves_size || '-'}</td>
                     <td>
                         <div className="action-buttons">
                           {emp.status === EMPLOYEE_STATUS_VALUES.active && (
