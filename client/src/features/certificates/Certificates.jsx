@@ -108,6 +108,7 @@ export default function Certificates() {
           fd.append('issue_date', result.data.issue_date || '');
           fd.append('expiry_date', result.data.expiry_date || '');
           fd.append('item_type_id', result.data.item_type_id || '');
+          fd.append('certificate_id', editingCertificate.id);
           await uploadService.uploadCertificate(fd);
         } else {
           await certificatesService.update(editingCertificate.id, result.data);

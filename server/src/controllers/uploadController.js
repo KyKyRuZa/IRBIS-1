@@ -15,17 +15,28 @@ export async function uploadCertificate(req, res, next) {
     } catch (err) {
       return res.status(400).json({ error: err.message || 'Недопустимый тип файла' });
     }
-    const { product_name, certificate_number, issue_date, expiry_date, item_type_id } = req.body;
+    const { product_name, certificate_number, issue_date, expiry_date, item_type_id, certificate_id } = req.body;
     if (!product_name) {
       return res.status(400).json({ error: 'Введите наименование продукции' });
     }
     const relativePath = path.join('/uploads', 'certificates', req.file.filename);
-    const result = await pool.query(
-      'INSERT INTO certificates (product_name, certificate_number, issue_date, expiry_date, file_path, item_type_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [product_name, certificate_number || null, issue_date || null, expiry_date || null, relativePath, item_type_id || null]
-    );
-    res.status(201).json(result.rows[0]);
-    log.info({ certificateNumber: certificate_number }, 'Certificate file uploaded');
+    let result;
+    if (certificate_id) {
+      result = await pool.query(
+        'UPDATE certificates SET product_name=$1, certificate_number=$2, issue_date=$3, expiry_date=$4, file_path=$5, item_type_id=$6 WHERE id=$7 RETURNING *',
+        [product_name, certificate_number || null, issue_date || null, expiry_date || null, relativePath, item_type_id || null, certificate_id]
+      );
+      if (!result.rows[0]) {
+        return res.status(404).json({ error: 'Сертификат не найден' });
+      }
+    } else {
+      result = await pool.query(
+        'INSERT INTO certificates (product_name, certificate_number, issue_date, expiry_date, file_path, item_type_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+        [product_name, certificate_number || null, issue_date || null, expiry_date || null, relativePath, item_type_id || null]
+      );
+    }
+    res.status(certificate_id ? 200 : 201).json(result.rows[0]);
+    log.info({ certificateNumber: certificate_number, certificateId: certificate_id }, 'Certificate file uploaded');
   } catch (error) {
     log.error(error);
     next(error);
