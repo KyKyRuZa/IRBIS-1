@@ -100,6 +100,16 @@ app.use('/certs', express.static('certs', {
 }));
 app.use('/api', globalLimiter);
 
+app.get('/api/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.status(200).json({ status: 'ok', db: 'up' });
+  } catch (err) {
+    logger.error(err, 'Health check failed');
+    res.status(503).json({ status: 'error', db: 'down' });
+  }
+});
+
 app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth/register', registerLimiter);
 app.use('/api/auth/refresh', refreshLimiter);
