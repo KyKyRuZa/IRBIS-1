@@ -103,7 +103,7 @@ export default function IssueNorms() {
     setEditingNorm(norm);
     setSubmitError('');
     setFormData({
-      item_type_id: norm.item_type_id || '',
+      item_type_id: norm.item_type_id ? String(norm.item_type_id) : '',
       period_months: norm.period_months || '',
       quantity: norm.quantity || 1,
       position: norm.position || ''

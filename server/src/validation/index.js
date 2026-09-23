@@ -9,12 +9,6 @@ export const LoginSchema = z.object({
   password: z.string().min(1, 'Введите пароль'),
 });
 
-export const RegisterSchema = z.object({
-  username: z.string().min(1, 'Введите логин'),
-  password: z.string().regex(PASSWORD_REGEX, 'Пароль должен содержать минимум 8 символов, заглавную и строчную буквы, цифру и спецсимвол'),
-  role: z.enum(['admin', 'user'], { error: (issue) => (issue.input === undefined || issue.input === '' ? 'Выберите роль' : 'Выберите роль из списка') }).optional(),
-});
-
 export const ChangePasswordSchema = z.object({
   old_password: z.string().min(1, 'Введите старый пароль'),
   new_password: z.string().regex(PASSWORD_REGEX, 'Пароль должен содержать минимум 8 символов, заглавную и строчную буквы, цифру и спецсимвол'),

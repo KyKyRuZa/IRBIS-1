@@ -15,7 +15,6 @@ vi.mock('@/lib/api.js', () => {
 
 const specs = [
   { name: 'login', http: 'post', args: ['user', 'pass'], expected: ['/api/auth/login', { username: 'user', password: 'pass' }], sample: { token: 't', username: 'user', role: 'admin' } },
-  { name: 'register', http: 'post', args: ['user', 'pass'], expected: ['/api/auth/register', { username: 'user', password: 'pass', role: 'admin' }], sample: { id: 1 } },
   { name: 'changePassword', http: 'post', args: ['old', 'new'], expected: ['/api/auth/change-password', { old_password: 'old', new_password: 'new' }], sample: { ok: true } },
 ];
 
@@ -30,15 +29,8 @@ describe('authService', () => {
       expect(api[http]).toHaveBeenCalledWith(...expected);
     });
 
-    it(`${name}() propagates errors`, async () => {
-      api[http].mockRejectedValue(new Error('boom'));
-      await expect(authService[name](...args)).rejects.toThrow('boom');
-    });
-  });
-
-  it('register sends the provided role', async () => {
-    api.post.mockResolvedValue({ data: { id: 2 } });
-    await authService.register('u', 'p', 'user');
-    expect(api.post).toHaveBeenCalledWith('/api/auth/register', { username: 'u', password: 'p', role: 'user' });
+  it(`${name}() propagates errors`, async () => {
+    api[http].mockRejectedValue(new Error('boom'));
+    await expect(authService[name](...args)).rejects.toThrow('boom');
   });
 });

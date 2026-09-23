@@ -11,7 +11,6 @@ export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isRegister, setIsRegister] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
@@ -35,26 +34,14 @@ export default function Login() {
       return;
     }
     try {
-      if (isRegister) {
-        await authService.register(username, password, 'admin');
-        const res = await authService.login(username, password);
-        login({ username: res.username, role: res.role });
-      } else {
-        const res = await authService.login(username, password);
-        login({ username: res.username, role: res.role });
-      }
+      const res = await authService.login(username, password);
+      login({ username: res.username, role: res.role });
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.error || 'Ошибка входа. Проверьте данные.');
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const switchMode = () => {
-    setIsRegister((v) => !v);
-    setError('');
-    setPassword('');
   };
 
   return (
@@ -68,12 +55,10 @@ export default function Login() {
       <div className={styles.card}>
         <header className={styles.cardHeader}>
           <h2 className={styles.heading}>
-            {isRegister ? 'Регистрация' : 'Вход в систему'}
+            Вход в систему
           </h2>
           <p className={styles.cardSubtitle}>
-            {isRegister
-              ? 'Создайте учётную запись администратора'
-              : 'Введите логин и пароль для входа'}
+            Введите логин и пароль для входа
           </p>
         </header>
 
@@ -114,7 +99,7 @@ export default function Login() {
                 className={`form-control ${styles.passwordInput}`}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                autoComplete={isRegister ? 'new-password' : 'current-password'}
+                autoComplete="current-password"
                 required
                 aria-invalid={Boolean(error)}
               />
@@ -138,18 +123,9 @@ export default function Login() {
             {isLoading && <span className={styles.spinner} aria-hidden="true" />}
             {isLoading
               ? 'Подождите…'
-              : isRegister
-                ? 'Зарегистрироваться'
-                : 'Войти'}
+              : 'Войти'}
           </button>
         </form>
-
-        <p className={styles.footer}>
-          {isRegister ? 'Уже есть аккаунт?' : 'Нет аккаунта?'}
-          <button type="button" onClick={switchMode} className={styles.linkButton}>
-            {isRegister ? 'Войти' : 'Зарегистрироваться'}
-          </button>
-        </p>
       </div>
     </div>
   );

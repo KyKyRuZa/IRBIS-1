@@ -43,7 +43,7 @@ const loginLimiter = rateLimit({
   message: { error: 'Too many login attempts, please try again later' },
 });
 
-const registerLimiter = rateLimit({
+const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
   standardHeaders: true,
@@ -118,7 +118,6 @@ app.get('/api/health', async (req, res) => {
 app.use('/api', globalLimiter);
 
 app.use('/api/auth/login', loginLimiter);
-app.use('/api/auth/register', registerLimiter);
 app.use('/api/auth/refresh', refreshLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/employees', employeeRoutes);

@@ -297,10 +297,10 @@ export default function IssueForm() {
         : null
     );
     form.setMany({
-      employee_id: record.employee_id || '',
-      item_type_id: record.item_type_id || '',
+      employee_id: record.employee_id ? String(record.employee_id) : '',
+      item_type_id: record.item_type_id ? String(record.item_type_id) : '',
       quantity: record.quantity || 1,
-      certificate_id: record.certificate_id || '',
+      certificate_id: record.certificate_id ? String(record.certificate_id) : '',
       wear_time_override: record.wear_time_override_months || '',
       notes: record.notes || '',
       issue_method: record.issue_method || 'personal'
