@@ -19,7 +19,7 @@ export function buildCookieOptions() {
     httpOnly: true,
     secure: cookieSecure,
     sameSite: 'strict',
-    path: '/api',
+    path: '/',
   };
 }
 
