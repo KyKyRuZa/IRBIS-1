@@ -99,13 +99,13 @@ async function renderTemplate(templatePath, data) {
   const { default: PizZip } = await import('pizzip');
   const zip = new PizZip(content);
   const { default: Docxtemplater } = await import('docxtemplater');
-  const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
-  doc.setData(data);
+  const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true, ...data });
+
   await doc.render();
   return doc.getZip().generate({ type: 'nodebuffer' });
 }
 
-async function loadTemplate(filename) {
+async function loadTemplate(filename, data) {
   const templatePath = path.join(__dirname, '..', 'templates', filename);
   const templateBuffer = fs.readFileSync(templatePath);
   const { default: PizZip } = await import('pizzip');
@@ -114,6 +114,7 @@ async function loadTemplate(filename) {
   const doc = new Docxtemplater(zip, {
     paragraphLoop: true,
     linebreaks: true,
+    ...data,
   });
   return doc;
 }
@@ -201,8 +202,7 @@ export async function exportEmployeeCard(req, res, next) {
     const { default: PizZip } = await import('pizzip');
     const zip = new PizZip(templateBuffer);
     const { default: Docxtemplater } = await import('docxtemplater');
-    const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
-    doc.setData(data);
+    const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true, ...data });
     await doc.render();
     const buffer = doc.getZip().generate({ type: 'nodebuffer' });
 
@@ -228,7 +228,6 @@ export async function exportConsumables(req, res, next) {
 
     const emp = result.rows[0];
     const period = req.query.period || 'first';
-    const doc = await loadTemplate('consumables-template.docx');
 
     const norms = await getNormsForEmployee(emp);
     const consumables = norms.filter((n) => n.category === 'consumable');
@@ -255,7 +254,7 @@ export async function exportConsumables(req, res, next) {
       }
     }
 
-    doc.setData(data);
+    const doc = await loadTemplate('consumables-template.docx', data);
     await doc.render();
 
     const buffer = doc.getZip().generate({ type: 'nodebuffer' });

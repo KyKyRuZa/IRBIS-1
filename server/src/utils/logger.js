@@ -30,7 +30,8 @@ export const logger = pino({
   timestamp: () => {
     const now = new Date();
     const moscow = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (10800000));
-    return `,"time":"${moscow.toISOString()}"`;
+    const pad = (n) => String(n).padStart(2, '0');
+    return `,"time":"${moscow.getFullYear()}-${pad(moscow.getMonth() + 1)}-${pad(moscow.getDate())} ${pad(moscow.getHours())}:${pad(moscow.getMinutes())}:${pad(moscow.getSeconds())}"`;
   },
   redact: {
     paths: SENSITIVE,
