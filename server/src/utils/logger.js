@@ -27,6 +27,11 @@ const SENSITIVE = [
 export const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
   base: { service: 'irbis-server' },
+  timestamp: () => {
+    const now = new Date();
+    const moscow = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (10800000));
+    return `,"time":"${moscow.toISOString()}"`;
+  },
   redact: {
     paths: SENSITIVE,
     censor: '[REDACTED]',
