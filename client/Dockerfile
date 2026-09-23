@@ -1,9 +1,11 @@
 # syntax=docker/dockerfile:1
-FROM node:24-alpine
+# NOTE: This file is NOT used in production. The nginx/Dockerfile builds the client
+# and serves the static build. This file remains for local dev reference only.
+
+FROM node:22-alpine
 
 WORKDIR /app
 
-# Lockfile + manifests first -> install layer is cached unless deps change
 COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
     npm ci
@@ -11,5 +13,3 @@ RUN --mount=type=cache,target=/root/.npm \
 COPY . .
 
 EXPOSE 5173
-
-CMD ["npm", "run", "dev", "--", "--host"]
