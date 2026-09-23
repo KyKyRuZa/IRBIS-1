@@ -13,7 +13,11 @@ const pool = {
       const normalized = Array.isArray(rows) ? rows : rows == null ? [] : [rows];
       return { rows: normalized, rowCount: normalized.length };
     } catch (err) {
-      getRequestLogger().error({ err, sql: text }, 'Database query failed');
+      const logData = { err };
+      if (process.env.NODE_ENV !== 'production') {
+        logData.sql = text;
+      }
+      getRequestLogger().error(logData, 'Database query failed');
       throw err;
     }
   },

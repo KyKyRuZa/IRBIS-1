@@ -1,6 +1,7 @@
 import pool from '../models/db.js';
 import path from 'path';
 import { childLogger } from '../utils/logger.js';
+import { validateUploadedFileType } from '../middleware/upload.js';
 
 const log = childLogger('upload');
 
@@ -8,6 +9,11 @@ export async function uploadCertificate(req, res, next) {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Файл обязателен' });
+    }
+    try {
+      await validateUploadedFileType(req.file);
+    } catch (err) {
+      return res.status(400).json({ error: err.message || 'Недопустимый тип файла' });
     }
     const { product_name, certificate_number, issue_date, expiry_date, item_type_id } = req.body;
     if (!product_name) {
@@ -30,6 +36,11 @@ export async function uploadSignature(req, res, next) {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Файл обязателен' });
+    }
+    try {
+      await validateUploadedFileType(req.file);
+    } catch (err) {
+      return res.status(400).json({ error: err.message || 'Недопустимый тип файла' });
     }
     const { issue_record_id } = req.body;
     if (!issue_record_id) {

@@ -1,3 +1,4 @@
+import fs from 'fs/promises';
 import pool from '../models/db.js';
 import { logger } from '../utils/logger.js';
 
@@ -127,11 +128,16 @@ export async function backupDatabase(req, res, next) {
     const dbUser = process.env.DB_USER || 'postgres';
     const dbPassword = process.env.DB_PASSWORD || 'postgres';
 
+    const pgPassPath = '/tmp/.pgpass';
+    await fs.writeFile(pgPassPath, `${dbHost}:${dbPort}:${dbName}:${dbUser}:${dbPassword}\n`, { mode: 0o600 });
+
     const date = new Date().toISOString().split('T')[0];
     const dumpPath = `/tmp/irbis_backup_${date}.sql`;
     const args = ['-h', dbHost, '-p', String(dbPort), '-U', dbUser, '-d', dbName, '-f', dumpPath];
 
-    await execFileAsync('pg_dump', args, { env: { ...process.env, PGPASSWORD: dbPassword } });
+    await execFileAsync('pg_dump', args, { env: { ...process.env, PGPASSFILE: pgPassPath } });
+
+    await fs.unlink(pgPassPath).catch(() => {});
 
     res.download(dumpPath, `irbis_backup_${date}.sql`, (err) => {
       unlink(dumpPath).catch(() => {});

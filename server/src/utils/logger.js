@@ -38,7 +38,11 @@ export const logger = pino({
   },
   formatters: {
     err(error) {
-      return { err: { type: error.type, message: error.message, stack: error.stack } };
+      const data = { err: { type: error.type, message: error.message } };
+      if (process.env.NODE_ENV !== 'production') {
+        data.err.stack = error.stack;
+      }
+      return data;
     },
   },
   transport: isPretty

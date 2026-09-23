@@ -140,7 +140,7 @@ export async function changePassword(req, res, next) {
       log.warn({ userId }, 'Change password failed: invalid old password');
       return res.status(401).json({ error: 'Invalid old password' });
     }
-    const hash = await bcrypt.hash(new_password, 10);
+    const hash = await bcrypt.hash(new_password, 12);
     await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, userId]);
     log.info({ userId }, 'Password changed');
     res.json({ message: 'Password changed successfully' });

@@ -1,6 +1,7 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { fileTypeFromBuffer } from 'file-type';
 import { childLogger } from '../utils/logger.js';
 
 const log = childLogger('upload');
@@ -9,6 +10,14 @@ const uploadDir = path.join(process.env.UPLOAD_DIR || path.join(process.cwd(), '
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
+
+const ALLOWED_MAGIC_TYPES = new Set([
+  'image/png',
+  'image/jpeg',
+  'image/gif',
+  'image/webp',
+  'application/pdf',
+]);
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -44,3 +53,12 @@ export const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter
 });
+
+export async function validateUploadedFileType(file) {
+  const buffer = await fs.promises.readFile(file.path);
+  const detected = await fileTypeFromBuffer(buffer);
+  if (!detected || !ALLOWED_MAGIC_TYPES.has(detected.mime)) {
+    await fs.promises.unlink(file.path).catch(() => {});
+    throw new Error('Uploaded file type does not match its extension');
+  }
+}

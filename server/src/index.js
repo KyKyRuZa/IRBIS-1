@@ -29,6 +29,11 @@ import rateLimit from 'express-rate-limit';
 const isProd = process.env.NODE_ENV === 'production';
 const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === 'true';
 
+if (isProd && rateLimitDisabled) {
+  logger.error('RATE_LIMIT_DISABLED=true is not allowed in production');
+  process.exit(1);
+}
+
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
@@ -93,10 +98,10 @@ app.use(securityHeaders);
 app.use(cookiesMiddleware);
 app.use(express.json());
 app.use(requestLogger);
-app.use('/uploads', express.static('uploads', {
+app.use('/uploads', authMiddleware, express.static('uploads', {
   setHeaders: (res) => res.setHeader('X-Content-Type-Options', 'nosniff'),
 }));
-app.use('/certs', express.static('certs', {
+app.use('/certs', authMiddleware, express.static('certs', {
   setHeaders: (res) => res.setHeader('X-Content-Type-Options', 'nosniff'),
 }));
 
