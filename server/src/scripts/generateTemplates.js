@@ -117,40 +117,5 @@ async function generateEmployeeCardTemplate() {
   console.log('Employee card template generated');
 }
 
-async function generateConsumablesTemplate() {
-  const children = [
-    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'ВЕДОМОСТЬ ВЫДАЧИ РАСХОДНЫХ (ДЕРМАТОЛОГИЧЕСКИХ) СИЗ', font: 'Times New Roman', size: 26, bold: true })] }),
-    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: '{period_label}', font: 'Times New Roman', size: 24 })] }),
-  ];
-
-  const tableHeader = ['Наименование СИЗ', 'Модель/марка', 'Дата выдачи', 'Количество', 'Лично/дозатор', 'Подпись получившего', 'Дата возврата', 'Количество возвращено', 'Подпись сдавшего', 'Акт списания (дата, номер)'];
-  const columnWidths = [14, 12, 12, 6, 8, 10, 10, 8, 8, 6];
-
-  const months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь'];
-
-  for (let m = 0; m < months.length; m++) {
-    children.push(new Paragraph({ children: [new TextRun({ text: months[m], font: 'Times New Roman', size: 24, bold: true })] }));
-    children.push(new Table({
-      width: { size: 100, type: WidthType.PERCENTAGE },
-      borders: createTableBorder(),
-      rows: [
-        new TableRow({ children: tableHeader.map((h, i) => buildHeaderCell(h, columnWidths[i])) }),
-        ...Array.from({ length: 4 }, () => new TableRow({
-          children: [`{item_${m}_name}`, `{item_${m}_model}`, `{item_${m}_date}`, `{item_${m}_qty}`, 'лично', `{item_${m}_sign}`, '‒', '‒', '', ''].map((c, i) => makeCell(c, { width: columnWidths[i] }))
-        }))
-      ]
-    }));
-    children.push(emptyP());
-  }
-
-  const doc = new Document({ sections: [{ properties: {}, children }] });
-  const buffer = await Packer.toBuffer(doc);
-  const templatesDir = path.join(__dirname, '..', 'templates');
-  if (!fs.existsSync(templatesDir)) fs.mkdirSync(templatesDir, { recursive: true });
-  fs.writeFileSync(path.join(templatesDir, 'consumables-template.docx'), buffer);
-  console.log('Consumables template generated');
-}
-
 await generateEmployeeCardTemplate();
-await generateConsumablesTemplate();
 console.log('All templates generated successfully');
