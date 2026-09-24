@@ -4,24 +4,20 @@ export function useResource(service, params = {}) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const paramsRef = useRef(params);
-
-  useEffect(() => {
-    paramsRef.current = params;
-  });
+  const paramsKey = JSON.stringify(params);
 
   const fetch = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const result = await service(paramsRef.current);
+      const result = await service(params);
       setData(Array.isArray(result) ? result : [result]);
     } catch (e) {
       setError(e.message || 'Ошибка загрузки');
     } finally {
       setLoading(false);
     }
-  }, [service]);
+  }, [service, paramsKey]);
 
   useEffect(() => {
     fetch();

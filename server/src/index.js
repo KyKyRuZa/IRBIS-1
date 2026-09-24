@@ -139,6 +139,7 @@ app.use((req, res) => {
 
 process.on('unhandledRejection', (reason, promise) => {
   logger.error({ reason, promise }, 'Unhandled promise rejection');
+  process.exit(1);
 });
 
 process.on('uncaughtException', (err) => {
@@ -162,25 +163,30 @@ const gracefulShutdown = async () => {
 process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
 
-if (process.env.NODE_ENV !== 'test') {
-  initDB().then(() => {
-    updateExpiredIssueRecordsStatus()
-      .then(() => updateCertificateStatus())
-      .then(() => aggregateNotifications())
-      .catch(err => logger.error(err, 'Initial startup failed'));
-    cron.schedule('0 8 * * *', async () => {
-      try {
-        await updateExpiredIssueRecordsStatus();
-        await updateCertificateStatus();
-        await aggregateNotifications();
-      } catch (err) {
-        logger.error(err, 'Scheduled job failed');
-      }
-    });
-    app.listen(PORT, () => {
-      logger.info(`Server running on port ${PORT}`);
-    });
-  });
-}
+  if (process.env.NODE_ENV !== 'test') {
+    initDB()
+      .then(() => {
+        updateExpiredIssueRecordsStatus()
+          .then(() => updateCertificateStatus())
+          .then(() => aggregateNotifications())
+          .catch(err => logger.error(err, 'Initial startup failed'));
+        cron.schedule('0 8 * * *', async () => {
+          try {
+            await updateExpiredIssueRecordsStatus();
+            await updateCertificateStatus();
+            await aggregateNotifications();
+          } catch (err) {
+            logger.error(err, 'Scheduled job failed');
+          }
+        });
+        app.listen(PORT, () => {
+          logger.info(`Server running on port ${PORT}`);
+        });
+      })
+      .catch(err => {
+        logger.error(err, 'Failed to initialize database');
+        process.exit(1);
+      });
+  }
 
 export default app;

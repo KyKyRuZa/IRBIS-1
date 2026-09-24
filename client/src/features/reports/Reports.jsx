@@ -169,10 +169,11 @@ export default function Reports() {
 
   const handleGroupConsumables = async () => {
     setShowExportMenu(false);
-    const siteId = prompt('Введите ID объекта для групповой ведомости расходников:');
-    if (siteId) {
-      download(() => exportsService.exportGroupConsumables(siteId), `Групповая ведомость расходников ${new Date().toLocaleDateString('ru-RU')}.xlsx`);
+    if (!filters.site_id) {
+      alert('Выберите объект в фильтре «Объект» для формирования групповой ведомости расходников.');
+      return;
     }
+    download(() => exportsService.exportGroupConsumables(filters.site_id), `Групповая ведомость расходников ${new Date().toLocaleDateString('ru-RU')}.docx`);
   };
 
   const handleAllCards = async () => {

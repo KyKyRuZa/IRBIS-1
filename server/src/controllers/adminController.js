@@ -117,10 +117,8 @@ export async function markAllNotificationsRead(req, res, next) {
 
 export async function backupDatabase(req, res, next) {
   try {
-    const { execFile } = await import('child_process');
+    const { spawn } = await import('child_process');
     const { unlink } = await import('fs/promises');
-    const { promisify } = await import('util');
-    const execFileAsync = promisify(execFile);
 
     const dbHost = process.env.DB_HOST || 'localhost';
     const dbPort = process.env.DB_PORT || 5432;
@@ -132,17 +130,27 @@ export async function backupDatabase(req, res, next) {
     await fs.writeFile(pgPassPath, `${dbHost}:${dbPort}:${dbName}:${dbUser}:${dbPassword}\n`, { mode: 0o600 });
 
     const date = new Date().toISOString().split('T')[0];
-    const dumpPath = `/tmp/irbis_backup_${date}.sql`;
-    const args = ['-h', dbHost, '-p', String(dbPort), '-U', dbUser, '-d', dbName, '-f', dumpPath];
+    const args = ['-h', dbHost, '-p', String(dbPort), '-U', dbUser, '-d', dbName];
 
-    await execFileAsync('pg_dump', args, { env: { ...process.env, PGPASSFILE: pgPassPath } });
+    res.setHeader('Content-Type', 'application/sql');
+    res.setHeader('Content-Disposition', `attachment; filename="irbis_backup_${date}.sql"`);
 
-    await fs.unlink(pgPassPath).catch(() => {});
+    const pgdump = spawn('pg_dump', args, { env: { ...process.env, PGPASSFILE: pgPassPath } });
 
-    res.download(dumpPath, `irbis_backup_${date}.sql`, (err) => {
-      unlink(dumpPath).catch(() => {});
-      if (err) {
-        logger.error(err, 'Backup download error');
+    pgdump.stdout.pipe(res);
+
+    pgdump.on('close', async (code) => {
+      await unlink(pgPassPath).catch(() => {});
+      if (code !== 0) {
+        logger.error({ code }, 'pg_dump exited with non-zero code');
+      }
+    });
+
+    pgdump.on('error', async (err) => {
+      await unlink(pgPassPath).catch(() => {});
+      logger.error(err, 'Failed to start pg_dump');
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Backup failed' });
       }
     });
   } catch (error) {

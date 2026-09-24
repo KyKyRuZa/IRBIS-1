@@ -6,6 +6,21 @@ function badRequest(message) {
   return error;
 }
 
+async function calculateExpiryAndReorder(issueDate, wearTime, itemTypeId) {
+  const effectiveWear = wearTime ? Number(wearTime) : null;
+  let expiryDate = null;
+  let reorderDate = null;
+  if (effectiveWear && issueDate) {
+    expiryDate = new Date(issueDate);
+    expiryDate.setMonth(expiryDate.getMonth() + effectiveWear);
+    expiryDate = expiryDate.toISOString().split('T')[0];
+    const reorder = new Date(expiryDate);
+    reorder.setMonth(reorder.getMonth() - 2);
+    reorderDate = reorder.toISOString().split('T')[0];
+  }
+  return { expiryDate, reorderDate };
+}
+
 export async function createIssueRecord(employeeId, itemTypeId, quantity, issueDate, expiryDate, certificateId, reorderDate, wearTimeOverride, notes, issueMethod, signaturePath, signatureDate) {
   const result = await pool.query(
     `INSERT INTO issue_records (employee_id, item_type_id, quantity, issue_date, expiry_date, certificate_id, reorder_date, wear_time_override_months, notes, issue_method, signature_path, signature_date) 
@@ -168,13 +183,9 @@ export async function updateIssueRecord(id, data) {
     const item = await pool.query('SELECT * FROM item_types WHERE id=$1', [itemTypeId]);
     const effectiveWear = wearTime ? Number(wearTime) : (item.rows[0]?.default_wear_time_months || null);
     const issueDate = patch.issue_date ?? current.issue_date;
-    let expiryDate = null;
-    if (effectiveWear && issueDate) {
-      expiryDate = new Date(issueDate);
-      expiryDate.setMonth(expiryDate.getMonth() + effectiveWear);
-    }
-    patch.expiry_date = expiryDate ? expiryDate.toISOString().split('T')[0] : null;
-    patch.reorder_date = expiryDate ? new Date(new Date(expiryDate).setMonth(new Date(expiryDate).getMonth() - 2)).toISOString().split('T')[0] : null;
+    const { expiryDate, reorderDate: computedReorderDate } = await calculateExpiryAndReorder(issueDate, effectiveWear);
+    patch.expiry_date = expiryDate;
+    patch.reorder_date = computedReorderDate;
   }
 
   const columns = Object.keys(patch);
