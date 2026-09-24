@@ -178,7 +178,7 @@ const seedIssueRecords = async (employees, itemTypes, certs) => {
   };
   const records = [];
   const statuses = ['issued', 'issued', 'issued', 'returned', 'disposed', 'due_for_disposal'];
-  const methods = ['norm', 'norm', 'norm', 'additional', 'replacement'];
+  const methods = ['personal', 'personal', 'personal', 'dosator', 'personal'];
   for (let i = 0; i < employees.length; i++) {
     const emp = employees[i];
     for (let j = 0; j < itemTypes.length; j++) {

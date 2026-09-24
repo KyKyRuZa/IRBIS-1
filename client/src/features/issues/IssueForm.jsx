@@ -75,7 +75,7 @@ export default function IssueForm() {
     toggleSort,
     resetFilters
   } = useTableControls({
-    filters: { employee_id: '', site_id: '', item_type_id: '', status: '', date_from: '', date_to: '' },
+    filters: { employee_id: '', issue_method: '', item_type_id: '', status: '', date_from: '', date_to: '' },
     sort: { key: 'issue_date', dir: 'desc' }
   });
 
@@ -90,7 +90,7 @@ export default function IssueForm() {
     search,
     filters: {
       employee_id: filters.employee_id,
-      site_id: filters.site_id,
+      issue_method: filters.issue_method,
       item_type_id: filters.item_type_id,
       status: filters.status
     },
@@ -99,7 +99,7 @@ export default function IssueForm() {
   });
 
   const hasActiveFilters = Boolean(search) ||
-    filters.employee_id !== '' || filters.site_id !== '' ||
+    filters.employee_id !== '' || filters.issue_method !== '' ||
     filters.item_type_id !== '' || filters.status !== '' ||
     filters.date_from !== '' || filters.date_to !== '';
 
@@ -409,11 +409,10 @@ export default function IssueForm() {
                 <option key={emp.id} value={String(emp.id)}>{emp.full_name}</option>
               ))}
             </FilterSelect>
-            <FilterSelect label="Объект" value={filters.site_id} onChange={(value) => setFilter('site_id', value)}>
+            <FilterSelect label="Способ выдачи" value={filters.issue_method} onChange={(value) => setFilter('issue_method', value)}>
               <option value="">Все</option>
-              {sites.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
+              <option value={ISSUE_METHOD_VALUES[0]}>{ISSUE_METHODS[ISSUE_METHOD_VALUES[0]]}</option>
+              <option value={ISSUE_METHOD_VALUES[1]}>{ISSUE_METHODS[ISSUE_METHOD_VALUES[1]]}</option>
             </FilterSelect>
             <FilterSelect label="Наименование" value={filters.item_type_id} onChange={(value) => setFilter('item_type_id', value)}>
               <option value="">Все</option>
@@ -459,6 +458,7 @@ export default function IssueForm() {
                     <tr>
                       <SortableTh label="Сотрудник" sortKey="full_name" sort={sort} onSort={toggleSort} />
                       <SortableTh label="Наименование" sortKey="item_type_name" sort={sort} onSort={toggleSort} />
+                      <SortableTh label="Способ выдачи" sortKey="issue_method" sort={sort} onSort={toggleSort} />
                       <SortableTh label="Кол-во" sortKey="quantity" sort={sort} onSort={toggleSort} />
                       <SortableTh label="Срок годности" sortKey="expiry_date" sort={sort} onSort={toggleSort} />
                       <SortableTh label="Статус" sortKey="status" sort={sort} onSort={toggleSort} />
@@ -470,6 +470,7 @@ export default function IssueForm() {
                       <tr key={record.id}>
                         <td>{record.full_name}</td>
                         <td>{record.item_type_name}</td>
+                        <td>{ISSUE_METHODS[record.issue_method] || '-'}</td>
                         <td>{record.quantity}</td>
                         <td>{record.expiry_date ? new Date(record.expiry_date).toLocaleDateString() : '-'}</td>
                          <td>

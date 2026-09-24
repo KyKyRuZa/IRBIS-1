@@ -168,7 +168,7 @@ export async function batchIssueSingle(req, res, next) {
 
 export async function listIssues(req, res, next) {
   try {
-    const { employee_id, site_id, item_type_id, status, date_from, date_to } = req.query;
+    const { employee_id, site_id, item_type_id, status, date_from, date_to, issue_method } = req.query;
     let query = `
       SELECT r.*, e.full_name, e.position, e.site_id, it.name as item_type_name, it.category, c.certificate_number
       FROM issue_records r
@@ -203,6 +203,10 @@ export async function listIssues(req, res, next) {
     if (date_to) {
       query += ` AND r.issue_date <= $${paramIndex++}`;
       params.push(date_to);
+    }
+    if (issue_method) {
+      query += ` AND r.issue_method = $${paramIndex++}`;
+      params.push(issue_method.toLowerCase());
     }
 
     query += ' ORDER BY r.issue_date DESC, r.id DESC';
