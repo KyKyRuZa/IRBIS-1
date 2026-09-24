@@ -136,6 +136,12 @@ export async function exportToExcel(req, res, next) {
       });
     });
 
+    worksheet.eachRow(row => {
+      row.eachCell(cell => {
+        cell.font = { name: 'Times New Roman', size: 11 };
+      });
+    });
+
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename=irbis-act-vydachi.xlsx');
     await workbook.xlsx.write(res);
@@ -208,13 +214,19 @@ export async function exportDemandReport(req, res, next) {
         no: idx + 1,
         item: r.item_name,
         category: categories[r.category] || r.category,
-        unit: r.unit || '-',
+        unit: r.unit || '',
         employees: Number(r.active_employees),
         issued: Number(r.issued_qty),
         returned: Number(r.returned_qty),
         in_use: inUse,
         norm: normQty,
         demand: demand
+      });
+    });
+
+    worksheet.eachRow(row => {
+      row.eachCell(cell => {
+        cell.font = { name: 'Times New Roman', size: 11 };
       });
     });
 
@@ -278,7 +290,7 @@ export async function exportIssuesReport(req, res, next) {
         formatDate(r.issue_date),
         formatDate(r.expiry_date),
         String(r.quantity || 1),
-        r.status === 'issued' ? 'Выдано' : r.status === 'disposed' ? 'Списано' : r.status === 'returned' ? 'Возвращено' : r.status || ''
+        r.status === 'issued' ? 'Выдано' : r.status === 'disposed' ? 'Списано' : r.status === 'returned' ? 'Возвращено' : r.status === 'due_for_disposal' ? 'К списанию' : r.status || ''
       ])
     ];
 
@@ -294,7 +306,7 @@ export async function exportIssuesReport(req, res, next) {
           new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 200 }, children: [new TextRun({ text: 'ОТЧЁТ О ВЫДАЧЕ СИЗ', font: 'Times New Roman', size: 28, bold: true })] }),
           new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 120 }, children: [new TextRun({ text: 'АЗС ИРБИС', font: 'Times New Roman', size: 24 })] }),
           new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 300 }, children: [new TextRun({ text: `Дата формирования: ${formatDate(new Date().toISOString())}`, font: 'Times New Roman', size: 22, italics: true })] }),
-          buildTable(tableRows, [5, 16, 10, 14, 12, 18, 10, 11, 11, 7, 8]),
+          buildTable(tableRows, [8, 16, 10, 14, 12, 18, 10, 11, 11, 7, 8]),
           emptyP(),
           new Paragraph({ children: [new TextRun({ text: `Всего записей: ${rows.length}`, font: 'Times New Roman', size: 22, italics: true })] }),
         ]
@@ -399,9 +411,9 @@ export async function exportItemsReport(req, res, next) {
         idx + 1,
         r.name || '',
         categories[r.category] || r.category || '',
-        r.unit || '-',
-        String(r.default_wear_time_months || '-'),
-        seasonality[r.seasonality] || r.seasonality || '-',
+        r.unit || '',
+        String(r.default_wear_time_months || ''),
+        seasonality[r.seasonality] || r.seasonality || '',
         r.requires_certificate ? 'Да' : 'Нет'
       ])
     ];
