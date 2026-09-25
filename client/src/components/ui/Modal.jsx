@@ -15,7 +15,7 @@ export default function Modal({ isOpen, onClose, title, children, size }) {
   if (!isOpen) return null;
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
+    <div className={styles.overlay}>
       <div className={`${styles.content} ${size === 'compact' ? styles.compact : ''}`} onClick={(e) => e.stopPropagation()}>
         {title && <h3 className={styles.header}>{title}</h3>}
         <button className={styles.closeButton} onClick={onClose} aria-label="Закрыть">
