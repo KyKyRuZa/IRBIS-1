@@ -129,6 +129,26 @@
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.sheetSelect {
+  width: 240px;
+  max-width: 100%;
+}
+
+/* Одна строка: титульный лист + выбор листа + печать + архив */
+.printRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.printRow .btn,
+.printRow .form-control {
+  flex: 0 0 auto;
 }
 
 .dataTable {
@@ -190,6 +210,22 @@
   .exportActions {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .printRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .printRow .btn,
+  .printRow .form-control {
+    width: 100%;
+    max-width: none;
+  }
+
+  .printRow .sheetSelect {
+    width: 100%;
+    max-width: none;
   }
 
   .exportActions .btn {

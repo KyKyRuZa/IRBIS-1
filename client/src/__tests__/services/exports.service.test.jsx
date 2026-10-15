@@ -15,6 +15,9 @@ vi.mock('@/lib/api.js', () => {
 
 const specs = [
   { name: 'exportEmployeeCard', http: 'get', args: [1], expected: ['/api/export/employee-card/1', { responseType: 'blob' }], sample: 'blob' },
+  { name: 'exportEmployeeSheet', http: 'get', args: [1, '2026-04-02'], expected: ['/api/export/employee-card/1', { params: { part: 'sheet', issue_date: '2026-04-02' }, responseType: 'blob' }], sample: 'blob' },
+  { name: 'exportEmployeeSheets', http: 'get', args: [1, 2026], expected: ['/api/export/employee-card/1/sheets', { params: { year: 2026 }, responseType: 'blob' }], sample: 'blob' },
+  { name: 'exportIssueSheets', http: 'get', args: [{ issue_date: '2026-04-02', position: 'Оператор' }], expected: ['/api/export/issue-sheets', { params: { issue_date: '2026-04-02', position: 'Оператор' }, responseType: 'blob' }], sample: 'blob' },
   { name: 'exportConsumables', http: 'get', args: [1, 'second'], expected: ['/api/export/consumables/1', { params: { period: 'second' }, responseType: 'blob' }], sample: 'blob' },
   { name: 'exportAllCards', http: 'get', args: [], expected: ['/api/export/all-cards', { responseType: 'blob' }], sample: 'blob' },
   { name: 'exportIssuesReport', http: 'get', args: [], expected: ['/api/export/issues-report', { responseType: 'blob' }], sample: 'blob' },

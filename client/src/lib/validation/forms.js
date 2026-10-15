@@ -13,6 +13,7 @@ export const issueSchema = z.object({
 
 export const issueBatchSchema = z.object({
   site_id: z.string().min(1, 'Выберите объект'),
+  position: z.string().optional().nullable(),
   item_type_id: z.string().min(1, 'Выберите наименование'),
   quantity: z.coerce.number({ error: (issue) => issue.input === undefined || issue.input === '' ? 'Количество должно быть числом' : 'Количество должно быть числом' }).int('Количество должно быть целым').positive('Количество должно быть больше 0'),
   certificate_id: z.string().optional().nullable(),

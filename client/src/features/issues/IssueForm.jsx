@@ -5,7 +5,9 @@ import { sitesService } from '@/lib/services/sites.service.js';
 import { certificatesService } from '@/lib/services/certificates.service.js';
 import { issuesService } from '@/lib/services/issues.service.js';
 import { uploadService } from '@/lib/services/upload.service.js';
+import { exportsService } from '@/lib/services/exports.service.js';
 import { useAuth } from '@/hooks/useAuth.js';
+import { useExport } from '@hooks/useExport.js';
 import { useLocation } from 'react-router-dom';
 import { ISSUE_STATUSES, ISSUE_STATUS_LABELS } from '@/lib/constants/issue-statuses.js';
 import { ISSUE_METHODS, ISSUE_METHOD_VALUES } from '@/lib/constants/issue-methods.js';
@@ -52,6 +54,8 @@ export default function IssueForm() {
   const [lastSignature, setLastSignature] = useState(null);
   const [issueMode, setIssueMode] = useState('group');
   const [selectedSite, setSelectedSite] = useState('');
+  const [groupPosition, setGroupPosition] = useState('');
+  const [printableIssue, setPrintableIssue] = useState(null);
   const [signatureFile, setSignatureFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [disposeId, setDisposeId] = useState(null);
@@ -65,6 +69,7 @@ export default function IssueForm() {
 
   const form = useFormState(formInitialState);
   const { data: records, loading, error, refetch: refetchRecords } = useResource(issuesService.list);
+  const { download: downloadExport, exporting: exportingSheet } = useExport();
 
   const {
     search,
@@ -121,7 +126,42 @@ export default function IssueForm() {
     setCurrentPage(1);
   }, [search, filters, sort, records]);
 
-  const handleSiteChange = (siteId) => setSelectedSite(siteId);
+  const handleSiteChange = (siteId) => {
+    setSelectedSite(siteId);
+    setGroupPosition('');
+  };
+
+  // Должности сотрудников выбранного объекта — для групповой выдачи по должности.
+  const sitePositions = useMemo(() => {
+    if (!selectedSite) return [];
+    const positions = new Set(
+      employees
+        .filter((emp) => String(emp.site_id) === String(selectedSite) && emp.position)
+        .map((emp) => emp.position)
+    );
+    return [...positions];
+  }, [employees, selectedSite]);
+
+  // После создания выдачи предлагаем сразу распечатать лист(ы) выдачи:
+  // для групповой — по одному листу на каждого сотрудника зачисления.
+  const offerSheetPrint = (record, mode) => {
+    if (!record?.issue_date) return;
+    setPrintableIssue({
+      issue_date: (record.issue_date || '').slice(0, 10),
+      employee_id: record.employee_id,
+      mode,
+    });
+  };
+
+  const printSheets = () => {
+    if (!printableIssue) return;
+    const { issue_date, employee_id, mode } = printableIssue;
+    if (mode === 'group') {
+      downloadExport(() => exportsService.exportIssueSheets({ issue_date }), `Листы выдачи ${issue_date}.zip`);
+    } else {
+      downloadExport(() => exportsService.exportEmployeeSheet(employee_id, issue_date), `Лист выдачи ${employee_id} ${issue_date}.docx`);
+    }
+  };
 
   const addBatchItem = () => setBatchItems(prev => [...prev, emptyBatchItem()]);
   const removeBatchItem = (index) => setBatchItems(prev => prev.filter((_, i) => i !== index));
@@ -221,7 +261,7 @@ export default function IssueForm() {
         };
         let payload;
         if (issueMode === 'group') {
-          const result = issueBatchSchema.safeParse({ site_id: selectedSite, ...baseData });
+          const result = issueBatchSchema.safeParse({ site_id: selectedSite, ...baseData, position: groupPosition || undefined });
           if (!result.success) {
             const fieldError = {};
             (result.error?.issues || []).forEach((err) => {
@@ -263,6 +303,7 @@ export default function IssueForm() {
       if (record) {
         const modeLabel = issueMode === 'group' ? 'Групповая выдача' : issueMode === 'batch-single' ? 'Несколько позиций' : 'Одиночная выдача';
         showSuccess(`${modeLabel} создана${record.id ? `, ID ${record.id}` : ''}`);
+        offerSheetPrint(record, issueMode === 'group' ? 'group' : 'single');
       }
       }
 
@@ -372,6 +413,7 @@ export default function IssueForm() {
     setLastSignature(null);
     setIssueMode('group');
     setSelectedSite('');
+    setGroupPosition('');
     setBatchItems([]);
     setFieldErrors({});
   };
@@ -396,6 +438,22 @@ export default function IssueForm() {
         </div>
       </div>
       <div className={styles.container}>
+        {printableIssue && (
+          <div className="card">
+            <div className={styles.printBanner}>
+              <span>
+                Выдача от {new Date(printableIssue.issue_date).toLocaleDateString()} создана.
+                Распечатать {printableIssue.mode === 'group' ? 'листы выдачи по сотрудникам (zip)' : 'лист выдачи'}?
+              </span>
+              <div className={styles.printBannerActions}>
+                <button className="btn" disabled={exportingSheet} onClick={printSheets}>
+                  {exportingSheet ? 'Формирование...' : 'Распечатать'}
+                </button>
+                <button className="btn btn-secondary" onClick={() => setPrintableIssue(null)}>Закрыть</button>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="card">
           <div className="table-controls">
             <SearchBox
@@ -461,6 +519,7 @@ export default function IssueForm() {
                       <SortableTh label="Способ выдачи" sortKey="issue_method" sort={sort} onSort={toggleSort} />
                       <SortableTh label="Кол-во" sortKey="quantity" sort={sort} onSort={toggleSort} />
                       <SortableTh label="Срок годности" sortKey="expiry_date" sort={sort} onSort={toggleSort} />
+                      <th>Лист карточки</th>
                       <SortableTh label="Статус" sortKey="status" sort={sort} onSort={toggleSort} />
                       <th>Действия</th>
                     </tr>
@@ -473,6 +532,7 @@ export default function IssueForm() {
                         <td>{ISSUE_METHODS[record.issue_method] || '-'}</td>
                         <td>{record.quantity}</td>
                         <td>{record.expiry_date ? new Date(record.expiry_date).toLocaleDateString() : '-'}</td>
+                        <td>{record.sheet_number ?? '-'}</td>
                          <td>
                            {record.status === ISSUE_STATUSES.issued ? (
                              <span className="badge badge-success">{ISSUE_STATUS_LABELS.issued}</span>
@@ -540,6 +600,26 @@ export default function IssueForm() {
                     ))}
                   </select>
                   {fieldErrors.site_id && <div id="site-error" className={styles.fieldError} role="alert">{fieldErrors.site_id}</div>}
+                </div>
+            )}
+            {issueMode === 'group' && selectedSite && (
+                <div className={`form-group ${styles.field}`}>
+                  <label>Должность</label>
+                  <select
+                    className="form-control"
+                    value={groupPosition}
+                    onChange={(e) => setGroupPosition(e.target.value)}
+                  >
+                    <option value="">Все должности объекта</option>
+                    {sitePositions.map((position) => (
+                      <option key={position} value={position}>{position}</option>
+                    ))}
+                  </select>
+                  {groupPosition && (
+                    <small className={styles.signatureHint}>
+                      Выдача будет создана только для должности «{groupPosition}»
+                    </small>
+                  )}
                 </div>
             )}
             {(issueMode === 'single' || issueMode === 'batch-single') && (
@@ -710,9 +790,12 @@ export default function IssueForm() {
                 ? 'Загрузка...'
                 : (editingRecord
                   ? 'Сохранить'
-                  : (issueMode === 'group'
-                    ? `Выдать всем сотрудникам объекта (${selectedSite ? sites.find(s => s.id == selectedSite)?.name : 'объект не выбран'})`
-                    : issueMode === 'batch-single'
+                   : (issueMode === 'group'
+                     ? `Выдать сотрудникам (${[
+                         selectedSite ? sites.find(s => s.id == selectedSite)?.name : 'объект не выбран',
+                         groupPosition || 'все должности',
+                       ].join(' / ')})`
+                     : issueMode === 'batch-single'
                       ? 'Выдать все позиции сотруднику'
                       : 'Выдать'))}
             </button>

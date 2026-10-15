@@ -6,6 +6,17 @@ function badRequest(message) {
   return error;
 }
 
+// Номер листа выдачи в карточке: титульный лист = 1, поэтому к количеству
+// различных дат выдачи сотрудника в этом календарном году до текущей даты
+// прибавляется 1. С января нумерация начинается заново.
+export const SHEET_NUMBER_SELECT = `
+  (SELECT COUNT(DISTINCT r2.issue_date)::int + 1
+     FROM issue_records r2
+    WHERE r2.employee_id = r.employee_id
+      AND EXTRACT(YEAR FROM r2.issue_date) = EXTRACT(YEAR FROM r.issue_date)
+      AND r2.issue_date <= r.issue_date) AS sheet_number
+`;
+
 async function calculateExpiryAndReorder(issueDate, wearTime, itemTypeId) {
   const effectiveWear = wearTime ? Number(wearTime) : null;
   let expiryDate = null;
@@ -32,7 +43,8 @@ export async function createIssueRecord(employeeId, itemTypeId, quantity, issueD
 
 export async function getAllIssueRecords() {
   const result = await pool.query(`
-    SELECT r.*, e.full_name, e.position, e.site_id, it.name as item_type_name, it.category, c.certificate_number
+    SELECT r.*, e.full_name, e.position, e.site_id, it.name as item_type_name, it.category, c.certificate_number,
+      ${SHEET_NUMBER_SELECT}
     FROM issue_records r
     JOIN employees e ON r.employee_id = e.id
     JOIN item_types it ON r.item_type_id = it.id
@@ -44,7 +56,8 @@ export async function getAllIssueRecords() {
 
 export async function getIssueRecordsByEmployee(employeeId) {
   const result = await pool.query(`
-    SELECT r.*, it.name as item_type_name, it.category, c.certificate_number
+    SELECT r.*, it.name as item_type_name, it.category, c.certificate_number,
+      ${SHEET_NUMBER_SELECT}
     FROM issue_records r
     JOIN item_types it ON r.item_type_id = it.id
     LEFT JOIN certificates c ON r.certificate_id = c.id
@@ -52,6 +65,89 @@ export async function getIssueRecordsByEmployee(employeeId) {
     ORDER BY r.issue_date DESC
   `, [employeeId]);
   return result.rows;
+}
+
+// Позиции одной выдачи (события) — всё, что выдано сотруднику в одну дату.
+// Лист выдачи печатается по событию и содержит только эти позиции.
+export async function getIssueRecordsForEvent(employeeId, issueDate) {
+  const result = await pool.query(`
+    SELECT r.*, it.name as item_type_name, it.category, it.unit, c.certificate_number
+    FROM issue_records r
+    JOIN item_types it ON r.item_type_id = it.id
+    LEFT JOIN certificates c ON r.certificate_id = c.id
+    WHERE r.employee_id = $1 AND r.issue_date = $2
+    ORDER BY r.id ASC
+  `, [employeeId, issueDate]);
+  return result.rows;
+}
+
+// События выдачи сотрудника за календарный год с номерами листов.
+// Титульный лист = 1, поэтому первая выдача года — лист 2; с января нумерация сбрасывается.
+export async function getIssueEventsByEmployee(employeeId, year) {
+  const result = await pool.query(`
+    SELECT r.*, it.name as item_type_name, it.category, it.unit, c.certificate_number
+    FROM issue_records r
+    JOIN item_types it ON r.item_type_id = it.id
+    LEFT JOIN certificates c ON r.certificate_id = c.id
+    WHERE r.employee_id = $1 AND EXTRACT(YEAR FROM r.issue_date) = $2
+    ORDER BY r.issue_date ASC, r.id ASC
+  `, [employeeId, year]);
+
+  const events = [];
+  const byDate = new Map();
+  for (const row of result.rows) {
+    const key = new Date(row.issue_date).toISOString().slice(0, 10);
+    if (!byDate.has(key)) {
+      const event = { issue_date: key, sheetNumber: events.length + 2, items: [] };
+      byDate.set(key, event);
+      events.push(event);
+    }
+    byDate.get(key).items.push(row);
+  }
+  return events;
+}
+
+// Номер листа выдачи в карточке: титульный лист = 1, поэтому первая выдача
+// календарного года — лист 2. С января нумерация сбрасывается.
+export async function getIssueSheetNumber(employeeId, issueDate) {
+  const result = await pool.query(`
+    SELECT COUNT(DISTINCT r2.issue_date)::int + 1 AS sheet_number
+    FROM issue_records r2
+    WHERE r2.employee_id = $1
+      AND EXTRACT(YEAR FROM r2.issue_date) = EXTRACT(YEAR FROM $2::date)
+      AND r2.issue_date <= $2::date
+  `, [employeeId, issueDate]);
+  return Number(result.rows[0]?.sheet_number || 2);
+}
+
+// Сотрудники, у которых есть выдача в указанную дату (для групповой печати листов).
+export async function getEmployeesWithIssueOnDate(issueDate, { position = null, siteId = null } = {}) {
+  const result = await pool.query(`
+    SELECT DISTINCT e.*, s.name as site_name, s.responsible_person as site_responsible
+    FROM issue_records r
+    JOIN employees e ON r.employee_id = e.id
+    LEFT JOIN sites s ON e.site_id = s.id
+    WHERE r.issue_date = $1
+      AND ($2::text IS NULL OR e.position = $2)
+      AND ($3::int IS NULL OR e.site_id = $3)
+    ORDER BY e.full_name
+  `, [issueDate, position, siteId]);
+  return result.rows;
+}
+
+// Самая свежая дата выдачи среди отфильтрованных записей — по умолчанию
+// групповая печать берёт последнюю выдачу («только что выдала и печатаю листочки»).
+export async function getLatestIssueDate({ position = null, siteId = null } = {}) {
+  const result = await pool.query(`
+    SELECT MAX(r.issue_date) as issue_date
+    FROM issue_records r
+    JOIN employees e ON r.employee_id = e.id
+    WHERE ($1::text IS NULL OR e.position = $1)
+      AND ($2::int IS NULL OR e.site_id = $2)
+  `, [position, siteId]);
+  return result.rows[0]?.issue_date
+    ? new Date(result.rows[0].issue_date).toISOString().slice(0, 10)
+    : null;
 }
 
 export async function getIssueRecordsBySite(siteId) {

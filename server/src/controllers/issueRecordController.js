@@ -13,7 +13,8 @@ import {
   getExpiringItems,
   getIssueRecordById,
   updateIssueRecord,
-  deleteIssueRecord
+  deleteIssueRecord,
+  SHEET_NUMBER_SELECT
 } from '../models/issueRecordModel.js';
 import pool from '../models/db.js';
 
@@ -70,13 +71,20 @@ export async function issueItem(req, res, next) {
 
 export async function batchIssue(req, res, next) {
   try {
-    const { site_id, item_type_id, quantity, issue_date, certificate_id, wear_time_override, notes, issue_method } = req.body;
+    const { site_id, item_type_id, quantity, issue_date, certificate_id, wear_time_override, notes, issue_method, position } = req.body;
     if (!site_id || !item_type_id) {
       return res.status(400).json({ error: 'site_id and item_type_id are required' });
     }
-    const employees = await pool.query('SELECT id FROM employees WHERE site_id=$1 AND status=$2', [site_id, 'active']);
+    // Необязательный фильтр по должности: выдать можно всем сотрудникам
+    // объекта или только одной должности (например, всем операторам).
+    const employees = await pool.query(
+      'SELECT id FROM employees WHERE site_id=$1 AND status=$2 AND ($3::text IS NULL OR position=$3)',
+      [site_id, 'active', position?.trim() || null]
+    );
     if (employees.rows.length === 0) {
-      return res.status(404).json({ error: 'No active employees at this site' });
+      return res.status(404).json({ error: position?.trim()
+        ? 'No active employees with this position at this site'
+        : 'No active employees at this site' });
     }
 
     const item = await pool.query('SELECT * FROM item_types WHERE id = $1', [item_type_id]);
@@ -170,7 +178,8 @@ export async function listIssues(req, res, next) {
   try {
     const { employee_id, site_id, item_type_id, status, date_from, date_to, issue_method } = req.query;
     let query = `
-      SELECT r.*, e.full_name, e.position, e.site_id, it.name as item_type_name, it.category, c.certificate_number
+      SELECT r.*, e.full_name, e.position, e.site_id, it.name as item_type_name, it.category, c.certificate_number,
+        ${SHEET_NUMBER_SELECT}
       FROM issue_records r
       JOIN employees e ON r.employee_id = e.id
       JOIN item_types it ON r.item_type_id = it.id

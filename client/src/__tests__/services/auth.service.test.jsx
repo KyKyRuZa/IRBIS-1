@@ -33,4 +33,5 @@ describe('authService', () => {
     api[http].mockRejectedValue(new Error('boom'));
     await expect(authService[name](...args)).rejects.toThrow('boom');
   });
+  });
 });

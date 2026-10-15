@@ -48,6 +48,7 @@ export const IssueRecordSchema = z.object({
 
 export const IssueBatchSchema = z.object({
   site_id: z.preprocess(toNum, z.number().int().positive('Некорректный объект')),
+  position: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
   item_type_id: z.preprocess(toNum, z.number().int().positive('Некорректная позиция')),
   quantity: z.preprocess(toNum, z.number().int().positive('Количество должно быть целым и больше 0')).optional(),
   issue_date: z.string().optional().nullable(),

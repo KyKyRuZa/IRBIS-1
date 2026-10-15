@@ -1,6 +1,14 @@
 import { Router } from 'express';
 import { exportToExcel, exportDemandReport, exportIssuesReport, exportExpiringReport } from '../controllers/reportController.js';
-import { exportEmployeeCard, exportConsumables, exportAllCards, exportItemsReport, exportGroupConsumablesReport } from '../controllers/exportController.js';
+import {
+  exportEmployeeCard,
+  exportEmployeeCardSheets,
+  exportConsumables,
+  exportAllCards,
+  exportItemsReport,
+  exportGroupConsumablesReport,
+  exportIssueSheets,
+} from '../controllers/exportController.js';
 import { authMiddleware, adminOnly } from '../middleware/auth.js';
 
 const router = Router();
@@ -11,6 +19,8 @@ router.use(adminOnly);
 router.get('/excel', exportToExcel);
 router.get('/demand/excel', exportDemandReport);
 router.get('/employee-card/:id', exportEmployeeCard);
+router.get('/employee-card/:id/sheets', exportEmployeeCardSheets);
+router.get('/issue-sheets', exportIssueSheets);
 router.get('/consumables/:id', exportConsumables);
 router.get('/all-cards', exportAllCards);
 router.get('/issues-report', exportIssuesReport);

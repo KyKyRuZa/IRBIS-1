@@ -199,5 +199,20 @@ export async function createPushSubscription(overrides = {}) {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Binary export helpers
+// ---------------------------------------------------------------------------
+
+// Экспорт-эндпоинты отдают бинарные body (docx/zip), а supertest по их
+// content-type не возвращает буфер — собираем поток ответа вручную.
+export function fetchExport(agent, url, query = {}) {
+  return agent.get(url).query(query)
+    .parse((res, cb) => {
+      const chunks = [];
+      res.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
+      res.on('end', () => cb(null, Buffer.concat(chunks)));
+    });
+}
+
 export { request };
 export { app };
