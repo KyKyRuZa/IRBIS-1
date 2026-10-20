@@ -154,24 +154,32 @@ export async function exportToExcel(req, res, next) {
 export async function exportDemandReport(req, res, next) {
   try {
     const { site_id } = req.query;
+    const siteParam = site_id ? [site_id, site_id] : [];
+
+    const activeEmployeesRes = await pool.query(
+      `SELECT COUNT(*)::int as active_employees
+       FROM employees e
+       WHERE e.status = 'active' ${site_id ? 'AND e.site_id = $1' : ''}`,
+      site_id ? [site_id] : []
+    );
+    const activeEmployees = activeEmployeesRes.rows[0]?.active_employees || 0;
+
     const result = await pool.query(`
       SELECT 
         it.id as item_type_id,
         it.name as item_name,
         it.category,
         it.unit,
-        COUNT(DISTINCT e.id) FILTER (WHERE e.status = 'active') as active_employees,
         COALESCE(SUM(ir.quantity), 0) as issued_qty,
         COALESCE(SUM(ir.return_quantity), 0) as returned_qty,
         COALESCE(SUM(ir.quantity) - SUM(ir.return_quantity), 0) as in_use_qty
       FROM item_types it
-      CROSS JOIN employees e
-      LEFT JOIN issue_norms in_ ON in_.item_type_id = it.id
-      LEFT JOIN issue_records ir ON ir.item_type_id = it.id AND ir.employee_id = e.id AND ir.status NOT IN ('returned', 'disposed')
-      ${site_id ? 'WHERE e.site_id = $1' : 'WHERE 1=1'}
+      LEFT JOIN issue_records ir ON ir.item_type_id = it.id
+        AND ir.status NOT IN ('returned', 'disposed')
+        ${site_id ? 'AND EXISTS (SELECT 1 FROM employees e WHERE e.id = ir.employee_id AND e.status = \'active\' AND e.site_id = $1)' : ''}
       GROUP BY it.id, it.name, it.category, it.unit
       ORDER BY it.category, it.name
-    `, site_id ? [site_id] : []);
+    `, siteParam);
 
     const rows = result.rows;
     const categories = { clothing: 'Спецодежда', footwear: 'Обувь', siz: 'СИЗ', consumable: 'Расходники' };
@@ -215,7 +223,7 @@ export async function exportDemandReport(req, res, next) {
         item: r.item_name,
         category: categories[r.category] || r.category,
         unit: r.unit || '',
-        employees: Number(r.active_employees),
+        employees: activeEmployees,
         issued: Number(r.issued_qty),
         returned: Number(r.returned_qty),
         in_use: inUse,

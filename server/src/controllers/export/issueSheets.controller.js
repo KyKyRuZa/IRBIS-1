@@ -49,7 +49,7 @@ export async function exportIssueSheets(req, res, next) {
 
     archive.on('error', (err) => {
       logger.error(err, 'Archive error');
-      if (!res.headersSent) res.status(500).json({ error: err.message });
+      if (!res.headersSent) res.status(500).json({ error: 'Archive error' });
     });
 
     for (const emp of employees) {

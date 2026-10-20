@@ -67,8 +67,10 @@ export async function getEmployee(req, res, next) {
     const employee = await getEmployeeById(req.params.id);
     if (!employee) return res.status(404).json({ error: 'Employee not found' });
     
-    const norms = await getNormsForEmployee(employee);
-    const history = await getIssueRecordsByEmployee(req.params.id);
+    const [norms, history] = await Promise.all([
+      getNormsForEmployee(employee),
+      getIssueRecordsByEmployee(req.params.id)
+    ]);
     
     res.json({ ...employee, norms, history });
   } catch (error) {

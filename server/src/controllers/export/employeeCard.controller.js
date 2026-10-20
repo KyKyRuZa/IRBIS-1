@@ -39,6 +39,7 @@ function sendDocx(res, buffer, filename) {
  */
 export async function exportEmployeeCard(req, res, next) {
   try {
+    console.log('DEBUG exportEmployeeCard: query=', JSON.stringify(req.query), 'params=', req.params);
     const emp = await findEmployee(req.params.id);
     if (!emp) return res.status(404).json({ error: 'Employee not found' });
 
@@ -51,6 +52,7 @@ export async function exportEmployeeCard(req, res, next) {
         getIssueRecordsForEvent(emp.id, issueDate),
         getIssueSheetNumber(emp.id, issueDate),
       ]);
+      console.log('DEBUG sheet: items.length=', items.length, 'sheetNumber=', sheetNumber, 'items=', items.map(i => ({date: i.issue_date, item: i.item_type_name, qty: i.quantity})));
       if (items.length === 0) return res.status(404).json({ error: 'No issues found for this date' });
 
       const data = buildSheetData(emp, items, sheetNumber, new Date(issueDate).getFullYear());
@@ -87,7 +89,7 @@ export async function exportEmployeeCardSheets(req, res, next) {
 
     archive.on('error', (err) => {
       logger.error(err, 'Archive error');
-      if (!res.headersSent) res.status(500).json({ error: err.message });
+      if (!res.headersSent) res.status(500).json({ error: 'Archive error' });
     });
 
     for (const event of events) {

@@ -32,11 +32,11 @@ async function calculateExpiryAndReorder(issueDate, wearTime, itemTypeId) {
   return { expiryDate, reorderDate };
 }
 
-export async function createIssueRecord(employeeId, itemTypeId, quantity, issueDate, expiryDate, certificateId, reorderDate, wearTimeOverride, notes, issueMethod, signaturePath, signatureDate) {
+export async function createIssueRecord(employeeId, itemTypeId, quantity, issueDate, expiryDate, certificateId, reorderDate, wearTimeOverride, notes, issueMethod, signaturePath, signatureDate, writeOffAct) {
   const result = await pool.query(
-    `INSERT INTO issue_records (employee_id, item_type_id, quantity, issue_date, expiry_date, certificate_id, reorder_date, wear_time_override_months, notes, issue_method, signature_path, signature_date) 
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
-    [employeeId, itemTypeId, quantity, issueDate, expiryDate, certificateId, reorderDate, wearTimeOverride, notes, issueMethod, signaturePath, signatureDate]
+    `INSERT INTO issue_records (employee_id, item_type_id, quantity, issue_date, expiry_date, certificate_id, reorder_date, wear_time_override_months, notes, issue_method, signature_path, signature_date, write_off_act) 
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *`,
+    [employeeId, itemTypeId, quantity, issueDate, expiryDate, certificateId, reorderDate, wearTimeOverride, notes, issueMethod, signaturePath, signatureDate, writeOffAct || null]
   );
   return result.rows[0];
 }
@@ -188,8 +188,8 @@ export async function deleteIssueRecord(id) {
 
 export async function batchIssueRecords(records) {
   const result = await pool.query(
-    `INSERT INTO issue_records (employee_id, item_type_id, quantity, issue_date, expiry_date, certificate_id, reorder_date, wear_time_override_months, notes, issue_method)
-     SELECT * FROM UNNEST($1::int[], $2::int[], $3::int[], $4::date[], $5::date[], $6::int[], $7::date[], $8::int[], $9::text[], $10::text[]) RETURNING *`,
+    `INSERT INTO issue_records (employee_id, item_type_id, quantity, issue_date, expiry_date, certificate_id, reorder_date, wear_time_override_months, notes, issue_method, write_off_act)
+     SELECT * FROM UNNEST($1::int[], $2::int[], $3::int[], $4::date[], $5::date[], $6::int[], $7::date[], $8::int[], $9::text[], $10::text[], $11::text[]) RETURNING *`,
      [
        records.map(r => r.employee_id),
        records.map(r => r.item_type_id),
@@ -200,7 +200,8 @@ export async function batchIssueRecords(records) {
        records.map(r => r.reorder_date),
        records.map(r => r.wear_time_override),
        records.map(r => r.notes || null),
-       records.map(r => r.issue_method || null)
+       records.map(r => r.issue_method || null),
+       records.map(r => r.write_off_act || null)
      ]
    );
   return result.rows;
@@ -235,7 +236,7 @@ export async function updateIssueRecord(id, data) {
   if (!current) return null;
 
   const patch = {};
-  const whitelist = ['employee_id', 'item_type_id', 'quantity', 'issue_date', 'expiry_date', 'certificate_id', 'notes', 'issue_method'];
+  const whitelist = ['employee_id', 'item_type_id', 'quantity', 'issue_date', 'expiry_date', 'certificate_id', 'notes', 'issue_method', 'write_off_act'];
   const allowedStatuses = ['issued', 'disposed', 'returned', 'due_for_disposal'];
   for (const key of whitelist) {
     if (Object.prototype.hasOwnProperty.call(data, key)) patch[key] = data[key];
@@ -306,8 +307,8 @@ export async function updateExpiredIssueRecordsStatus() {
 
 export async function batchIssueRecordsForEmployee(employeeId, records, issueDate) {
   const result = await pool.query(
-    `INSERT INTO issue_records (employee_id, item_type_id, quantity, issue_date, expiry_date, certificate_id, reorder_date, wear_time_override_months, notes, issue_method)
-     SELECT $1, * FROM UNNEST($2::int[], $3::int[], $4::date[], $5::date[], $6::int[], $7::date[], $8::int[], $9::text[], $10::text[]) RETURNING *`,
+    `INSERT INTO issue_records (employee_id, item_type_id, quantity, issue_date, expiry_date, certificate_id, reorder_date, wear_time_override_months, notes, issue_method, write_off_act)
+     SELECT $1, * FROM UNNEST($2::int[], $3::int[], $4::date[], $5::date[], $6::int[], $7::date[], $8::int[], $9::text[], $10::text[], $11::text[]) RETURNING *`,
      [
        employeeId,
        records.map(r => r.item_type_id),
@@ -318,8 +319,9 @@ export async function batchIssueRecordsForEmployee(employeeId, records, issueDat
        records.map(r => r.reorder_date),
        records.map(r => r.wear_time_override),
        records.map(r => r.notes || null),
-       records.map(r => r.issue_method || null)
+       records.map(r => r.issue_method || null),
+       records.map(r => r.write_off_act || null)
      ]
-   );
+    );
   return result.rows;
 }

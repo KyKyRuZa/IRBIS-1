@@ -67,7 +67,7 @@ describe('Auth', () => {
       const agent = await loginAs('admin');
       const res = await agent
         .post('/api/auth/change-password')
-        .send({ old_password: 'nope', new_password: 'newpass1' });
+        .send({ old_password: 'nope', new_password: 'Newpass1!' });
       expect(res.status).toBe(401);
     });
 
@@ -75,11 +75,11 @@ describe('Auth', () => {
       const agent = await loginAs('admin');
       const res = await agent
         .post('/api/auth/change-password')
-        .send({ old_password: 'adminpass', new_password: 'newpass1' });
+        .send({ old_password: 'adminpass', new_password: 'Newpass1!' });
       expect(res.status).toBe(200);
       const login = await request(app)
         .post('/api/auth/login')
-        .send({ username: 'admin', password: 'newpass1' });
+        .send({ username: 'admin', password: 'Newpass1!' });
       expect(login.status).toBe(200);
     });
   });

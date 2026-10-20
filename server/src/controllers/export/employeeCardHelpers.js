@@ -49,7 +49,7 @@ export async function buildCardData(emp, norms, history) {
       return {
         itemName: record.item_type_name || '',
         model: record.certificate_number || '',
-        issueDate: '',
+         issueDate: formatDate(record.issue_date),
         issueQty: String(record.quantity || ''),
         issueMethod: record.issue_method === 'dosator' ? 'в дозаторе' : (isConsumable ? 'лично' : ''),
         returnDate: (!isConsumable && record.return_date) ? formatDate(record.return_date) : '',

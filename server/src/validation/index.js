@@ -44,6 +44,7 @@ export const IssueRecordSchema = z.object({
   signature_date: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
   issue_method: z.preprocess(emptyToUndefined, z.enum(['personal', 'dosator'], { error: (issue) => (issue.input === undefined || issue.input === '' ? 'Выберите способ выдачи' : 'Выберите способ выдачи из списка') }).nullable().optional()),
+  write_off_act: z.string().optional().nullable(),
 });
 
 export const IssueBatchSchema = z.object({
@@ -151,6 +152,7 @@ export const IssueRecordUpdateSchema = z.object({
   notes: z.string().optional().nullable(),
   issue_method: z.preprocess(emptyToUndefined, z.enum(['personal', 'dosator'], { error: (issue) => (issue.input === undefined || issue.input === '' ? 'Выберите способ выдачи' : 'Выберите способ выдачи из списка') }).nullable().optional()),
   status: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+  write_off_act: z.string().optional().nullable(),
 });
 
 export const CertificateUpdateSchema = CertificateSchema.partial();
@@ -158,4 +160,42 @@ export const CertificateUpdateSchema = CertificateSchema.partial();
 export const IssueReturnSchema = z.object({
   return_date: z.string().optional().nullable(),
   return_quantity: z.preprocess(toNum, z.number().int().nonnegative('Количество возврата должно быть целым и не меньше 0')).optional(),
+});
+
+export const CertificateUploadSchema = z.object({
+  product_name: z.string().min(1, 'Введите наименование продукции'),
+  certificate_number: z.string().optional().nullable(),
+  issue_date: z.string().optional().nullable(),
+  expiry_date: z.string().optional().nullable(),
+  item_type_id: z.preprocess(toNum, z.number().int().positive('Некорректная позиция')).optional().nullable(),
+  certificate_id: z.preprocess(toNum, z.number().int().positive('Некорректный сертификат')).optional().nullable(),
+});
+
+export const SignatureUploadSchema = z.object({
+  issue_record_id: z.preprocess(toNum, z.number().int().positive('Некорректная запись выдачи')),
+});
+
+export const PushSubscribeSchema = z.object({
+  endpoint: z.string().min(1, 'endpoint обязателен'),
+  keys: z.object({
+    p256dh: z.string().min(1, 'keys.p256dh обязателен'),
+    auth: z.string().min(1, 'keys.auth обязателен'),
+  }),
+  employee_id: z.preprocess(toNum, z.number().int().positive('Некорректный сотрудник')).optional().nullable(),
+});
+
+export const PushUnsubscribeSchema = z.object({
+  endpoint: z.string().min(1, 'endpoint обязателен'),
+});
+
+export const PushSendSchema = z.object({
+  employeeId: z.preprocess(toNum, z.number().int().positive('Некорректный сотрудник')).optional().nullable(),
+  notificationId: z.string().min(1, 'notificationId обязателен'),
+});
+
+export const ClientLogSchema = z.object({
+  level: z.enum(['debug', 'info', 'warn', 'error'], { error: 'Некорректный уровень лога' }),
+  message: z.string().min(1, 'Сообщение обязательно').max(2000, 'Сообщение слишком длинное'),
+  module: z.string().max(100, 'Название модуля слишком длинное').optional().nullable(),
+  context: z.record(z.any()).optional().nullable(),
 });

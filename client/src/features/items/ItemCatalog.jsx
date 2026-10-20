@@ -97,17 +97,15 @@ export default function ItemCatalog() {
       result = result.filter((item) => item.requires_certificate === val);
     }
     if (filters.default_wear_time_from !== '' || filters.default_wear_time_to !== '') {
-      const from = Number(filters.default_wear_time_from);
-      const to = Number(filters.default_wear_time_to);
-      if (!Number.isNaN(from) || !Number.isNaN(to)) {
-        result = result.filter((item) => {
-          const itemVal = Number(item.default_wear_time);
-          if (Number.isNaN(itemVal)) return false;
-          if (!Number.isNaN(from) && itemVal < from) return false;
-          if (!Number.isNaN(to) && itemVal > to) return false;
-          return true;
-        });
-      }
+      const from = filters.default_wear_time_from ? Number(filters.default_wear_time_from) : null;
+      const to = filters.default_wear_time_to ? Number(filters.default_wear_time_to) : null;
+      result = result.filter((item) => {
+        const itemVal = Number(item.default_wear_time);
+        if (Number.isNaN(itemVal)) return false;
+        if (from !== null && itemVal < from) return false;
+        if (to !== null && itemVal > to) return false;
+        return true;
+      });
     }
 
     if (sort && sort.key) {

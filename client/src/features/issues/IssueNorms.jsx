@@ -145,31 +145,27 @@ export default function IssueNorms() {
     }
 
     if (filters.period_months_from !== '' || filters.period_months_to !== '') {
-      const periodFrom = Number(filters.period_months_from);
-      const periodTo = Number(filters.period_months_to);
-      if (!Number.isNaN(periodFrom) || !Number.isNaN(periodTo)) {
-        result = result.filter((norm) => {
-          const val = Number(norm.period_months);
-          if (Number.isNaN(val)) return false;
-          if (!Number.isNaN(periodFrom) && val < periodFrom) return false;
-          if (!Number.isNaN(periodTo) && val > periodTo) return false;
-          return true;
-        });
-      }
+      const periodFrom = filters.period_months_from ? Number(filters.period_months_from) : null;
+      const periodTo = filters.period_months_to ? Number(filters.period_months_to) : null;
+      result = result.filter((norm) => {
+        const val = Number(norm.period_months);
+        if (Number.isNaN(val)) return false;
+        if (periodFrom !== null && val < periodFrom) return false;
+        if (periodTo !== null && val > periodTo) return false;
+        return true;
+      });
     }
 
     if (filters.quantity_from !== '' || filters.quantity_to !== '') {
-      const qtyFrom = Number(filters.quantity_from);
-      const qtyTo = Number(filters.quantity_to);
-      if (!Number.isNaN(qtyFrom) || !Number.isNaN(qtyTo)) {
-        result = result.filter((norm) => {
-          const val = Number(norm.quantity);
-          if (Number.isNaN(val)) return false;
-          if (!Number.isNaN(qtyFrom) && val < qtyFrom) return false;
-          if (!Number.isNaN(qtyTo) && val > qtyTo) return false;
-          return true;
-        });
-      }
+      const qtyFrom = filters.quantity_from ? Number(filters.quantity_from) : null;
+      const qtyTo = filters.quantity_to ? Number(filters.quantity_to) : null;
+      result = result.filter((norm) => {
+        const val = Number(norm.quantity);
+        if (Number.isNaN(val)) return false;
+        if (qtyFrom !== null && val < qtyFrom) return false;
+        if (qtyTo !== null && val > qtyTo) return false;
+        return true;
+      });
     }
 
     if (sort && sort.key) {

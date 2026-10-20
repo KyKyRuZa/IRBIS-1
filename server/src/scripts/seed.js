@@ -151,7 +151,7 @@ const seedIssueNorms = async (itemTypes, sites) => {
     'Электрик',
     'Сварщик'
   ];
-  const genders = ['male', 'female', null];
+  const genders = ['male', 'female'];
   for (const p of positions) {
     for (const g of genders) {
       for (const item of itemTypes) {
@@ -194,18 +194,17 @@ const seedIssueRecords = async (employees, itemTypes, certs) => {
       const returnDate = status === 'returned' ? createDate(Math.floor(Math.random() * 30)) : null;
       const returnQuantity = status === 'returned' ? 1 : 0;
       const method = methods[Math.floor(Math.random() * methods.length)];
-      const reorderDate = expiryDate ? new Date(expiryDate) : null;
-      if (reorderDate) {
-        reorderDate.setDate(reorderDate.getDate() - 30);
-      }
+  const reorderDate = expiryDate ? new Date(expiryDate) : null;
+  if (reorderDate) {
+    reorderDate.setMonth(reorderDate.getMonth() - 2);
+  }
       const notesMap = {
-        'norm': 'Выдано по норме',
-        'additional': 'Дополнительная выдача',
-        'replacement': 'Замена по износу'
+        'personal': 'Выдано по норме (лично выдача)',
+        'dosator': 'Выдано по норме (дозатор)'
       };
       const record = await pool.query(
-        'INSERT INTO issue_records (employee_id, item_type_id, quantity, issue_date, expiry_date, certificate_id, status, return_date, return_quantity, issue_method, reorder_date, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *',
-        [emp.id, item.id, 1, issueDate, expiryDate ? expiryDate.toISOString().split('T')[0] : null, cert?.id || null, status, returnDate, returnQuantity, method, reorderDate ? reorderDate.toISOString().split('T')[0] : null, notesMap[method]]
+        'INSERT INTO issue_records (employee_id, item_type_id, quantity, issue_date, expiry_date, certificate_id, status, return_date, return_quantity, issue_method, reorder_date, notes, write_off_act) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *',
+        [emp.id, item.id, 1, issueDate, expiryDate ? expiryDate.toISOString().split('T')[0] : null, cert?.id || null, status, returnDate, returnQuantity, method, reorderDate ? reorderDate.toISOString().split('T')[0] : null, notesMap[method], null]
       );
       records.push(record.rows[0]);
     }

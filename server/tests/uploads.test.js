@@ -59,7 +59,7 @@ describe('Uploads', () => {
       .post('/api/upload/signature')
       .set(authHeaders('admin', 1))
       .field('issue_record_id', issueId)
-      .attach('signature', Buffer.from('sig'), 'sig.png');
+      .attach('signature', Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64'), 'sig.png');
     expect(res.status).toBe(200);
     expect(res.body.signature_path).toContain('signatures');
   });

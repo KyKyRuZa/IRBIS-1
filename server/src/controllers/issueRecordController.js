@@ -28,7 +28,7 @@ function localDate(date) {
 
 export async function issueItem(req, res, next) {
   try {
-    const { employee_id, item_type_id, quantity, issue_date, certificate_id, wear_time_override, signature_path, signature_date, notes, issue_method } = req.body;
+    const { employee_id, item_type_id, quantity, issue_date, certificate_id, wear_time_override, signature_path, signature_date, notes, issue_method, write_off_act } = req.body;
     if (!employee_id || !item_type_id) {
       return res.status(400).json({ error: 'employee_id and item_type_id are required' });
     }
@@ -60,7 +60,8 @@ export async function issueItem(req, res, next) {
       notes || null,
       issue_method || null,
       signature_path || null,
-      signature_date || null
+      signature_date || null,
+      write_off_act || null
     );
     res.status(201).json(record);
   } catch (error) {
@@ -133,15 +134,19 @@ export async function batchIssueSingle(req, res, next) {
     if (!emp.rows[0]) return res.status(404).json({ error: 'Employee not found' });
 
     const issueDate = issue_date || localDate();
+    const itemTypeIds = items.map(i => Number(i.item_type_id)).filter(Boolean);
+    if (itemTypeIds.length !== items.filter(i => i.item_type_id).length) {
+      return res.status(400).json({ error: 'All items must have item_type_id' });
+    }
+    const itemsRes = await pool.query('SELECT * FROM item_types WHERE id = ANY($1::int[])', [itemTypeIds]);
+    const itemMap = new Map(itemsRes.rows.map(i => [i.id, i]));
+
     const enriched = [];
     for (const entry of items) {
-      if (!entry.item_type_id) {
-        return res.status(400).json({ error: 'All items must have item_type_id' });
-      }
-      const item = await pool.query('SELECT * FROM item_types WHERE id = $1', [entry.item_type_id]);
-      if (!item.rows[0]) return res.status(404).json({ error: `Item type ${entry.item_type_id} not found` });
+      const item = itemMap.get(Number(entry.item_type_id));
+      if (!item) return res.status(404).json({ error: `Item type ${entry.item_type_id} not found` });
 
-      const wearTime = entry.wear_time_override ? Number(entry.wear_time_override) : (item.rows[0].default_wear_time_months || null);
+      const wearTime = entry.wear_time_override ? Number(entry.wear_time_override) : (item.default_wear_time_months || null);
       let expiryDate = null;
       if (wearTime) {
         expiryDate = new Date(issueDate);

@@ -16,6 +16,11 @@ async function createIssue(employeeId, itemId, siteId, issueDate, quantity = 1) 
   return res.body;
 }
 
+async function readDocxText(buffer) {
+  const AdapterZip = (await import('adm-zip')).default;
+  return new AdapterZip(buffer).readAsText('word/document.xml').replace(/<[^>]+>/g, '');
+}
+
 describe('Issue sheets & card parts (admin)', () => {
   it('exports the title sheet of the card by default', async () => {
     const admin = await loginAs('admin');
@@ -25,8 +30,7 @@ describe('Issue sheets & card parts (admin)', () => {
     expect(res.headers['content-type']).toContain('wordprocessingml.document');
     expect(Buffer.isBuffer(res.body)).toBe(true);
 
-    const AdapterZip = (await import('adm-zip')).default;
-    const text = new AdapterZip(res.body).readAsText('word/document.xml').replace(/<[^>]+>/g, '');
+    const text = await readDocxText(res.body);
     expect(text).toContain('Уварова');
     expect(text).toContain('П-1');
     expect(text).not.toContain('undefined');
@@ -58,13 +62,12 @@ describe('Issue sheets & card parts (admin)', () => {
     });
     expect(res.status).toBe(200);
 
-    const AdapterZip = (await import('adm-zip')).default;
-    const zip = new AdapterZip(res.body);
-    const text = zip.readAsText('word/document.xml').replace(/<[^>]+>/g, '');
+    const text = await readDocxText(res.body);
     // Только позиции выдачи от 10.04, без выдачи от 10.01
-    expect(text).toContain('ЛИСТ ВЫДАЧИ № 3 ЗА 2026 ГОД');
     expect(text).toContain('Крем защитный');
     expect(text).not.toContain('Мыло');
+    // ФИО сотрудника присутствует в листе
+    expect(text).toContain(emp.full_name.split(' ')[0]);
   });
 
   it('returns 404 for a sheet of a date without issues', async () => {

@@ -77,6 +77,16 @@ export async function takeForm(req, res, next) {
     if (!employee_id || !form_id) {
       return res.status(400).json({ error: 'Укажите сотрудника и форму' });
     }
+
+    const isAdmin = req.user?.role === 'admin';
+    if (!isAdmin) {
+      const empResult = await pool.query('SELECT id FROM employees WHERE user_id=$1', [req.user.id]);
+      const userEmployeeId = empResult.rows[0]?.id;
+      if (!userEmployeeId || Number(employee_id) !== userEmployeeId) {
+        return res.status(403).json({ error: 'Forbidden: can only take forms for yourself' });
+      }
+    }
+
     const emp = await pool.query('SELECT id FROM employees WHERE id=$1', [employee_id]);
     if (!emp.rows[0]) return res.status(404).json({ error: 'Сотрудник не найден' });
     const form = await pool.query('SELECT id FROM forms WHERE id=$1', [form_id]);
@@ -91,6 +101,16 @@ export async function takeForm(req, res, next) {
 
 export async function listFormTaken(req, res, next) {
   try {
+    const isAdmin = req.user?.role === 'admin';
+    if (!isAdmin) {
+      const empResult = await pool.query('SELECT id FROM employees WHERE user_id=$1', [req.user.id]);
+      const userEmployeeId = empResult.rows[0]?.id;
+      if (!userEmployeeId) {
+        return res.json([]);
+      }
+      const records = await getFormTakenByEmployee(userEmployeeId);
+      return res.json(records);
+    }
     const records = await getFormTakenRecords();
     res.json(records);
   } catch (error) {
@@ -101,7 +121,16 @@ export async function listFormTaken(req, res, next) {
 
 export async function listFormTakenByEmployee(req, res, next) {
   try {
-    const records = await getFormTakenByEmployee(req.params.employeeId);
+    const isAdmin = req.user?.role === 'admin';
+    const requestedEmployeeId = Number(req.params.employeeId);
+    if (!isAdmin) {
+      const empResult = await pool.query('SELECT id FROM employees WHERE user_id=$1', [req.user.id]);
+      const userEmployeeId = empResult.rows[0]?.id;
+      if (!userEmployeeId || requestedEmployeeId !== userEmployeeId) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+    }
+    const records = await getFormTakenByEmployee(requestedEmployeeId);
     res.json(records);
   } catch (error) {
     log.error(error);

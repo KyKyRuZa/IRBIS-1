@@ -60,9 +60,9 @@ describe('Forms', () => {
   it('takes a form for the requesting employee', async () => {
     const emp = await createEmployee();
     const form = await createForm({ employee_id: emp.id });
-    const agent = await loginAs('user');
-    const take = await agent
+    const take = await request(app)
       .post(`${base}/take`)
+      .set(authHeaders('admin', 1))
       .send({ form_id: form.id, employee_id: emp.id });
     expect(take.status).toBe(201);
 

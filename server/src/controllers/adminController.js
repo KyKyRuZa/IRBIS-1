@@ -1,36 +1,35 @@
-import fs from 'fs/promises';
 import pool from '../models/db.js';
 import { logger } from '../utils/logger.js';
 
 export async function getDemandReport(req, res, next) {
   try {
     const { site_id } = req.query;
-    let query = `
+    const siteParam = site_id ? [site_id] : [];
+
+    const activeEmployeesRes = await pool.query(
+      `SELECT COUNT(*)::int as active_employees
+       FROM employees e
+       WHERE e.status = 'active' ${site_id ? 'AND e.site_id = $1' : ''}`,
+      siteParam
+    );
+    const activeEmployees = activeEmployeesRes.rows[0]?.active_employees || 0;
+
+    const result = await pool.query(`
       SELECT 
         it.id as item_type_id,
         it.name as item_name,
         it.category,
         it.unit,
-        COUNT(DISTINCT e.id) FILTER (WHERE e.status = 'active') as active_employees,
         COALESCE(SUM(ir.quantity), 0) as issued_qty,
         COALESCE(SUM(ir.return_quantity), 0) as returned_qty,
         COALESCE(SUM(ir.quantity) - SUM(ir.return_quantity), 0) as in_use_qty
       FROM item_types it
-      CROSS JOIN employees e
-      LEFT JOIN issue_norms in_ ON in_.item_type_id = it.id
-      LEFT JOIN issue_records ir ON ir.item_type_id = it.id AND ir.employee_id = e.id AND ir.status NOT IN ('returned', 'disposed')
-      WHERE 1=1
-    `;
-    const params = [];
-    let paramIndex = 1;
-
-    if (site_id) {
-      query += ` AND e.site_id = $${paramIndex++}`;
-      params.push(site_id);
-    }
-
-    query += ` GROUP BY it.id, it.name, it.category, it.unit ORDER BY it.category, it.name`;
-    const result = await pool.query(query, params);
+      LEFT JOIN issue_records ir ON ir.item_type_id = it.id
+        AND ir.status NOT IN ('returned', 'disposed')
+        ${site_id ? 'AND EXISTS (SELECT 1 FROM employees e WHERE e.id = ir.employee_id AND e.status = \'active\' AND e.site_id = $1)' : ''}
+      GROUP BY it.id, it.name, it.category, it.unit
+      ORDER BY it.category, it.name
+    `, siteParam);
     const rows = result.rows;
 
     const norms = await pool.query(`
@@ -38,9 +37,9 @@ export async function getDemandReport(req, res, next) {
       FROM issue_norms in_
       JOIN employees e ON (e.gender = in_.gender OR in_.gender IS NULL)
       WHERE e.status = 'active'
-      ${site_id ? `AND e.site_id = $${paramIndex++}` : ''}
+      ${site_id ? 'AND e.site_id = $1' : ''}
       GROUP BY in_.item_type_id
-    `, site_id ? [...params, site_id] : params);
+    `, siteParam);
 
     const normMap = {};
     norms.rows.forEach(n => {
@@ -56,7 +55,7 @@ export async function getDemandReport(req, res, next) {
         item_name: r.item_name,
         category: r.category,
         unit: r.unit,
-        active_employees: Number(r.active_employees),
+        active_employees: activeEmployees,
         in_use_qty: Number(r.in_use_qty),
         norm_qty: normQty,
         demand_qty: needed > 0 ? needed : 0,
@@ -118,7 +117,6 @@ export async function markAllNotificationsRead(req, res, next) {
 export async function backupDatabase(req, res, next) {
   try {
     const { spawn } = await import('child_process');
-    const { unlink } = await import('fs/promises');
 
     const dbHost = process.env.DB_HOST || 'localhost';
     const dbPort = process.env.DB_PORT || 5432;
@@ -126,28 +124,25 @@ export async function backupDatabase(req, res, next) {
     const dbUser = process.env.DB_USER || 'postgres';
     const dbPassword = process.env.DB_PASSWORD || 'postgres';
 
-    const pgPassPath = '/tmp/.pgpass';
-    await fs.writeFile(pgPassPath, `${dbHost}:${dbPort}:${dbName}:${dbUser}:${dbPassword}\n`, { mode: 0o600 });
-
     const date = new Date().toISOString().split('T')[0];
     const args = ['-h', dbHost, '-p', String(dbPort), '-U', dbUser, '-d', dbName];
 
     res.setHeader('Content-Type', 'application/sql');
     res.setHeader('Content-Disposition', `attachment; filename="irbis_backup_${date}.sql"`);
 
-    const pgdump = spawn('pg_dump', args, { env: { ...process.env, PGPASSFILE: pgPassPath } });
+    const pgdump = spawn('pg_dump', args, {
+      env: { PGPASSWORD: dbPassword, PGSSLMODE: 'disable' }
+    });
 
     pgdump.stdout.pipe(res);
 
-    pgdump.on('close', async (code) => {
-      await unlink(pgPassPath).catch(() => {});
+    pgdump.on('close', (code) => {
       if (code !== 0) {
         logger.error({ code }, 'pg_dump exited with non-zero code');
       }
     });
 
-    pgdump.on('error', async (err) => {
-      await unlink(pgPassPath).catch(() => {});
+    pgdump.on('error', (err) => {
       logger.error(err, 'Failed to start pg_dump');
       if (!res.headersSent) {
         res.status(500).json({ error: 'Backup failed' });

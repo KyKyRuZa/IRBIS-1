@@ -7,7 +7,7 @@ import { LoginSchema, ChangePasswordSchema } from '../validation/index.js';
 const router = Router();
 
 router.post('/login', validate(LoginSchema), login);
-router.post('/change-password', validate(ChangePasswordSchema), authMiddleware, changePassword);
+router.post('/change-password', authMiddleware, validate(ChangePasswordSchema), changePassword);
 router.post('/refresh', refresh);
 router.post('/logout', logout);
 router.get('/me', authMiddleware, me);
