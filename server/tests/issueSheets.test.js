@@ -92,7 +92,7 @@ describe('Issue sheets & card parts (admin)', () => {
 
     const list = await admin.get('/api/issues').query({ employee_id: emp.id });
     expect(list.status).toBe(200);
-    const sheets = list.body.map((r) => [(r.issue_date || '').slice(0, 10), Number(r.sheet_number)]);
+    const sheets = list.body.data.map((r) => [(r.issue_date || '').slice(0, 10), Number(r.sheet_number)]);
     // 2026: две выдачи → листы 2 и 3; 2027: нумерация с нуля → лист 2
     expect(sheets).toEqual(
       expect.arrayContaining([

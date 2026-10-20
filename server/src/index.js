@@ -23,16 +23,22 @@ import { aggregateNotifications } from './services/notificationService.js';
 import { updateExpiredIssueRecordsStatus } from './models/issueRecordModel.js';
 import { updateCertificateStatus } from './models/certificateModel.js';
 import { cookiesMiddleware, authMiddleware } from './middleware/auth.js';
-
+import { redisClient, acquireLock, releaseLock, disconnectRedis } from './utils/redis.js';
 import rateLimit from 'express-rate-limit';
+import { RedisStore } from 'rate-limit-redis';
 
 const isProd = process.env.NODE_ENV === 'production';
+const isTest = process.env.NODE_ENV === 'test';
 const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === 'true';
 
 if (isProd && rateLimitDisabled) {
   logger.error('RATE_LIMIT_DISABLED=true is not allowed in production');
   process.exit(1);
 }
+
+const redisStoreOpts = redisClient
+  ? { store: new RedisStore({ sendCommand: (...args) => redisClient.sendCommand(args) }) }
+  : {};
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -41,6 +47,7 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
   skip: () => rateLimitDisabled,
   message: { error: 'Too many login attempts, please try again later' },
+  ...redisStoreOpts,
 });
 
 const refreshLimiter = rateLimit({
@@ -50,6 +57,7 @@ const refreshLimiter = rateLimit({
   legacyHeaders: false,
   skip: () => rateLimitDisabled,
   message: { error: 'Too many refresh attempts, please try again later' },
+  ...redisStoreOpts,
 });
 
 const globalLimiter = rateLimit({
@@ -59,12 +67,15 @@ const globalLimiter = rateLimit({
   legacyHeaders: false,
   skip: () => rateLimitDisabled,
   message: { error: 'Too many requests, please try again later' },
+  ...redisStoreOpts,
 });
 
 function securityHeaders(req, res, next) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  res.setHeader('Content-Security-Policy', "default-src 'self'; img-src 'self' data: https:; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'");
   next();
 }
 
@@ -128,7 +139,7 @@ app.use('/api/log', logRoutes);
 app.use((err, req, res, next) => {
   getRequestLogger().error({ err, method: req.method, url: req.originalUrl }, err.message || 'Request failed');
   const status = err.status || 500;
-  const message = isProd ? 'Internal Server Error' : (err.message || 'Internal Server Error');
+  const message = isProd || isTest ? 'Internal Server Error' : (err.message || 'Internal Server Error');
   res.status(status).json({ error: message });
 });
 
@@ -138,55 +149,71 @@ app.use((req, res) => {
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  logger.error({ reason, promise }, 'Unhandled promise rejection');
-  process.exit(1);
+  logger.error({ reason, promise }, 'Unhandled promise rejection, shutting down');
+  gracefulShutdown(1);
 });
 
 process.on('uncaughtException', (err) => {
   logger.error(err, 'Uncaught exception, shutting down');
-  process.exit(1);
+  gracefulShutdown(1);
 });
 
 const PORT = process.env.PORT || 5000;
 
-const gracefulShutdown = async () => {
-  logger.info('Received shutdown signal, closing database pool...');
+const gracefulShutdown = async (exitCode = 0) => {
+  logger.info('Shutting down services...');
   try {
     await pool.end();
     logger.info('Database pool closed');
   } catch (err) {
     logger.error(err, 'Error closing database pool');
   }
-  process.exit(0);
+  try {
+    await disconnectRedis();
+  } catch (err) {
+    logger.error(err, 'Error closing Redis connection');
+  }
+  process.exit(exitCode);
 };
 
 process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
 
   if (process.env.NODE_ENV !== 'test') {
-    initDB()
-      .then(() => {
-        updateExpiredIssueRecordsStatus()
-          .then(() => updateCertificateStatus())
-          .then(() => aggregateNotifications())
-          .catch(err => logger.error(err, 'Initial startup failed'));
-        cron.schedule('0 8 * * *', async () => {
-          try {
-            await updateExpiredIssueRecordsStatus();
-            await updateCertificateStatus();
-            await aggregateNotifications();
-          } catch (err) {
-            logger.error(err, 'Scheduled job failed');
+    (async () => {
+      if (redisClient) {
+        await redisClient.connect();
+        logger.info('Redis connected');
+      }
+      await initDB();
+      updateExpiredIssueRecordsStatus()
+        .then(() => updateCertificateStatus())
+        .then(() => aggregateNotifications())
+        .catch(err => logger.error(err, 'Initial startup failed'));
+      cron.schedule('0 8 * * *', async () => {
+        let lockToken = null;
+        try {
+          lockToken = await acquireLock('cron:daily-jobs', 5 * 60 * 1000);
+          if (!lockToken) {
+            logger.info('Cron job already running, skipping');
+            return;
           }
-        });
-        app.listen(PORT, () => {
-          logger.info(`Server running on port ${PORT}`);
-        });
-      })
-      .catch(err => {
-        logger.error(err, 'Failed to initialize database');
-        process.exit(1);
+          await updateExpiredIssueRecordsStatus();
+          await updateCertificateStatus();
+          await aggregateNotifications();
+        } catch (err) {
+          logger.error(err, 'Scheduled job failed');
+        } finally {
+          if (lockToken) await releaseLock('cron:daily-jobs', lockToken);
+        }
       });
+      app.listen(PORT, () => {
+        logger.info(`Server running on port ${PORT}`);
+      });
+    })().catch(err => {
+      logger.error(err, 'Failed to initialize server');
+      process.exit(1);
+    });
   }
 
 export default app;

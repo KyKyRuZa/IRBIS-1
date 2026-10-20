@@ -71,22 +71,23 @@ export async function getDemandReport(req, res, next) {
 
 export async function getNotifications(req, res, next) {
   try {
-    const result = await pool.query(`
-      SELECT notification_id as id, type, severity, message, employee_id, site_id, date, read
-      FROM notifications
-      ORDER BY date DESC
-    `);
-    const notifications = result.rows.map(row => ({
-      id: row.id,
-      type: row.type,
-      severity: row.severity,
-      message: row.message,
-      employee_id: row.employee_id,
-      site_id: row.site_id,
-      date: row.date,
-      read: row.read
-    }));
-    res.json(notifications);
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limitNum = Math.min(200, Math.max(1, parseInt(req.query.limit) || 50));
+    const offset = (page - 1) * limitNum;
+
+    const [result, countResult] = await Promise.all([
+      pool.query(`
+        SELECT notification_id as id, type, severity, message, employee_id, site_id, date, read
+        FROM notifications
+        ORDER BY date DESC
+        LIMIT $1 OFFSET $2
+      `, [limitNum, offset]),
+      pool.query('SELECT COUNT(*) FROM notifications'),
+    ]);
+
+    const total = Number(countResult.rows[0].count);
+    res.set('X-Pagination', JSON.stringify({ page, limit: limitNum, total }));
+    res.json({ data: result.rows, pagination: { page, limit: limitNum, total } });
   } catch (error) {
     next(error);
   }

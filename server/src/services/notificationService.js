@@ -10,16 +10,48 @@ export async function aggregateNotifications() {
 
   const notifications = [];
 
-  const expiringItems = await pool.query(`
-    SELECT r.id, e.id as employee_id, e.full_name, e.site_id, s.name as site_name, it.name as item_name, r.expiry_date
-    FROM issue_records r
-    JOIN employees e ON r.employee_id = e.id
-    JOIN item_types it ON r.item_type_id = it.id
-    LEFT JOIN sites s ON e.site_id = s.id
-    WHERE r.expiry_date <= NOW() + make_interval(months => 1)
-      AND r.status = 'issued'
-    ORDER BY r.expiry_date ASC
-  `);
+  const [expiringItems, expiredItems, expiringCerts, expiredCerts, reorderItems] = await Promise.all([
+    pool.query(`
+      SELECT r.id, e.id as employee_id, e.full_name, e.site_id, s.name as site_name, it.name as item_name, r.expiry_date
+      FROM issue_records r
+      JOIN employees e ON r.employee_id = e.id
+      JOIN item_types it ON r.item_type_id = it.id
+      LEFT JOIN sites s ON e.site_id = s.id
+      WHERE r.expiry_date <= NOW() + make_interval(months => 1)
+        AND r.status = 'issued'
+      ORDER BY r.expiry_date ASC
+    `),
+    pool.query(`
+      SELECT r.id, e.id as employee_id, e.full_name, it.name as item_name, r.expiry_date
+      FROM issue_records r
+      JOIN employees e ON r.employee_id = e.id
+      JOIN item_types it ON r.item_type_id = it.id
+      WHERE r.expiry_date < NOW()
+    `),
+    pool.query(`
+      SELECT c.id, it.name as item_name, c.certificate_number, c.expiry_date
+      FROM certificates c
+      JOIN item_types it ON c.item_type_id = it.id
+      WHERE c.expiry_date <= NOW() + make_interval(months => 1)
+        AND c.status != 'expired'
+    `),
+    pool.query(`
+      SELECT c.id, it.name as item_name, c.certificate_number, c.expiry_date
+      FROM certificates c
+      JOIN item_types it ON c.item_type_id = it.id
+      WHERE c.expiry_date < NOW()
+        AND c.status != 'expired'
+    `),
+    pool.query(`
+      SELECT r.id, e.id as employee_id, e.full_name, it.name as item_name, r.reorder_date
+      FROM issue_records r
+      JOIN employees e ON r.employee_id = e.id
+      JOIN item_types it ON r.item_type_id = it.id
+      WHERE r.reorder_date <= NOW()
+        AND r.status = 'issued'
+    `),
+  ]);
+
   expiringItems.rows.forEach(r => {
     notifications.push({
       notification_id: `item_${r.id}`,
@@ -32,13 +64,6 @@ export async function aggregateNotifications() {
     });
   });
 
-  const expiredItems = await pool.query(`
-    SELECT r.id, e.id as employee_id, e.full_name, it.name as item_name, r.expiry_date
-    FROM issue_records r
-    JOIN employees e ON r.employee_id = e.id
-    JOIN item_types it ON r.item_type_id = it.id
-    WHERE r.expiry_date < NOW()
-  `);
   expiredItems.rows.forEach(r => {
     notifications.push({
       notification_id: `expired_${r.id}`,
@@ -50,13 +75,6 @@ export async function aggregateNotifications() {
     });
   });
 
-  const expiringCerts = await pool.query(`
-    SELECT c.id, it.name as item_name, c.certificate_number, c.expiry_date
-    FROM certificates c
-    JOIN item_types it ON c.item_type_id = it.id
-    WHERE c.expiry_date <= NOW() + make_interval(months => 1)
-      AND c.status != 'expired'
-  `);
   expiringCerts.rows.forEach(c => {
     notifications.push({
       notification_id: `cert_${c.id}`,
@@ -67,13 +85,6 @@ export async function aggregateNotifications() {
     });
   });
 
-  const expiredCerts = await pool.query(`
-    SELECT c.id, it.name as item_name, c.certificate_number, c.expiry_date
-    FROM certificates c
-    JOIN item_types it ON c.item_type_id = it.id
-    WHERE c.expiry_date < NOW()
-      AND c.status != 'expired'
-  `);
   expiredCerts.rows.forEach(c => {
     notifications.push({
       notification_id: `expired_cert_${c.id}`,
@@ -84,14 +95,6 @@ export async function aggregateNotifications() {
     });
   });
 
-  const reorderItems = await pool.query(`
-    SELECT r.id, e.id as employee_id, e.full_name, it.name as item_name, r.reorder_date
-    FROM issue_records r
-    JOIN employees e ON r.employee_id = e.id
-    JOIN item_types it ON r.item_type_id = it.id
-    WHERE r.reorder_date <= NOW()
-      AND r.status = 'issued'
-  `);
   reorderItems.rows.forEach(r => {
     notifications.push({
       notification_id: `reorder_${r.id}`,

@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 const emptyToUndefined = (v) => (v === '' || v === null ? undefined : v);
 
-const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,128}$/;
 
 export const LoginSchema = z.object({
   username: z.string().min(1, 'Введите логин'),
@@ -11,7 +11,7 @@ export const LoginSchema = z.object({
 
 export const ChangePasswordSchema = z.object({
   old_password: z.string().min(1, 'Введите старый пароль'),
-  new_password: z.string().regex(PASSWORD_REGEX, 'Пароль должен содержать минимум 8 символов, заглавную и строчную буквы, цифру и спецсимвол'),
+  new_password: z.string().regex(PASSWORD_REGEX, 'Пароль должен содержать минимум 8 символов, максимум 128 символов, заглавную и строчную буквы, цифру и спецсимвол'),
 });
 
 export const EmployeeSchema = z.object({

@@ -24,7 +24,7 @@ describe('Admin', () => {
     const admin = await loginAs('admin');
     const list = await admin.get(`${base}/notifications`);
     expect(list.status).toBe(200);
-    expect(Array.isArray(list.body)).toBe(true);
+    expect(Array.isArray(list.body.data)).toBe(true);
 
     const markAll = await admin.patch(`${base}/notifications/read-all`);
     expect(markAll.status).toBe(200);

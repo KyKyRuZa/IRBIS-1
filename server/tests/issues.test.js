@@ -115,7 +115,7 @@ describe('Issues (issue records)', () => {
     await seedIssue();
     const res = await request(app).get(base).set(authHeaders('admin', 1));
     expect(res.status).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
+    expect(Array.isArray(res.body.data)).toBe(true);
   });
 
   it('stores issue_method on create and update', async () => {

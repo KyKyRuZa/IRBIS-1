@@ -19,9 +19,41 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  pgbouncer:
+    image: edoburu/pgbouncer:v1.25.1-p0
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required}
+      - DB_DATABASE=${DB_NAME:-irbis}
+    ports:
+      - "6432:6432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  redis:
+    image: redis:8.2.6-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   backend:
     build: ./server
-    init: true 
+    init: true
     environment:
       TZ: Europe/Moscow
       DB_HOST: ${DB_HOST}
@@ -31,11 +63,16 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       PORT: ${PORT}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
-      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@pgbouncer:6432/${DB_NAME}
+      REDIS_URL: redis://redis:6379
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:?VAPID_PUBLIC_KEY is required}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:?VAPID_PRIVATE_KEY is required}
     depends_on:
       postgres:
+        condition: service_healthy
+      pgbouncer:
+        condition: service_started
+      redis:
         condition: service_healthy
     restart: unless-stopped
     volumes:

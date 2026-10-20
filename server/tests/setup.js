@@ -33,3 +33,11 @@ vi.mock('web-push', () => ({
   ...webpushStub,
   default: webpushStub,
 }));
+
+vi.mock('../src/utils/redis.js', () => ({
+  redisClient: null,
+  acquireLock: async () => crypto.randomUUID(),
+  releaseLock: async () => true,
+  disconnectRedis: async () => {},
+  __esModule: true,
+}));

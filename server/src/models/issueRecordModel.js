@@ -9,13 +9,17 @@ function badRequest(message) {
 // Номер листа выдачи в карточке: титульный лист = 1, поэтому к количеству
 // различных дат выдачи сотрудника в этом календарном году до текущей даты
 // прибавляется 1. С января нумерация начинается заново.
+//
+// Использует correlated subquery (COUNT DISTINCT). Window function с DISTINCT
+// не поддерживается PostgreSQL для агрегатов-оконных функций, поэтому
+// оптимизация до CTE с предвычислением требует рефакторинга запросов.
 export const SHEET_NUMBER_SELECT = `
   (SELECT COUNT(DISTINCT r2.issue_date)::int + 1
-     FROM issue_records r2
-    WHERE r2.employee_id = r.employee_id
-      AND EXTRACT(YEAR FROM r2.issue_date) = EXTRACT(YEAR FROM r.issue_date)
-      AND r2.issue_date <= r.issue_date) AS sheet_number
-`;
+      FROM issue_records r2
+     WHERE r2.employee_id = r.employee_id
+       AND EXTRACT(YEAR FROM r2.issue_date) = EXTRACT(YEAR FROM r.issue_date)
+       AND r2.issue_date <= r.issue_date) AS sheet_number
+  `;
 
 async function calculateExpiryAndReorder(issueDate, wearTime, itemTypeId) {
   const effectiveWear = wearTime ? Number(wearTime) : null;
@@ -56,7 +60,7 @@ export async function getAllIssueRecords() {
 
 export async function getIssueRecordsByEmployee(employeeId) {
   const result = await pool.query(`
-    SELECT r.*, it.name as item_type_name, it.category, c.certificate_number,
+    SELECT r.*, it.name as item_type_name, it.category, it.unit, c.certificate_number,
       ${SHEET_NUMBER_SELECT}
     FROM issue_records r
     JOIN item_types it ON r.item_type_id = it.id
@@ -178,6 +182,23 @@ export async function returnIssueRecord(id, returnDate, returnQuantity, status =
   return result.rows[0];
 }
 
+export async function returnIssueRecordAtomic(id, returnDate, returnQty) {
+  const result = await pool.query(`
+    UPDATE issue_records
+    SET status = CASE
+          WHEN (return_quantity + $1) >= quantity THEN 'returned'
+          ELSE 'issued'
+        END,
+        return_date = $2,
+        return_quantity = return_quantity + $1
+    WHERE id = $3
+      AND status IN ('issued', 'due_for_disposal')
+      AND (return_quantity + $1) <= quantity
+    RETURNING *
+  `, [returnQty, returnDate, id]);
+  return result.rows[0];
+}
+
 export async function deleteIssueRecord(id) {
   const result = await pool.query(
     'DELETE FROM issue_records WHERE id=$1 RETURNING id',
@@ -214,6 +235,7 @@ export async function getExpiringItems(monthsAhead = 2) {
     JOIN employees e ON r.employee_id = e.id
     JOIN item_types it ON r.item_type_id = it.id
     WHERE r.expiry_date <= NOW() + make_interval(months => $1)
+      AND r.status = 'issued'
     ORDER BY r.expiry_date
   `, [monthsAhead]);
   return result.rows;

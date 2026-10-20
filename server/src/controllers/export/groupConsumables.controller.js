@@ -5,7 +5,7 @@ import { Document, Packer, Paragraph, TextRun, AlignmentType } from 'docx';
 
 export async function exportGroupConsumablesReport(req, res, next) {
   try {
-    const { site_id, period } = req.query;
+    const { site_id, period: _period } = req.query;
     if (!site_id) return res.status(400).json({ error: 'Укажите объект' });
 
     const employees = await pool.query(`

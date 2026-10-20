@@ -97,34 +97,37 @@ function monthTable(rows) {
 
 export async function exportConsumables(req, res, next) {
   try {
-    const result = await pool.query(`
-      SELECT e.*, s.name as site_name
-      FROM employees e
-      LEFT JOIN sites s ON e.site_id = s.id
-      WHERE e.id = $1
-    `, [req.params.id]);
-    if (!result.rows[0]) return res.status(404).json({ error: 'Employee not found' });
-
-    const emp = result.rows[0];
     const period = req.query.period || 'first';
-
-    const year = new Date().getFullYear();
+    const year = parseInt(req.query.year) || new Date().getFullYear();
     const monthStart = period === 'first' ? 0 : 6;
     const monthEnd = period === 'first' ? 6 : 12;
     const months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
 
-    const history = await pool.query(`
-      SELECT r.issue_date, r.quantity, r.issue_method, c.certificate_number,
-             it.name as item_type_name
-      FROM issue_records r
-      JOIN item_types it ON r.item_type_id = it.id
-      LEFT JOIN certificates c ON r.certificate_id = c.id
-      WHERE r.employee_id = $1
-        AND it.category = 'consumable'
-        AND EXTRACT(MONTH FROM r.issue_date) BETWEEN $2 AND $3
-        AND EXTRACT(YEAR FROM r.issue_date) = $4
-      ORDER BY r.issue_date ASC
-    `, [emp.id, monthStart + 1, monthEnd, year]);
+    const [result, history] = await Promise.all([
+      pool.query(`
+        SELECT e.*, s.name as site_name
+        FROM employees e
+        LEFT JOIN sites s ON e.site_id = s.id
+        WHERE e.id = $1
+      `, [req.params.id]),
+      pool.query(`
+        SELECT r.issue_date, r.quantity, r.issue_method, c.certificate_number,
+               it.name as item_type_name
+        FROM issue_records r
+        JOIN item_types it ON r.item_type_id = it.id
+        LEFT JOIN certificates c ON r.certificate_id = c.id
+        WHERE r.employee_id = $1
+          AND it.category = 'consumable'
+          AND r.status != 'disposed'
+          AND EXTRACT(MONTH FROM r.issue_date) BETWEEN $2 AND $3
+          AND EXTRACT(YEAR FROM r.issue_date) = $4
+        ORDER BY r.issue_date ASC
+      `, [req.params.id, monthStart + 1, monthEnd, year]),
+    ]);
+
+    if (!result.rows[0]) return res.status(404).json({ error: 'Employee not found' });
+
+    const emp = result.rows[0];
 
     const rowsByMonth = {};
     for (let m = monthStart; m < monthEnd; m++) rowsByMonth[m] = [];

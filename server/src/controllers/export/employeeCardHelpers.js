@@ -1,11 +1,15 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import PizZip from 'pizzip';
+import Docxtemplater from 'docxtemplater';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 import { getNormsForEmployee } from '../../models/issueNormModel.js';
 import { getIssueRecordsByEmployee } from '../../models/issueRecordModel.js';
+
+const templateCache = new Map();
 
 export function formatDate(dateStr) {
   if (!dateStr) return '';
@@ -129,10 +133,12 @@ export function buildSheetData(emp, items, sheetNumber, year) {
 }
 
 export async function renderTemplate(templatePath, data) {
-  const content = fs.readFileSync(templatePath);
-  const { default: PizZip } = await import('pizzip');
-  const zip = new PizZip(content);
-  const { default: Docxtemplater } = await import('docxtemplater');
+  let templateBuffer = templateCache.get(templatePath);
+  if (!templateBuffer) {
+    templateBuffer = fs.readFileSync(templatePath);
+    templateCache.set(templatePath, templateBuffer);
+  }
+  const zip = new PizZip(templateBuffer);
   const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
   doc.setData(data);
   await doc.render();
@@ -140,11 +146,16 @@ export async function renderTemplate(templatePath, data) {
 }
 
 export async function loadTemplate(filename, data) {
+  if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+    throw new Error('Invalid template filename: path traversal detected');
+  }
   const templatePath = path.join(__dirname, '..', '..', 'templates', filename);
-  const templateBuffer = fs.readFileSync(templatePath);
-  const { default: PizZip } = await import('pizzip');
+  let templateBuffer = templateCache.get(templatePath);
+  if (!templateBuffer) {
+    templateBuffer = fs.readFileSync(templatePath);
+    templateCache.set(templatePath, templateBuffer);
+  }
   const zip = new PizZip(templateBuffer);
-  const { default: Docxtemplater } = await import('docxtemplater');
   const doc = new Docxtemplater(zip, {
     paragraphLoop: true,
     linebreaks: true,

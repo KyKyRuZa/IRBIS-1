@@ -39,7 +39,6 @@ function sendDocx(res, buffer, filename) {
  */
 export async function exportEmployeeCard(req, res, next) {
   try {
-    console.log('DEBUG exportEmployeeCard: query=', JSON.stringify(req.query), 'params=', req.params);
     const emp = await findEmployee(req.params.id);
     if (!emp) return res.status(404).json({ error: 'Employee not found' });
 
@@ -48,11 +47,8 @@ export async function exportEmployeeCard(req, res, next) {
       if (!issueDate) {
         return res.status(400).json({ error: 'issue_date is required for part=sheet' });
       }
-      const [items, sheetNumber] = await Promise.all([
-        getIssueRecordsForEvent(emp.id, issueDate),
-        getIssueSheetNumber(emp.id, issueDate),
-      ]);
-      console.log('DEBUG sheet: items.length=', items.length, 'sheetNumber=', sheetNumber, 'items=', items.map(i => ({date: i.issue_date, item: i.item_type_name, qty: i.quantity})));
+       const items = await getIssueRecordsForEvent(emp.id, issueDate);
+      const sheetNumber = await getIssueSheetNumber(emp.id, issueDate);
       if (items.length === 0) return res.status(404).json({ error: 'No issues found for this date' });
 
       const data = buildSheetData(emp, items, sheetNumber, new Date(issueDate).getFullYear());

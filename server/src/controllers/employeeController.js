@@ -35,27 +35,43 @@ export async function registerEmployee(req, res, next) {
 
 export async function listEmployees(req, res, next) {
   try {
-    const { search, status, site_id } = req.query;
-    let query = 'SELECT e.*, s.name as site_name FROM employees e LEFT JOIN sites s ON e.site_id = s.id WHERE 1=1';
+    const { search, status, site_id, page, limit: limitQuery } = req.query;
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(200, Math.max(1, parseInt(limitQuery) || 50));
+    const offset = (pageNum - 1) * limitNum;
+
+    let whereClause = '';
     const params = [];
     let paramIndex = 1;
-    
+
     if (search) {
-      query += ` AND e.full_name ILIKE $${paramIndex++}`;
+      whereClause += ` AND e.full_name ILIKE $${paramIndex++}`;
       params.push(`%${search}%`);
     }
     if (status) {
-      query += ` AND e.status = $${paramIndex++}`;
+      whereClause += ` AND e.status = $${paramIndex++}`;
       params.push(status);
     }
     if (site_id) {
-      query += ` AND e.site_id = $${paramIndex++}`;
+      whereClause += ` AND e.site_id = $${paramIndex++}`;
       params.push(site_id);
     }
-    query += ' ORDER BY e.created_at DESC';
-    
-    const result = await pool.query(query, params);
-    res.json(result.rows);
+
+    const [result, countResult] = await Promise.all([
+      pool.query(
+        `SELECT e.*, s.name as site_name FROM employees e LEFT JOIN sites s ON e.site_id = s.id WHERE 1=1 ${whereClause}
+         ORDER BY e.created_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`,
+        [...params, limitNum, offset]
+      ),
+      pool.query(
+        `SELECT COUNT(*) FROM employees e WHERE 1=1 ${whereClause}`,
+        params
+      ),
+    ]);
+
+    const total = Number(countResult.rows[0].count);
+    res.set('X-Pagination', JSON.stringify({ page: pageNum, limit: limitNum, total }));
+    res.json({ data: result.rows, pagination: { page: pageNum, limit: limitNum, total } });
   } catch (error) {
     log.error(error);
     next(error);

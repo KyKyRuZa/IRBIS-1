@@ -58,6 +58,6 @@ describe('Employees', () => {
       .send({ full_name: 'A B', position: 'Worker', site_id: site.id });
     const list = await request(app).get(`${base}?site_id=${site.id}`).set(authHeaders('admin', 1));
     expect(list.status).toBe(200);
-    expect(Array.isArray(list.body)).toBe(true);
+    expect(Array.isArray(list.body.data)).toBe(true);
   });
 });
