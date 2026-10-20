@@ -109,7 +109,12 @@ export default function IssueForm() {
     filters.date_from !== '' || filters.date_to !== '';
 
   useEffect(() => {
-    employeesService.list().then(setEmployees);
+    employeesService.list().then(res => {
+      const employees = res && typeof res === 'object' && !Array.isArray(res) && 'pagination' in res
+        ? res.data
+        : res;
+      setEmployees(Array.isArray(employees) ? employees : []);
+    });
     itemsService.list().then(setItems);
     sitesService.list().then(setSites);
   }, []);

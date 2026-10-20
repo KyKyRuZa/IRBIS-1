@@ -15,7 +15,7 @@ vi.mock('@/lib/api.js', () => {
 
 const specs = [
   { name: 'getDemand', http: 'get', args: [1], expected: ['/api/admin/demand', { params: { site_id: 1 } }], sample: [{ id: 1 }] },
-  { name: 'getNotifications', http: 'get', args: [], expected: ['/api/admin/notifications'], sample: [{ id: 1 }] },
+  { name: 'getNotifications', http: 'get', args: [], expected: ['/api/admin/notifications', { params: {} }], sample: [{ id: 1 }] },
   { name: 'markNotificationRead', http: 'patch', args: [1], expected: ['/api/admin/notifications/1/read'], sample: { id: 1 } },
   { name: 'markAllNotificationsRead', http: 'patch', args: [], expected: ['/api/admin/notifications/read-all'], sample: { ok: true } },
   { name: 'backupDatabase', http: 'get', args: [], expected: ['/api/admin/backup', { responseType: 'blob' }], sample: 'blob' },

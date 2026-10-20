@@ -1,5 +1,9 @@
 import pool from '../models/db.js';
 import bcrypt from 'bcrypt';
+import { childLogger } from '../utils/logger.js';
+import { randomUUID } from 'node:crypto';
+
+const log = childLogger('seed');
 
 const clearAll = async () => {
   await pool.query('DELETE FROM push_subscriptions');
@@ -288,7 +292,7 @@ const seedPushSubscriptions = async (employees) => {
 const seedUsers = async () => {
   const existing = await pool.query('SELECT id FROM users WHERE username = $1', ['admin']);
   if (existing.rows.length > 0) {
-    console.log('Admin user already exists');
+    log.info('Admin user already exists');
     return existing.rows[0];
   }
   const passwordHash = await bcrypt.hash('admin', 10);
@@ -296,49 +300,49 @@ const seedUsers = async () => {
     'INSERT INTO users (username, password_hash, role, push_enabled) VALUES ($1, $2, $3, $4) RETURNING *',
     ['admin', passwordHash, 'admin', true]
   );
-  console.log('Admin user created');
+  log.info('Admin user created');
   return result.rows[0];
 };
 
 const main = async () => {
   try {
     await clearAll();
-    console.log('Cleared all data');
+    log.info('Cleared all data');
 
     const sites = await seedSites();
-    console.log('Sites seeded:', sites.length);
+    log.info({ count: sites.length }, 'Sites seeded');
 
     const employees = await seedEmployees(sites);
-    console.log('Employees seeded:', employees.length);
+    log.info({ count: employees.length }, 'Employees seeded');
 
     const itemTypes = await seedItemTypes();
-    console.log('Item types seeded:', itemTypes.length);
+    log.info({ count: itemTypes.length }, 'Item types seeded');
 
     const certs = await seedCertificates(itemTypes);
-    console.log('Certificates seeded:', certs.length);
+    log.info({ count: certs.length }, 'Certificates seeded');
 
     const norms = await seedIssueNorms(itemTypes, sites);
-    console.log('Issue norms seeded:', norms.length);
+    log.info({ count: norms.length }, 'Issue norms seeded');
 
     const records = await seedIssueRecords(employees, itemTypes, certs);
-    console.log('Issue records seeded:', records.length);
+    log.info({ count: records.length }, 'Issue records seeded');
 
     const { forms, formTaken } = await seedForms(employees);
-    console.log('Forms seeded:', forms.length, 'Form taken:', formTaken.length);
+    log.info({ forms: forms.length, formTaken: formTaken.length }, 'Forms seeded');
 
     const notifications = await seedNotifications(employees, sites);
-    console.log('Notifications seeded:', notifications.length);
+    log.info({ count: notifications.length }, 'Notifications seeded');
 
     const subscriptions = await seedPushSubscriptions(employees);
-    console.log('Push subscriptions seeded:', subscriptions.length);
+    log.info({ count: subscriptions.length }, 'Push subscriptions seeded');
 
     const user = await seedUsers();
-    console.log('Users seeded:', user.username);
+    log.info({ username: user.username }, 'Users seeded');
 
-    console.log('Seeding completed successfully');
+    log.info('Seeding completed successfully');
     process.exit(0);
   } catch (error) {
-    console.error('Seeding failed:', error);
+    log.error(error, 'Seeding failed');
     process.exit(1);
   }
 };

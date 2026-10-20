@@ -58,7 +58,10 @@ function Sidebar({ collapsed, onToggleCollapse }) {
       try {
         const { adminService } = await import('@/lib/services/admin.service.js');
         const data = await adminService.getNotifications();
-        if (!cancelled) setNotifications(Array.isArray(data) ? data : []);
+        const notifications = data && typeof data === 'object' && 'pagination' in data
+          ? data.data
+          : data;
+        if (!cancelled) setNotifications(Array.isArray(notifications) ? notifications : []);
       } catch {
         // ignore
       }

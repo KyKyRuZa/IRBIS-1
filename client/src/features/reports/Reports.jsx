@@ -37,6 +37,13 @@ export default function Reports() {
   const exportMenuRef = useRef(null);
   const { download } = useExport();
 
+  const extractData = (response) => {
+    if (response && typeof response === 'object' && !Array.isArray(response) && 'pagination' in response) {
+      return response.data || [];
+    }
+    return response;
+  };
+
   const {
     search,
     setSearch,
@@ -79,7 +86,7 @@ export default function Reports() {
         if (!mounted) return;
         setSites(Array.isArray(sitesRes) ? sitesRes : []);
         setItems(Array.isArray(itemsRes) ? itemsRes : []);
-        setRecords(Array.isArray(recordsRes) ? recordsRes : []);
+        setRecords(Array.isArray(extractData(recordsRes)) ? extractData(recordsRes) : []);
         setExpiring(Array.isArray(expiringRes) ? expiringRes : []);
       } catch (e) {
         console.error('Failed to load base reports data', e);
@@ -99,7 +106,7 @@ export default function Reports() {
 
   const fetchRecords = async () => {
     const res = await issuesService.list(filters);
-    setRecords(res);
+    setRecords(Array.isArray(extractData(res)) ? extractData(res) : []);
   };
 
   const fetchDemand = async () => {
@@ -132,7 +139,7 @@ export default function Reports() {
     setCurrentPage(1);
     setRecordsPage(1);
     setExpiringPage(1);
-    issuesService.list().then(res => setRecords(Array.isArray(res) ? res : []));
+    issuesService.list().then(res => setRecords(Array.isArray(extractData(res)) ? extractData(res) : []));
     adminService.getDemand('').then(res => setDemand(Array.isArray(res) ? res : []));
     issuesService.getExpiring(2).then(res => setExpiring(Array.isArray(res) ? res : []));
   };

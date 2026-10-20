@@ -86,7 +86,10 @@ export default function FormTracker() {
 
   const fetchEmployees = async () => {
     const res = await employeesService.list();
-    setEmployees(res);
+    const employees = res && typeof res === 'object' && !Array.isArray(res) && 'pagination' in res
+      ? res.data
+      : res;
+    setEmployees(Array.isArray(employees) ? employees : []);
   };
 
   const fetchRecords = async () => {

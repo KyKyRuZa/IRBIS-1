@@ -22,7 +22,10 @@ function NotificationsPage() {
     setLoading(true);
     setError(null);
     try {
-      const data = await adminService.getNotifications();
+      const response = await adminService.getNotifications();
+      const data = response && typeof response === 'object' && 'pagination' in response
+        ? response.data
+        : response;
       setItems(Array.isArray(data) ? data : []);
     } catch (e) {
       setError(e.message || 'Не удалось загрузить уведомления');

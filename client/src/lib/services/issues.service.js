@@ -4,6 +4,9 @@ export const issuesService = {
   list: (params = {}) =>
     api.get('/api/issues', { params }).then(r => r.data),
 
+  listPaginated: (params = {}) =>
+    api.get('/api/issues', { params }).then(r => r.data),
+
   get: (id) =>
     api.get(`/api/issues/${id}`).then(r => r.data),
 
@@ -25,8 +28,8 @@ export const issuesService = {
   dispose: (id) =>
     api.patch(`/api/issues/${id}/dispose`).then(r => r.data),
 
-  returnItem: (id) =>
-    api.patch(`/api/issues/${id}/return`).then(r => r.data),
+  returnItem: (id, returnData) =>
+    api.patch(`/api/issues/${id}/return`, returnData).then(r => r.data),
 
   getExpiring: (months = 2, filters = {}) =>
     api.get('/api/issues/expiring', { params: { ...filters, months } }).then(r => r.data),

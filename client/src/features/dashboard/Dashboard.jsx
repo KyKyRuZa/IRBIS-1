@@ -13,9 +13,16 @@ import ErrorState from '@/components/ui/ErrorState.jsx';
 import EmptyState from '@/components/ui/EmptyState.jsx';
 import styles from '@styles/Dashboard.module.css';
 
-function settle(value, fallback) {
-  return value.status === 'fulfilled' ? value.value : fallback;
-}
+  function settle(value, fallback) {
+    return value.status === 'fulfilled' ? value.value : fallback;
+  }
+
+  function extractData(response) {
+    if (response && typeof response === 'object' && !Array.isArray(response) && 'pagination' in response) {
+      return response.data || [];
+    }
+    return response;
+  }
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -42,8 +49,8 @@ export default function Dashboard() {
         const certList = Array.isArray(settle(certificates, [])) ? settle(certificates, []) : [];
         const expList = Array.isArray(settle(expiring, [])) ? settle(expiring, []) : [];
         const demList = Array.isArray(settle(demand, [])) ? settle(demand, []) : [];
-        const notifList = Array.isArray(settle(notifications, [])) ? settle(notifications, []) : [];
-        const issList = Array.isArray(settle(issues, [])) ? settle(issues, []) : [];
+        const notifList = Array.isArray(extractData(settle(notifications, []))) ? extractData(settle(notifications, [])) : [];
+        const issList = Array.isArray(extractData(settle(issues, []))) ? extractData(settle(issues, [])) : [];
 
         const activeEmployees = empList.filter(
           (e) => normalizeEmployeeStatus(e.status) === EMPLOYEE_STATUS_VALUES.active

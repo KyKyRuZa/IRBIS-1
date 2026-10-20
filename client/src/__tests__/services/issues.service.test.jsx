@@ -21,7 +21,7 @@ const specs = [
   { name: 'delete', http: 'delete', args: [8], expected: ['/api/issues/8'], sample: { id: 8 } },
   { name: 'batchCreate', http: 'post', args: [{ items: [] }], expected: ['/api/issues/batch', { items: [] }], sample: { id: 1 } },
   { name: 'dispose', http: 'patch', args: [8], expected: ['/api/issues/8/dispose'], sample: { id: 8 } },
-  { name: 'returnItem', http: 'patch', args: [8], expected: ['/api/issues/8/return'], sample: { id: 8 } },
+  { name: 'returnItem', http: 'patch', args: [8, { return_quantity: 1 }], expected: ['/api/issues/8/return', { return_quantity: 1 }], sample: { id: 8 } },
   { name: 'getExpiring', http: 'get', args: [3], expected: ['/api/issues/expiring', { params: { months: 3 } }], sample: [{ id: 1 }] },
 ];
 
