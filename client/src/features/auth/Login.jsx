@@ -1,48 +1,48 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Icon from '@components/ui/Icon.jsx';
-import { authService } from '@lib/services/auth.service.js';
-import { useAuth } from '@hooks/useAuth.js';
-import { showError, showFieldErrors } from '@/lib/toast.js';
-import { loginSchema } from '@/lib/validation/forms.js';
-import styles from '@styles/Login.module.css';
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import Icon from '@components/ui/Icon.jsx'
+import { authService } from '@lib/services/auth.service.js'
+import { useAuth } from '@hooks/useAuth.js'
+import { showError, showFieldErrors } from '@/lib/toast.js'
+import { loginSchema } from '@/lib/validation/forms.js'
+import styles from '@styles/Login.module.css'
 
 export default function Login() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
-  const { login, isAuthenticated } = useAuth();
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const navigate = useNavigate()
+  const { login, isAuthenticated } = useAuth()
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/');
+      navigate('/')
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate])
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (isLoading) return;
-    setIsLoading(true);
-    setError('');
-    const result = loginSchema.safeParse({ username, password });
+    e.preventDefault()
+    if (isLoading) return
+    setIsLoading(true)
+    setError('')
+    const result = loginSchema.safeParse({ username, password })
     if (!result.success) {
-      showFieldErrors(result.error?.issues || []);
-      setIsLoading(false);
-      return;
+      showFieldErrors(result.error?.issues || [])
+      setIsLoading(false)
+      return
     }
     try {
-      const res = await authService.login(username, password);
-      login({ username: res.username, role: res.role });
-      navigate('/');
+      const res = await authService.login(username, password)
+      login({ username: res.username, role: res.role })
+      navigate('/')
     } catch (err) {
-      setError(err.response?.data?.error || 'Ошибка входа. Проверьте данные.');
+      setError(err.response?.data?.error || 'Ошибка входа. Проверьте данные.')
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <div className={styles.pageWrapper}>
@@ -54,12 +54,8 @@ export default function Login() {
 
       <div className={styles.card}>
         <header className={styles.cardHeader}>
-          <h2 className={styles.heading}>
-            Вход в систему
-          </h2>
-          <p className={styles.cardSubtitle}>
-            Введите логин и пароль для входа
-          </p>
+          <h2 className={styles.heading}>Вход в систему</h2>
+          <p className={styles.cardSubtitle}>Введите логин и пароль для входа</p>
         </header>
 
         {error && (
@@ -115,18 +111,12 @@ export default function Login() {
             </div>
           </div>
 
-          <button
-            type="submit"
-            className={`btn ${styles.submitButton}`}
-            disabled={isLoading}
-          >
+          <button type="submit" className={`btn ${styles.submitButton}`} disabled={isLoading}>
             {isLoading && <span className={styles.spinner} aria-hidden="true" />}
-            {isLoading
-              ? 'Подождите…'
-              : 'Войти'}
+            {isLoading ? 'Подождите…' : 'Войти'}
           </button>
         </form>
       </div>
     </div>
-  );
+  )
 }

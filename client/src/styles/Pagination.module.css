@@ -21,7 +21,9 @@
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .button:hover:not(:disabled) {

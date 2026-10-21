@@ -1,7 +1,12 @@
-import Icon from '@components/ui/Icon.jsx';
-import styles from '@styles/ErrorState.module.css';
+import Icon from '@components/ui/Icon.jsx'
+import styles from '@styles/ErrorState.module.css'
 
-export default function ErrorState({ title = 'Произошла ошибка', message, onRetry, retryLabel = 'Повторить' }) {
+export default function ErrorState({
+  title = 'Произошла ошибка',
+  message,
+  onRetry,
+  retryLabel = 'Повторить',
+}) {
   return (
     <div className={styles.wrapper} role="alert">
       <div className={styles.icon}>
@@ -15,5 +20,5 @@ export default function ErrorState({ title = 'Произошла ошибка', 
         </button>
       )}
     </div>
-  );
+  )
 }

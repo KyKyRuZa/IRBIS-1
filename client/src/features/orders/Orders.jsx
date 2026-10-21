@@ -1,56 +1,61 @@
-import { useState, useEffect, useMemo } from 'react';
-import { sitesService } from '@/lib/services/sites.service.js';
-import { employeesService } from '@/lib/services/employees.service.js';
-import Pagination from '@/components/ui/Pagination.jsx';
-import LoadingState from '@/components/ui/LoadingState.jsx';
-import ErrorState from '@/components/ui/ErrorState.jsx';
-import EmptyState from '@/components/ui/EmptyState.jsx';
-import Icon from '@components/ui/Icon.jsx';
-import SearchBox from '@components/ui/SearchBox.jsx';
-import FilterSelect from '@components/ui/FilterSelect.jsx';
-import styles from '@styles/Orders.module.css';
+import { useState, useEffect, useMemo } from 'react'
+import { sitesService } from '@/lib/services/sites.service.js'
+import { employeesService } from '@/lib/services/employees.service.js'
+import Pagination from '@/components/ui/Pagination.jsx'
+import LoadingState from '@/components/ui/LoadingState.jsx'
+import ErrorState from '@/components/ui/ErrorState.jsx'
+import EmptyState from '@/components/ui/EmptyState.jsx'
+import Icon from '@components/ui/Icon.jsx'
+import SearchBox from '@components/ui/SearchBox.jsx'
+import FilterSelect from '@components/ui/FilterSelect.jsx'
+import styles from '@styles/Orders.module.css'
 
 export default function Orders() {
-  const [sites, setSites] = useState([]);
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [siteId, setSiteId] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [search, setSearch] = useState('');
+  const [sites, setSites] = useState([])
+  const [rows, setRows] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [siteId, setSiteId] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
-    sitesService.list().then(setSites).catch(() => setError('Не удалось загрузить объекты'));
-    setLoading(false);
-  }, []);
+    sitesService
+      .list()
+      .then(setSites)
+      .catch(() => setError('Не удалось загрузить объекты'))
+    setLoading(false)
+  }, [])
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [siteId]);
+    setCurrentPage(1)
+  }, [siteId])
 
   useEffect(() => {
     if (!siteId) {
-      setRows([]);
-      return;
+      setRows([])
+      return
     }
-    setLoading(true);
-    employeesService.bySite(siteId)
+    setLoading(true)
+    employeesService
+      .bySite(siteId)
       .then(setRows)
       .catch(() => setError('Не удалось загрузить сотрудников'))
-      .finally(() => setLoading(false));
-  }, [siteId]);
+      .finally(() => setLoading(false))
+  }, [siteId])
 
   const filtered = useMemo(() => {
-    if (!search) return rows;
-    const q = search.toLowerCase();
-    return rows.filter(r =>
-      (r.full_name || '').toLowerCase().includes(q) ||
-      (r.position || '').toLowerCase().includes(q)
-    );
-  }, [rows, search]);
+    if (!search) return rows
+    const q = search.toLowerCase()
+    return rows.filter(
+      (r) =>
+        (r.full_name || '').toLowerCase().includes(q) ||
+        (r.position || '').toLowerCase().includes(q)
+    )
+  }, [rows, search])
 
-  const startIndex = (currentPage - 1) * 10;
-  const paginated = filtered.slice(startIndex, startIndex + 10);
+  const startIndex = (currentPage - 1) * 10
+  const paginated = filtered.slice(startIndex, startIndex + 10)
 
   return (
     <div className={styles.pageWrapper}>
@@ -58,7 +63,9 @@ export default function Orders() {
         <div className={`${styles.container} ${styles.pageHeaderContent}`}>
           <div className={styles.title}>
             <h1>Заказ СИЗ</h1>
-            <div className={styles.subtitle}>Размеры сотрудников по объектам для планирования закупок</div>
+            <div className={styles.subtitle}>
+              Размеры сотрудников по объектам для планирования закупок
+            </div>
           </div>
         </div>
       </div>
@@ -68,7 +75,9 @@ export default function Orders() {
             <FilterSelect label="Объект" value={siteId} onChange={setSiteId}>
               <option value="">Выберите объект...</option>
               {sites.map((s) => (
-                <option key={s.id} value={String(s.id)}>{s.name}</option>
+                <option key={s.id} value={String(s.id)}>
+                  {s.name}
+                </option>
               ))}
             </FilterSelect>
             {siteId && (
@@ -94,7 +103,9 @@ export default function Orders() {
             <EmptyState
               icon={<Icon name="building2" size={48} />}
               title="Сотрудники не найдены"
-              description={search ? 'Поиск не дал результатов.' : 'На объекте нет активных сотрудников.'}
+              description={
+                search ? 'Поиск не дал результатов.' : 'На объекте нет активных сотрудников.'
+              }
             />
           )}
 
@@ -139,5 +150,5 @@ export default function Orders() {
         </div>
       </div>
     </div>
-  );
+  )
 }

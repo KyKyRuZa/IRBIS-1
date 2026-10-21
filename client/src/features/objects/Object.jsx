@@ -1,144 +1,136 @@
-import { useState, useEffect, useMemo } from 'react';
-import { sitesService } from '@lib/services/sites.service.js';
-import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
-import { showError, showSuccess, showFieldErrors } from '@/lib/toast.js';
-import { siteSchema } from '@/lib/validation/forms.js';
-import Modal from '@components/ui/Modal.jsx';
-import ConfirmDialog from '@components/ui/ConfirmDialog.jsx';
-import Pagination from '@/components/ui/Pagination.jsx';
-import LoadingState from '@/components/ui/LoadingState.jsx';
-import ErrorState from '@/components/ui/ErrorState.jsx';
-import EmptyState from '@/components/ui/EmptyState.jsx';
-import SortableTh from '@/components/ui/SortableTh.jsx';
-import Icon from '@components/ui/Icon.jsx';
-import SearchBox from '@components/ui/SearchBox.jsx';
-import FilterSelect from '@components/ui/FilterSelect.jsx';
-import styles from '@styles/Object.module.css';
+import { useState, useEffect, useMemo } from 'react'
+import { sitesService } from '@lib/services/sites.service.js'
+import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js'
+import { showError, showSuccess, showFieldErrors } from '@/lib/toast.js'
+import { siteSchema } from '@/lib/validation/forms.js'
+import Modal from '@components/ui/Modal.jsx'
+import ConfirmDialog from '@components/ui/ConfirmDialog.jsx'
+import Pagination from '@/components/ui/Pagination.jsx'
+import LoadingState from '@/components/ui/LoadingState.jsx'
+import ErrorState from '@/components/ui/ErrorState.jsx'
+import EmptyState from '@/components/ui/EmptyState.jsx'
+import SortableTh from '@/components/ui/SortableTh.jsx'
+import Icon from '@components/ui/Icon.jsx'
+import SearchBox from '@components/ui/SearchBox.jsx'
+import FilterSelect from '@components/ui/FilterSelect.jsx'
+import styles from '@styles/Object.module.css'
 
 export default function Object() {
-  const [sites, setSites] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [showModal, setShowModal] = useState(false);
-  const [editingSite, setEditingSite] = useState(null);
-  const [deleteId, setDeleteId] = useState(null);
+  const [sites, setSites] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [showModal, setShowModal] = useState(false)
+  const [editingSite, setEditingSite] = useState(null)
+  const [deleteId, setDeleteId] = useState(null)
   const [formData, setFormData] = useState({
     name: '',
-    responsible_person: ''
-  });
-  const [currentPage, setCurrentPage] = useState(1);
-  const [fieldErrors, setFieldErrors] = useState({});
+    responsible_person: '',
+  })
+  const [currentPage, setCurrentPage] = useState(1)
+  const [fieldErrors, setFieldErrors] = useState({})
 
-  const {
-    search,
-    searchApplied,
-    setSearch,
-    filters,
-    setFilter,
-    sort,
-    toggleSort,
-    resetFilters
-  } = useTableControls({
-    filters: { responsible_person: '' },
-    sort: { key: 'name', dir: 'asc' }
-  });
+  const { search, searchApplied, setSearch, filters, setFilter, sort, toggleSort, resetFilters } =
+    useTableControls({
+      filters: { responsible_person: '' },
+      sort: { key: 'name', dir: 'asc' },
+    })
 
   const fetchSites = async () => {
-    setLoading(true);
-    setError('');
+    setLoading(true)
+    setError('')
     try {
-      const res = await sitesService.list();
-      setSites(res);
+      const res = await sitesService.list()
+      setSites(res)
     } catch (e) {
-      setError(e.message || 'Ошибка загрузки объектов');
+      setError(e.message || 'Ошибка загрузки объектов')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchSites();
-  }, []);
+    fetchSites()
+  }, [])
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchApplied, filters, sort, sites]);
+    setCurrentPage(1)
+  }, [searchApplied, filters, sort, sites])
 
   const responsiblePersonOptions = useMemo(() => {
-    const map = new Map();
+    const map = new Map()
     sites.forEach((s) => {
-      const val = s.responsible_person || '';
-      if (val) map.set(val, val);
-    });
-    return Array.from(map.values()).sort((a, b) => a.localeCompare(b, 'ru'));
-  }, [sites]);
+      const val = s.responsible_person || ''
+      if (val) map.set(val, val)
+    })
+    return Array.from(map.values()).sort((a, b) => a.localeCompare(b, 'ru'))
+  }, [sites])
 
   const filteredSites = useFilteredList(sites, {
     search: searchApplied,
     filters,
     sort,
-    searchFields: ['name', 'responsible_person']
-  });
+    searchFields: ['name', 'responsible_person'],
+  })
 
-  const totalItems = filteredSites.length;
-  const startIndex = (currentPage - 1) * 10;
-  const paginatedSites = filteredSites.slice(startIndex, startIndex + 10);
+  const totalItems = filteredSites.length
+  const startIndex = (currentPage - 1) * 10
+  const paginatedSites = filteredSites.slice(startIndex, startIndex + 10)
 
-  const hasActiveFilters = Boolean(search) || filters.responsible_person !== '';
+  const hasActiveFilters = Boolean(search) || filters.responsible_person !== ''
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setFieldErrors({});
-    const result = siteSchema.safeParse(formData);
+    e.preventDefault()
+    setFieldErrors({})
+    const result = siteSchema.safeParse(formData)
     if (!result.success) {
-      const fieldError = {};
-      (result.error?.issues || []).forEach((err) => {
-        fieldError[err.path.join('.')] = err.message;
-      });
-      setFieldErrors(fieldError);
-      showFieldErrors(result.error?.issues || []);
-      return;
+      const fieldError = {}
+      ;(result.error?.issues || []).forEach((err) => {
+        fieldError[err.path.join('.')] = err.message
+      })
+      setFieldErrors(fieldError)
+      showFieldErrors(result.error?.issues || [])
+      return
     }
     try {
       if (editingSite) {
-        await sitesService.update(editingSite.id, result.data);
-        setEditingSite(null);
-        showSuccess('Объект обновлён');
+        await sitesService.update(editingSite.id, result.data)
+        setEditingSite(null)
+        showSuccess('Объект обновлён')
       } else {
-        await sitesService.create(result.data);
-        showSuccess('Объект добавлен');
+        await sitesService.create(result.data)
+        showSuccess('Объект добавлен')
       }
-      setFormData({ name: '', responsible_person: '' });
-      setShowModal(false);
-      fetchSites();
+      setFormData({ name: '', responsible_person: '' })
+      setShowModal(false)
+      fetchSites()
     } catch (err) {
-      showError(err.response?.data?.error || 'Не удалось сохранить объект');
+      showError(err.response?.data?.error || 'Не удалось сохранить объект')
     }
-  };
+  }
 
   const handleEdit = (site) => {
-    setEditingSite(site);
-    setFormData({ name: site.name, responsible_person: site.responsible_person || '' });
-    setShowModal(true);
-  };
+    setEditingSite(site)
+    setFormData({ name: site.name, responsible_person: site.responsible_person || '' })
+    setShowModal(true)
+  }
 
   const handleDelete = async (id) => {
-    setDeleteId(id);
-  };
+    setDeleteId(id)
+  }
 
   const confirmDelete = async () => {
-    if (!deleteId) return;
-    await sitesService.delete(deleteId);
-    fetchSites();
-    setDeleteId(null);
-  };
+    if (!deleteId) return
+    await sitesService.delete(deleteId)
+    fetchSites()
+    setDeleteId(null)
+  }
 
   const handleClose = () => {
-    setShowModal(false);
-    setEditingSite(null);
-    setFormData({ name: '', responsible_person: '' });
-    setFieldErrors({});
-  };
+    setShowModal(false)
+    setEditingSite(null)
+    setFormData({ name: '', responsible_person: '' })
+    setFieldErrors({})
+  }
 
   return (
     <div className={styles.pageWrapper}>
@@ -148,7 +140,14 @@ export default function Object() {
             <h1>Объекты</h1>
             <div className={styles.subtitle}>Список АЗС и подразделений</div>
           </div>
-          <button className="btn" onClick={() => { setEditingSite(null); setFormData({ name: '', responsible_person: '' }); setShowModal(true); }}>
+          <button
+            className="btn"
+            onClick={() => {
+              setEditingSite(null)
+              setFormData({ name: '', responsible_person: '' })
+              setShowModal(true)
+            }}
+          >
             <Icon name="plus" size={16} /> Добавить объект
           </button>
         </div>
@@ -161,10 +160,16 @@ export default function Object() {
               onChange={setSearch}
               placeholder="Поиск по названию или ответственному..."
             />
-            <FilterSelect label="Ответственный" value={filters.responsible_person} onChange={(value) => setFilter('responsible_person', value)}>
+            <FilterSelect
+              label="Ответственный"
+              value={filters.responsible_person}
+              onChange={(value) => setFilter('responsible_person', value)}
+            >
               <option value="">Все</option>
               {responsiblePersonOptions.map((name) => (
-                <option key={name} value={name}>{name}</option>
+                <option key={name} value={name}>
+                  {name}
+                </option>
               ))}
             </FilterSelect>
             {hasActiveFilters && (
@@ -176,43 +181,81 @@ export default function Object() {
 
           {loading && <LoadingState label="Загрузка объектов..." />}
           {!loading && error && <ErrorState message={error} onRetry={fetchSites} />}
-          {!loading && !error && (
-            filteredSites.length === 0 ? (
+          {!loading &&
+            !error &&
+            (filteredSites.length === 0 ? (
               <EmptyState
                 icon={<Icon name="building2" size={48} />}
                 title="Объекты не найдены"
-                description={hasActiveFilters ? 'По заданным фильтрам ничего не найдено.' : 'Пока не добавлено ни одного объекта.'}
-                action={<button className="btn" onClick={() => { setEditingSite(null); setFormData({ name: '', responsible_person: '' }); setShowModal(true); }}><Icon name="plus" size={16} /> Добавить объект</button>}
+                description={
+                  hasActiveFilters
+                    ? 'По заданным фильтрам ничего не найдено.'
+                    : 'Пока не добавлено ни одного объекта.'
+                }
+                action={
+                  <button
+                    className="btn"
+                    onClick={() => {
+                      setEditingSite(null)
+                      setFormData({ name: '', responsible_person: '' })
+                      setShowModal(true)
+                    }}
+                  >
+                    <Icon name="plus" size={16} /> Добавить объект
+                  </button>
+                }
               />
             ) : (
               <>
                 <div className="tableScroll">
-
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <SortableTh label="Название" sortKey="name" sort={sort} onSort={toggleSort} />
-                      <SortableTh label="Ответственный" sortKey="responsible_person" sort={sort} onSort={toggleSort} />
-                      <th>Действия</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedSites.map((s) => (
-                      <tr key={s.id}>
-                        <td>{s.name}</td>
-                        <td>{s.responsible_person}</td>
-                        <td>
-                          <div className="action-buttons">
-                            <button className="btn action-btn" aria-label="Редактировать" data-tooltip="Редактировать" onClick={() => handleEdit(s)}><Icon name="pencil" size={14} /></button>
-                            <button className="btn btn-danger action-btn" aria-label="Удалить" data-tooltip="Удалить" onClick={() => handleDelete(s.id)}><Icon name="trash" size={14} /></button>
-                          </div>
-                        </td>
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <SortableTh
+                          label="Название"
+                          sortKey="name"
+                          sort={sort}
+                          onSort={toggleSort}
+                        />
+                        <SortableTh
+                          label="Ответственный"
+                          sortKey="responsible_person"
+                          sort={sort}
+                          onSort={toggleSort}
+                        />
+                        <th>Действия</th>
                       </tr>
-                    ))}
-                  </tbody>
-                 </table>
-
-                 </div>
+                    </thead>
+                    <tbody>
+                      {paginatedSites.map((s) => (
+                        <tr key={s.id}>
+                          <td>{s.name}</td>
+                          <td>{s.responsible_person}</td>
+                          <td>
+                            <div className="action-buttons">
+                              <button
+                                className="btn action-btn"
+                                aria-label="Редактировать"
+                                data-tooltip="Редактировать"
+                                onClick={() => handleEdit(s)}
+                              >
+                                <Icon name="pencil" size={14} />
+                              </button>
+                              <button
+                                className="btn btn-danger action-btn"
+                                aria-label="Удалить"
+                                data-tooltip="Удалить"
+                                onClick={() => handleDelete(s.id)}
+                              >
+                                <Icon name="trash" size={14} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
                 <Pagination
                   totalItems={totalItems}
                   itemsPerPage={10}
@@ -220,12 +263,16 @@ export default function Object() {
                   onPageChange={setCurrentPage}
                 />
               </>
-            )
-          )}
+            ))}
         </div>
       </div>
 
-      <Modal isOpen={showModal} onClose={handleClose} title={editingSite ? 'Редактировать объект' : 'Добавить объект'} size="compact">
+      <Modal
+        isOpen={showModal}
+        onClose={handleClose}
+        title={editingSite ? 'Редактировать объект' : 'Добавить объект'}
+        size="compact"
+      >
         <form onSubmit={handleSubmit} className={styles.formSection}>
           <div className={styles.formGrid}>
             <div className={`form-group ${styles.field}`}>
@@ -234,12 +281,16 @@ export default function Object() {
                 type="text"
                 className="form-control"
                 value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
                 aria-invalid={Boolean(fieldErrors.name)}
                 aria-describedby={fieldErrors.name ? 'name-error' : undefined}
               />
-              {fieldErrors.name && <div id="name-error" className={styles.fieldError} role="alert">{fieldErrors.name}</div>}
+              {fieldErrors.name && (
+                <div id="name-error" className={styles.fieldError} role="alert">
+                  {fieldErrors.name}
+                </div>
+              )}
             </div>
             <div className={`form-group ${styles.field}`}>
               <label>Ответственный</label>
@@ -247,13 +298,19 @@ export default function Object() {
                 type="text"
                 className="form-control"
                 value={formData.responsible_person}
-                onChange={(e) => setFormData({...formData, responsible_person: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, responsible_person: e.target.value })}
               />
             </div>
           </div>
           <div className={styles.actionButtons}>
-            <button type="submit" className="btn">{editingSite ? 'Сохранить' : 'Добавить объект'}</button>
-            {editingSite && <button type="button" className="btn btn-secondary" onClick={handleClose}>Отмена</button>}
+            <button type="submit" className="btn">
+              {editingSite ? 'Сохранить' : 'Добавить объект'}
+            </button>
+            {editingSite && (
+              <button type="button" className="btn btn-secondary" onClick={handleClose}>
+                Отмена
+              </button>
+            )}
           </div>
         </form>
       </Modal>
@@ -266,5 +323,5 @@ export default function Object() {
         message="Вы уверены, что хотите удалить этот объект?"
       />
     </div>
-  );
+  )
 }

@@ -51,7 +51,10 @@
   font-weight: 500;
   color: #1a1d21;
   text-decoration: none;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  transition:
+    background 0.12s,
+    border-color 0.12s,
+    color 0.12s;
 }
 
 .quickBtn:hover {
@@ -61,9 +64,9 @@
 }
 
 .quickPrimary {
-  background: #AA2A40;
+  background: #aa2a40;
   color: #ffffff;
-  border-color: #AA2A40;
+  border-color: #aa2a40;
 }
 
 .quickPrimary:hover {
@@ -88,10 +91,18 @@
   padding: 16px 18px;
 }
 
-.kpiPrimary { border-top-color: #1a1d21; }
-.kpiInfo { border-top-color: #475569; }
-.kpiWarning { border-top-color: #9a6a00; }
-.kpiDanger { border-top-color: #b3261e; }
+.kpiPrimary {
+  border-top-color: #1a1d21;
+}
+.kpiInfo {
+  border-top-color: #475569;
+}
+.kpiWarning {
+  border-top-color: #9a6a00;
+}
+.kpiDanger {
+  border-top-color: #b3261e;
+}
 
 .kpiValue {
   font-size: 28px;
@@ -174,9 +185,15 @@
   gap: 3px;
 }
 
-.sevDanger { border-left-color: #b3261e; }
-.sevWarning { border-left-color: #9a6a00; }
-.sevInfo { border-left-color: #475569; }
+.sevDanger {
+  border-left-color: #b3261e;
+}
+.sevWarning {
+  border-left-color: #9a6a00;
+}
+.sevInfo {
+  border-left-color: #475569;
+}
 
 .taskTitle {
   font-size: 13px;

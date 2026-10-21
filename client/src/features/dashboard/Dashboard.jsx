@@ -1,65 +1,78 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { employeesService } from '@/lib/services/employees.service.js';
-import { certificatesService } from '@/lib/services/certificates.service.js';
-import { issuesService } from '@/lib/services/issues.service.js';
-import { adminService } from '@/lib/services/admin.service.js';
-import { useAuth } from '@/hooks/useAuth.js';
-import { normalizeEmployeeStatus, EMPLOYEE_STATUS_VALUES } from '@/lib/constants/employee-statuses.js';
-import { CERTIFICATE_STATUSES } from '@/lib/constants/certificate-statuses.js';
-import { formatDate } from '@/lib/utils/date.js';
-import LoadingState from '@/components/ui/LoadingState.jsx';
-import ErrorState from '@/components/ui/ErrorState.jsx';
-import EmptyState from '@/components/ui/EmptyState.jsx';
-import styles from '@styles/Dashboard.module.css';
+import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
+import { employeesService } from '@/lib/services/employees.service.js'
+import { certificatesService } from '@/lib/services/certificates.service.js'
+import { issuesService } from '@/lib/services/issues.service.js'
+import { adminService } from '@/lib/services/admin.service.js'
+import { useAuth } from '@/hooks/useAuth.js'
+import {
+  normalizeEmployeeStatus,
+  EMPLOYEE_STATUS_VALUES,
+} from '@/lib/constants/employee-statuses.js'
+import { CERTIFICATE_STATUSES } from '@/lib/constants/certificate-statuses.js'
+import { formatDate } from '@/lib/utils/date.js'
+import LoadingState from '@/components/ui/LoadingState.jsx'
+import ErrorState from '@/components/ui/ErrorState.jsx'
+import EmptyState from '@/components/ui/EmptyState.jsx'
+import styles from '@styles/Dashboard.module.css'
 
-  function settle(value, fallback) {
-    return value.status === 'fulfilled' ? value.value : fallback;
-  }
+function settle(value, fallback) {
+  return value.status === 'fulfilled' ? value.value : fallback
+}
 
-  function extractData(response) {
-    if (response && typeof response === 'object' && !Array.isArray(response) && 'pagination' in response) {
-      return response.data || [];
-    }
-    return response;
+function extractData(response) {
+  if (
+    response &&
+    typeof response === 'object' &&
+    !Array.isArray(response) &&
+    'pagination' in response
+  ) {
+    return response.data || []
   }
+  return response
+}
 
 export default function Dashboard() {
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [data, setData] = useState(null);
+  const { user } = useAuth()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [data, setData] = useState(null)
 
   useEffect(() => {
-    let mounted = true;
-    (async () => {
+    let mounted = true
+    ;(async () => {
       try {
-        const [employees, certificates, expiring, demand, notifications, issues] = await Promise.allSettled([
-          employeesService.list(),
-          certificatesService.list(),
-          issuesService.getExpiring(2),
-          adminService.getDemand(),
-          adminService.getNotifications(),
-          issuesService.list(),
-        ]);
+        const [employees, certificates, expiring, demand, notifications, issues] =
+          await Promise.allSettled([
+            employeesService.list(),
+            certificatesService.list(),
+            issuesService.getExpiring(2),
+            adminService.getDemand(),
+            adminService.getNotifications(),
+            issuesService.list(),
+          ])
 
-        if (!mounted) return;
+        if (!mounted) return
 
-        const empList = Array.isArray(settle(employees, [])) ? settle(employees, []) : [];
-        const certList = Array.isArray(settle(certificates, [])) ? settle(certificates, []) : [];
-        const expList = Array.isArray(settle(expiring, [])) ? settle(expiring, []) : [];
-        const demList = Array.isArray(settle(demand, [])) ? settle(demand, []) : [];
-        const notifList = Array.isArray(extractData(settle(notifications, []))) ? extractData(settle(notifications, [])) : [];
-        const issList = Array.isArray(extractData(settle(issues, []))) ? extractData(settle(issues, [])) : [];
+        const empList = Array.isArray(settle(employees, [])) ? settle(employees, []) : []
+        const certList = Array.isArray(settle(certificates, [])) ? settle(certificates, []) : []
+        const expList = Array.isArray(settle(expiring, [])) ? settle(expiring, []) : []
+        const demList = Array.isArray(settle(demand, [])) ? settle(demand, []) : []
+        const notifList = Array.isArray(extractData(settle(notifications, [])))
+          ? extractData(settle(notifications, []))
+          : []
+        const issList = Array.isArray(extractData(settle(issues, [])))
+          ? extractData(settle(issues, []))
+          : []
 
         const activeEmployees = empList.filter(
           (e) => normalizeEmployeeStatus(e.status) === EMPLOYEE_STATUS_VALUES.active
-        ).length;
-        const expiredCerts = certList.filter((c) => c.status === CERTIFICATE_STATUSES.expired);
-        const expiringCerts = certList.filter((c) => c.status === CERTIFICATE_STATUSES.expiring);
-        const demandItems = demList.filter((d) => d.demand_qty > 0);
-        const issuedCount = issList.filter((r) => r.status === 'issued').length;
-        const unread = notifList.filter((n) => !n.read);
+        ).length
+        const expiredCerts = certList.filter((c) => c.status === CERTIFICATE_STATUSES.expired)
+        const expiringCerts = certList.filter((c) => c.status === CERTIFICATE_STATUSES.expiring)
+        const demandItems = demList.filter((d) => d.demand_qty > 0)
+        const issuedCount = issList.filter((r) => r.status === 'issued').length
+        const unread = notifList.filter((n) => !n.read)
 
         setData({
           totalEmployees: empList.length,
@@ -70,34 +83,34 @@ export default function Dashboard() {
           demandItems,
           issuedCount,
           notifications: unread,
-        });
+        })
       } catch (e) {
-        if (mounted) setError(e.message || 'Ошибка загрузки рабочего стола');
+        if (mounted) setError(e.message || 'Ошибка загрузки рабочего стола')
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) setLoading(false)
       }
-    })();
+    })()
     return () => {
-      mounted = false;
-    };
-  }, []);
+      mounted = false
+    }
+  }, [])
 
-  if (loading) return <LoadingState label="Загрузка рабочего стола..." />;
-  if (error) return <ErrorState message={error} onRetry={() => window.location.reload()} />;
+  if (loading) return <LoadingState label="Загрузка рабочего стола..." />
+  if (error) return <ErrorState message={error} onRetry={() => window.location.reload()} />
 
-  const d = data || {};
+  const d = data || {}
   const attentionCount =
     (d.expiredCerts?.length || 0) +
     (d.expiringSiz?.length || 0) +
     (d.demandItems?.length || 0) +
-    (d.notifications?.length || 0);
+    (d.notifications?.length || 0)
 
   const today = new Date().toLocaleDateString('ru-RU', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
-  });
+  })
 
   return (
     <div className={styles.pageWrapper}>
@@ -178,8 +191,8 @@ export default function Dashboard() {
                         n.severity === 'danger'
                           ? styles.sevDanger
                           : n.severity === 'warning'
-                          ? styles.sevWarning
-                          : styles.sevInfo
+                            ? styles.sevWarning
+                            : styles.sevInfo
                       }`}
                     >
                       <span className={styles.taskTitle}>{n.message}</span>
@@ -205,7 +218,9 @@ export default function Dashboard() {
                     <li
                       key={c.id}
                       className={`${styles.taskItem} ${
-                        c.status === CERTIFICATE_STATUSES.expired ? styles.sevDanger : styles.sevWarning
+                        c.status === CERTIFICATE_STATUSES.expired
+                          ? styles.sevDanger
+                          : styles.sevWarning
                       }`}
                     >
                       <span className={styles.taskTitle}>{c.product_name}</span>
@@ -271,5 +286,5 @@ export default function Dashboard() {
         )}
       </div>
     </div>
-  );
+  )
 }

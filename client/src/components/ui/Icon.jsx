@@ -46,9 +46,9 @@ import {
   ArrowUp,
   ArrowDown,
   Sliders,
-  Shield
-} from 'lucide-react';
-import styles from '@styles/Icon.module.css';
+  Shield,
+} from 'lucide-react'
+import styles from '@styles/Icon.module.css'
 
 const ICONS = {
   users: Users,
@@ -99,12 +99,12 @@ const ICONS = {
   packageOpen: PackageOpen,
   fileText: FileText,
   sliders: Sliders,
-  shield: Shield
-};
+  shield: Shield,
+}
 
 export default function Icon({ name, size = 18, className }) {
-  const LucideIcon = ICONS[name];
-  if (!LucideIcon) return null;
+  const LucideIcon = ICONS[name]
+  if (!LucideIcon) return null
   return (
     <span
       className={`${styles.icon} ${className || ''}`}
@@ -113,10 +113,10 @@ export default function Icon({ name, size = 18, className }) {
         alignItems: 'center',
         justifyContent: 'center',
         width: size,
-        height: size
+        height: size,
       }}
     >
       <LucideIcon size={size} strokeWidth={2} />
     </span>
-  );
+  )
 }

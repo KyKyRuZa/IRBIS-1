@@ -1,36 +1,41 @@
-import { useState, useEffect, useMemo } from 'react';
-import { employeesService } from '@/lib/services/employees.service.js';
-import { itemsService } from '@/lib/services/items.service.js';
-import { sitesService } from '@/lib/services/sites.service.js';
-import { certificatesService } from '@/lib/services/certificates.service.js';
-import { issuesService } from '@/lib/services/issues.service.js';
-import { uploadService } from '@/lib/services/upload.service.js';
-import { exportsService } from '@/lib/services/exports.service.js';
-import { useAuth } from '@/hooks/useAuth.js';
-import { useExport } from '@hooks/useExport.js';
-import { useLocation } from 'react-router-dom';
-import { ISSUE_STATUSES, ISSUE_STATUS_LABELS } from '@/lib/constants/issue-statuses.js';
-import { ISSUE_METHODS, ISSUE_METHOD_VALUES } from '@/lib/constants/issue-methods.js';
-import { useResource } from '@/hooks/useResource.js';
-import { useFormState } from '@/hooks/useFormState.js';
-import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js';
-import { showError, showSuccess, showFieldErrors } from '@/lib/toast.js';
-import { issueSchema, issueBatchSchema, issueBatchSingleSchema, issueUpdateSchema } from '@/lib/validation/forms.js';
-import Modal from '@/components/ui/Modal.jsx';
-import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
-import Pagination from '@/components/ui/Pagination.jsx';
-import LoadingState from '@/components/ui/LoadingState.jsx';
-import ErrorState from '@/components/ui/ErrorState.jsx';
-import EmptyState from '@/components/ui/EmptyState.jsx';
-import SortableTh from '@/components/ui/SortableTh.jsx';
-import Icon from '@components/ui/Icon.jsx';
-import SearchBox from '@components/ui/SearchBox.jsx';
-import FilterSelect from '@components/ui/FilterSelect.jsx';
-import DateRange from '@components/ui/DateRange.jsx';
-import IssueModeSelector from './IssueModeSelector.jsx';
-import BatchItemsTable from './BatchItemsTable.jsx';
-import { emptyBatchItem } from './BatchItemsTable.jsx';
-import styles from '@styles/IssueForm.module.css';
+import { useState, useEffect, useMemo } from 'react'
+import { employeesService } from '@/lib/services/employees.service.js'
+import { itemsService } from '@/lib/services/items.service.js'
+import { sitesService } from '@/lib/services/sites.service.js'
+import { certificatesService } from '@/lib/services/certificates.service.js'
+import { issuesService } from '@/lib/services/issues.service.js'
+import { uploadService } from '@/lib/services/upload.service.js'
+import { exportsService } from '@/lib/services/exports.service.js'
+import { useAuth } from '@/hooks/useAuth.js'
+import { useExport } from '@hooks/useExport.js'
+import { useLocation } from 'react-router-dom'
+import { ISSUE_STATUSES, ISSUE_STATUS_LABELS } from '@/lib/constants/issue-statuses.js'
+import { ISSUE_METHODS, ISSUE_METHOD_VALUES } from '@/lib/constants/issue-methods.js'
+import { useResource } from '@/hooks/useResource.js'
+import { useFormState } from '@/hooks/useFormState.js'
+import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js'
+import { showError, showSuccess, showFieldErrors } from '@/lib/toast.js'
+import {
+  issueSchema,
+  issueBatchSchema,
+  issueBatchSingleSchema,
+  issueUpdateSchema,
+} from '@/lib/validation/forms.js'
+import Modal from '@/components/ui/Modal.jsx'
+import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx'
+import Pagination from '@/components/ui/Pagination.jsx'
+import LoadingState from '@/components/ui/LoadingState.jsx'
+import ErrorState from '@/components/ui/ErrorState.jsx'
+import EmptyState from '@/components/ui/EmptyState.jsx'
+import SortableTh from '@/components/ui/SortableTh.jsx'
+import Icon from '@components/ui/Icon.jsx'
+import SearchBox from '@components/ui/SearchBox.jsx'
+import FilterSelect from '@components/ui/FilterSelect.jsx'
+import DateRange from '@components/ui/DateRange.jsx'
+import IssueModeSelector from './IssueModeSelector.jsx'
+import BatchItemsTable from './BatchItemsTable.jsx'
+import { emptyBatchItem } from './BatchItemsTable.jsx'
+import styles from '@styles/IssueForm.module.css'
 
 const formInitialState = {
   employee_id: '',
@@ -40,56 +45,60 @@ const formInitialState = {
   wear_time_override: '',
   signature_path: '',
   notes: '',
-  issue_method: 'personal'
-};
+  issue_method: 'personal',
+}
 
 export default function IssueForm() {
-  const { isAdmin } = useAuth();
-  const location = useLocation();
+  const { isAdmin } = useAuth()
+  const location = useLocation()
 
-  const [employees, setEmployees] = useState([]);
-  const [items, setItems] = useState([]);
-  const [sites, setSites] = useState([]);
-  const [certificates, setCertificates] = useState([]);
-  const [lastSignature, setLastSignature] = useState(null);
-  const [issueMode, setIssueMode] = useState('group');
-  const [selectedSite, setSelectedSite] = useState('');
-  const [groupPosition, setGroupPosition] = useState('');
-  const [printableIssue, setPrintableIssue] = useState(null);
-  const [signatureFile, setSignatureFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [disposeId, setDisposeId] = useState(null);
-  const [editingRecord, setEditingRecord] = useState(null);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [deleteId, setDeleteId] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [batchItems, setBatchItems] = useState([]);
-  const [fieldErrors, setFieldErrors] = useState({});
+  const [employees, setEmployees] = useState([])
+  const [items, setItems] = useState([])
+  const [sites, setSites] = useState([])
+  const [certificates, setCertificates] = useState([])
+  const [lastSignature, setLastSignature] = useState(null)
+  const [issueMode, setIssueMode] = useState('group')
+  const [selectedSite, setSelectedSite] = useState('')
+  const [groupPosition, setGroupPosition] = useState('')
+  const [printableIssue, setPrintableIssue] = useState(null)
+  const [signatureFile, setSignatureFile] = useState(null)
+  const [uploading, setUploading] = useState(false)
+  const [disposeId, setDisposeId] = useState(null)
+  const [editingRecord, setEditingRecord] = useState(null)
+  const [selectedEmployee, setSelectedEmployee] = useState(null)
+  const [deleteId, setDeleteId] = useState(null)
+  const [showModal, setShowModal] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [batchItems, setBatchItems] = useState([])
+  const [fieldErrors, setFieldErrors] = useState({})
 
-  const form = useFormState(formInitialState);
-  const { data: records, loading, error, refetch: refetchRecords } = useResource(issuesService.list);
-  const { download: downloadExport, exporting: exportingSheet } = useExport();
+  const form = useFormState(formInitialState)
+  const { data: records, loading, error, refetch: refetchRecords } = useResource(issuesService.list)
+  const { download: downloadExport, exporting: exportingSheet } = useExport()
 
-  const {
-    search,
-    setSearch,
-    filters,
-    setFilter,
-    sort,
-    toggleSort,
-    resetFilters
-  } = useTableControls({
-    filters: { employee_id: '', issue_method: '', item_type_id: '', status: '', date_from: '', date_to: '' },
-    sort: { key: 'issue_date', dir: 'desc' }
-  });
+  const { search, setSearch, filters, setFilter, sort, toggleSort, resetFilters } =
+    useTableControls({
+      filters: {
+        employee_id: '',
+        issue_method: '',
+        item_type_id: '',
+        status: '',
+        date_from: '',
+        date_to: '',
+      },
+      sort: { key: 'issue_date', dir: 'desc' },
+    })
 
-  const dateFilteredRecords = useMemo(() => records.filter((r) => {
-    const rDate = (r.issue_date || '').slice(0, 10);
-    if (filters.date_from && rDate && rDate < filters.date_from) return false;
-    if (filters.date_to && rDate && rDate > filters.date_to) return false;
-    return true;
-  }), [records, filters.date_from, filters.date_to]);
+  const dateFilteredRecords = useMemo(
+    () =>
+      records.filter((r) => {
+        const rDate = (r.issue_date || '').slice(0, 10)
+        if (filters.date_from && rDate && rDate < filters.date_from) return false
+        if (filters.date_to && rDate && rDate > filters.date_to) return false
+        return true
+      }),
+    [records, filters.date_from, filters.date_to]
+  )
 
   const filteredRecords = useFilteredList(dateFilteredRecords, {
     search,
@@ -97,96 +106,108 @@ export default function IssueForm() {
       employee_id: filters.employee_id,
       issue_method: filters.issue_method,
       item_type_id: filters.item_type_id,
-      status: filters.status
+      status: filters.status,
     },
     sort,
-    searchFields: ['full_name', 'item_type_name']
-  });
+    searchFields: ['full_name', 'item_type_name'],
+  })
 
-  const hasActiveFilters = Boolean(search) ||
-    filters.employee_id !== '' || filters.issue_method !== '' ||
-    filters.item_type_id !== '' || filters.status !== '' ||
-    filters.date_from !== '' || filters.date_to !== '';
-
-  useEffect(() => {
-    employeesService.list().then(res => {
-      const employees = res && typeof res === 'object' && !Array.isArray(res) && 'pagination' in res
-        ? res.data
-        : res;
-      setEmployees(Array.isArray(employees) ? employees : []);
-    });
-    itemsService.list().then(setItems);
-    sitesService.list().then(setSites);
-  }, []);
+  const hasActiveFilters =
+    Boolean(search) ||
+    filters.employee_id !== '' ||
+    filters.issue_method !== '' ||
+    filters.item_type_id !== '' ||
+    filters.status !== '' ||
+    filters.date_from !== '' ||
+    filters.date_to !== ''
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const employeeId = params.get('employee_id');
+    employeesService.list().then((res) => {
+      const employees =
+        res && typeof res === 'object' && !Array.isArray(res) && 'pagination' in res
+          ? res.data
+          : res
+      setEmployees(Array.isArray(employees) ? employees : [])
+    })
+    itemsService.list().then(setItems)
+    sitesService.list().then(setSites)
+  }, [])
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const employeeId = params.get('employee_id')
     if (employeeId) {
-      setFilter('employee_id', employeeId);
+      setFilter('employee_id', employeeId)
     }
-  }, [location.search]);
+  }, [location.search])
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [search, filters, sort, records]);
+    setCurrentPage(1)
+  }, [search, filters, sort, records])
 
   const handleSiteChange = (siteId) => {
-    setSelectedSite(siteId);
-    setGroupPosition('');
-  };
+    setSelectedSite(siteId)
+    setGroupPosition('')
+  }
 
   // Должности сотрудников выбранного объекта — для групповой выдачи по должности.
   const sitePositions = useMemo(() => {
-    if (!selectedSite) return [];
+    if (!selectedSite) return []
     const positions = new Set(
       employees
         .filter((emp) => String(emp.site_id) === String(selectedSite) && emp.position)
         .map((emp) => emp.position)
-    );
-    return [...positions];
-  }, [employees, selectedSite]);
+    )
+    return [...positions]
+  }, [employees, selectedSite])
 
   // После создания выдачи предлагаем сразу распечатать лист(ы) выдачи:
   // для групповой — по одному листу на каждого сотрудника зачисления.
   const offerSheetPrint = (record, mode) => {
-    if (!record?.issue_date) return;
+    if (!record?.issue_date) return
     setPrintableIssue({
       issue_date: (record.issue_date || '').slice(0, 10),
       employee_id: record.employee_id,
       mode,
-    });
-  };
+    })
+  }
 
   const printSheets = () => {
-    if (!printableIssue) return;
-    const { issue_date, employee_id, mode } = printableIssue;
+    if (!printableIssue) return
+    const { issue_date, employee_id, mode } = printableIssue
     if (mode === 'group') {
-      downloadExport(() => exportsService.exportIssueSheets({ issue_date }), `Листы выдачи ${issue_date}.zip`);
+      downloadExport(
+        () => exportsService.exportIssueSheets({ issue_date }),
+        `Листы выдачи ${issue_date}.zip`
+      )
     } else {
-      downloadExport(() => exportsService.exportEmployeeSheet(employee_id, issue_date), `Лист выдачи ${employee_id} ${issue_date}.docx`);
+      downloadExport(
+        () => exportsService.exportEmployeeSheet(employee_id, issue_date),
+        `Лист выдачи ${employee_id} ${issue_date}.docx`
+      )
     }
-  };
+  }
 
-  const addBatchItem = () => setBatchItems(prev => [...prev, emptyBatchItem()]);
-  const removeBatchItem = (index) => setBatchItems(prev => prev.filter((_, i) => i !== index));
-  const updateBatchItem = (index, patch) => setBatchItems(prev => prev.map((item, i) => i === index ? { ...item, ...patch } : item));
+  const addBatchItem = () => setBatchItems((prev) => [...prev, emptyBatchItem()])
+  const removeBatchItem = (index) => setBatchItems((prev) => prev.filter((_, i) => i !== index))
+  const updateBatchItem = (index, patch) =>
+    setBatchItems((prev) => prev.map((item, i) => (i === index ? { ...item, ...patch } : item)))
 
   const handleBatchItemChange = async (index, itemId) => {
-    updateBatchItem(index, { item_type_id: itemId, certificate_id: '' });
+    updateBatchItem(index, { item_type_id: itemId, certificate_id: '' })
     if (itemId) {
-      const certs = await certificatesService.listByItem(itemId);
-      setCertificates(certs);
+      const certs = await certificatesService.listByItem(itemId)
+      setCertificates(certs)
     }
-  };
+  }
 
   const handleItemChange = async (itemId) => {
-    form.setMany({ item_type_id: itemId });
+    form.setMany({ item_type_id: itemId })
     if (itemId) {
-      const certs = await certificatesService.listByItem(itemId);
-      setCertificates(certs);
+      const certs = await certificatesService.listByItem(itemId)
+      setCertificates(certs)
     }
-  };
+  }
 
   // The edited employee may no longer be active (and thus absent from the
   // loaded list), so always keep them selectable in the dropdown.
@@ -194,47 +215,52 @@ export default function IssueForm() {
     ? [...employees, selectedEmployee].filter(
         (emp, index, all) => all.findIndex((e) => e.id === emp.id) === index
       )
-    : employees;
+    : employees
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setUploading(true);
-    setFieldErrors({});
+    e.preventDefault()
+    setUploading(true)
+    setFieldErrors({})
     try {
-      let record;
+      let record
       if (issueMode === 'batch-single') {
         const rawItems = batchItems
-          .filter(bi => bi.item_type_id)
-          .map(bi => ({
+          .filter((bi) => bi.item_type_id)
+          .map((bi) => ({
             item_type_id: bi.item_type_id,
             quantity: bi.quantity || 1,
             certificate_id: bi.certificate_id || null,
             wear_time_override: bi.wear_time_override || null,
             notes: bi.notes || null,
             issue_method: bi.issue_method || 'personal',
-          }));
+          }))
         const batchResult = issueBatchSingleSchema.safeParse({
           employee_id: form.values.employee_id,
           issue_date: form.values.issue_date || null,
           items: rawItems,
-        });
+        })
         if (!batchResult.success) {
-          const fieldError = {};
-          (batchResult.error?.issues || []).forEach((err) => {
-            const key = err.path.join('.');
-            fieldError[key] = err.message;
-          });
-          setFieldErrors(fieldError);
-          showFieldErrors(batchResult.error?.issues || []);
-          return;
+          const fieldError = {}
+          ;(batchResult.error?.issues || []).forEach((err) => {
+            const key = err.path.join('.')
+            fieldError[key] = err.message
+          })
+          setFieldErrors(fieldError)
+          showFieldErrors(batchResult.error?.issues || [])
+          return
         }
-        const items = rawItems.map(bi => {
-          const itemTypeId = Number(bi.item_type_id);
-          const quantity = Number(bi.quantity);
-          const certId = bi.certificate_id ? Number(bi.certificate_id) : null;
-          const wearTime = bi.wear_time_override ? Number(bi.wear_time_override) : null;
-          if (Number.isNaN(itemTypeId) || Number.isNaN(quantity) || (bi.certificate_id && Number.isNaN(certId)) || (bi.wear_time_override && Number.isNaN(wearTime))) {
-            throw new Error('Некорректные числовые значения в позициях');
+        const items = rawItems.map((bi) => {
+          const itemTypeId = Number(bi.item_type_id)
+          const quantity = Number(bi.quantity)
+          const certId = bi.certificate_id ? Number(bi.certificate_id) : null
+          const wearTime = bi.wear_time_override ? Number(bi.wear_time_override) : null
+          if (
+            Number.isNaN(itemTypeId) ||
+            Number.isNaN(quantity) ||
+            (bi.certificate_id && Number.isNaN(certId)) ||
+            (bi.wear_time_override && Number.isNaN(wearTime))
+          ) {
+            throw new Error('Некорректные числовые значения в позициях')
           }
           return {
             item_type_id: itemTypeId,
@@ -243,18 +269,18 @@ export default function IssueForm() {
             wear_time_override: wearTime,
             notes: bi.notes || null,
             issue_method: bi.issue_method || 'personal',
-          };
-        });
+          }
+        })
         if (items.length === 0) {
-          showError('Нет позиций для выдачи. Добавьте хотя бы одну.');
-          return;
+          showError('Нет позиций для выдачи. Добавьте хотя бы одну.')
+          return
         }
         const res = await issuesService.batchSingleCreate({
           employee_id: Number(batchResult.data.employee_id),
           issue_date: batchResult.data.issue_date || null,
           items,
-        });
-        record = res.records?.[0];
+        })
+        record = res.records?.[0]
       } else {
         const baseData = {
           item_type_id: form.values.item_type_id,
@@ -263,86 +289,98 @@ export default function IssueForm() {
           wear_time_override: form.values.wear_time_override,
           notes: form.values.notes,
           issue_method: form.values.issue_method || 'personal',
-        };
-        let payload;
+        }
+        let payload
         if (issueMode === 'group') {
-          const result = issueBatchSchema.safeParse({ site_id: selectedSite, ...baseData, position: groupPosition || undefined });
+          const result = issueBatchSchema.safeParse({
+            site_id: selectedSite,
+            ...baseData,
+            position: groupPosition || undefined,
+          })
           if (!result.success) {
-            const fieldError = {};
-            (result.error?.issues || []).forEach((err) => {
-              fieldError[err.path.join('.')] = err.message;
-            });
-            setFieldErrors(fieldError);
-            showFieldErrors(result.error?.issues || []);
-            return;
+            const fieldError = {}
+            ;(result.error?.issues || []).forEach((err) => {
+              fieldError[err.path.join('.')] = err.message
+            })
+            setFieldErrors(fieldError)
+            showFieldErrors(result.error?.issues || [])
+            return
           }
-          payload = result.data;
+          payload = result.data
         } else {
-          const result = issueSchema.safeParse({ employee_id: form.values.employee_id, ...baseData });
+          const result = issueSchema.safeParse({
+            employee_id: form.values.employee_id,
+            ...baseData,
+          })
           if (!result.success) {
-            const fieldError = {};
-            (result.error?.issues || []).forEach((err) => {
-              fieldError[err.path.join('.')] = err.message;
-            });
-            setFieldErrors(fieldError);
-            showFieldErrors(result.error?.issues || []);
-            return;
+            const fieldError = {}
+            ;(result.error?.issues || []).forEach((err) => {
+              fieldError[err.path.join('.')] = err.message
+            })
+            setFieldErrors(fieldError)
+            showFieldErrors(result.error?.issues || [])
+            return
           }
-          payload = result.data;
+          payload = result.data
         }
         if (issueMode === 'group') {
           const res = await issuesService.batchCreate({
             site_id: payload.site_id,
             ...payload,
-          });
-          record = res.records?.[0];
+          })
+          record = res.records?.[0]
         } else {
           const res = await issuesService.create({
             employee_id: payload.employee_id,
             ...payload,
             signature_path: form.values.signature_path,
-          });
-          record = res;
+          })
+          record = res
         }
 
-      if (record) {
-        const modeLabel = issueMode === 'group' ? 'Групповая выдача' : issueMode === 'batch-single' ? 'Несколько позиций' : 'Одиночная выдача';
-        showSuccess(`${modeLabel} создана${record.id ? `, ID ${record.id}` : ''}`);
-        offerSheetPrint(record, issueMode === 'group' ? 'group' : 'single');
-      }
+        if (record) {
+          const modeLabel =
+            issueMode === 'group'
+              ? 'Групповая выдача'
+              : issueMode === 'batch-single'
+                ? 'Несколько позиций'
+                : 'Одиночная выдача'
+          showSuccess(`${modeLabel} создана${record.id ? `, ID ${record.id}` : ''}`)
+          offerSheetPrint(record, issueMode === 'group' ? 'group' : 'single')
+        }
       }
 
       if (signatureFile && record?.id) {
-        const fd = new FormData();
-        fd.append('signature', signatureFile);
-        fd.append('issue_record_id', record.id);
-        const sigRes = await uploadService.uploadSignature(fd);
-        setLastSignature(sigRes.signature_path || null);
+        const fd = new FormData()
+        fd.append('signature', signatureFile)
+        fd.append('issue_record_id', record.id)
+        const sigRes = await uploadService.uploadSignature(fd)
+        setLastSignature(sigRes.signature_path || null)
       } else {
-        setLastSignature(null);
+        setLastSignature(null)
       }
 
-      form.reset();
-      setSignatureFile(null);
-      setCertificates([]);
-      setShowModal(false);
-      setFieldErrors({});
-      refetchRecords();
+      form.reset()
+      setSignatureFile(null)
+      setCertificates([])
+      setShowModal(false)
+      setFieldErrors({})
+      refetchRecords()
     } catch (err) {
-      showError(err.response?.data?.error || 'Не удалось сохранить выдачу');
+      showError(err.response?.data?.error || 'Не удалось сохранить выдачу')
     } finally {
-      setUploading(false);
+      setUploading(false)
     }
-  };
+  }
 
   const handleEdit = (record) => {
-    setEditingRecord(record);
-    setIssueMode('single');
+    setEditingRecord(record)
+    setIssueMode('single')
     setSelectedEmployee(
       record.employee_id
         ? { id: record.employee_id, full_name: record.full_name, position: record.position }
         : null
-    );
+    )
     form.setMany({
       employee_id: record.employee_id ? String(record.employee_id) : '',
       item_type_id: record.item_type_id ? String(record.item_type_id) : '',
@@ -350,15 +388,15 @@ export default function IssueForm() {
       certificate_id: record.certificate_id ? String(record.certificate_id) : '',
       wear_time_override: record.wear_time_override_months || '',
       notes: record.notes || '',
-      issue_method: record.issue_method || 'personal'
-    });
-    setShowModal(true);
-  };
+      issue_method: record.issue_method || 'personal',
+    })
+    setShowModal(true)
+  }
 
   const handleUpdate = async (e) => {
-    e.preventDefault();
-    setUploading(true);
-    setFieldErrors({});
+    e.preventDefault()
+    setUploading(true)
+    setFieldErrors({})
     try {
       const baseData = {
         employee_id: form.values.employee_id,
@@ -368,64 +406,64 @@ export default function IssueForm() {
         wear_time_override: form.values.wear_time_override,
         notes: form.values.notes,
         issue_method: form.values.issue_method || 'personal',
-      };
-      const result = issueUpdateSchema.safeParse(baseData);
-      if (!result.success) {
-        const fieldError = {};
-        (result.error?.issues || []).forEach((err) => {
-          fieldError[err.path.join('.')] = err.message;
-        });
-        setFieldErrors(fieldError);
-        showFieldErrors(result.error?.issues || []);
-        return;
       }
-      await issuesService.update(editingRecord.id, result.data);
-      showSuccess('Выдача обновлена');
-      form.reset();
-      setEditingRecord(null);
-      setShowModal(false);
-      setCertificates([]);
-      setFieldErrors({});
-      refetchRecords();
+      const result = issueUpdateSchema.safeParse(baseData)
+      if (!result.success) {
+        const fieldError = {}
+        ;(result.error?.issues || []).forEach((err) => {
+          fieldError[err.path.join('.')] = err.message
+        })
+        setFieldErrors(fieldError)
+        showFieldErrors(result.error?.issues || [])
+        return
+      }
+      await issuesService.update(editingRecord.id, result.data)
+      showSuccess('Выдача обновлена')
+      form.reset()
+      setEditingRecord(null)
+      setShowModal(false)
+      setCertificates([])
+      setFieldErrors({})
+      refetchRecords()
     } catch (err) {
-      showError(err.response?.data?.error || 'Не удалось обновить выдачу');
+      showError(err.response?.data?.error || 'Не удалось обновить выдачу')
     } finally {
-      setUploading(false);
+      setUploading(false)
     }
-  };
+  }
 
   const confirmDispose = async () => {
-    if (!disposeId) return;
-    await issuesService.dispose(disposeId);
-    refetchRecords();
-    setDisposeId(null);
-  };
+    if (!disposeId) return
+    await issuesService.dispose(disposeId)
+    refetchRecords()
+    setDisposeId(null)
+  }
 
   const confirmDelete = async () => {
-    if (!deleteId) return;
-    await issuesService.delete(deleteId);
-    refetchRecords();
-    setDeleteId(null);
-  };
+    if (!deleteId) return
+    await issuesService.delete(deleteId)
+    refetchRecords()
+    setDeleteId(null)
+  }
 
   const handleClose = () => {
-    setShowModal(false);
-    setEditingRecord(null);
-    setSelectedEmployee(null);
-    form.reset();
-    setSignatureFile(null);
-    setCertificates([]);
-    setLastSignature(null);
-    setIssueMode('group');
-    setSelectedSite('');
-    setGroupPosition('');
-    setBatchItems([]);
-    setFieldErrors({});
-  };
+    setShowModal(false)
+    setEditingRecord(null)
+    setSelectedEmployee(null)
+    form.reset()
+    setSignatureFile(null)
+    setCertificates([])
+    setLastSignature(null)
+    setIssueMode('group')
+    setSelectedSite('')
+    setGroupPosition('')
+    setBatchItems([])
+    setFieldErrors({})
+  }
 
-  const totalItems = filteredRecords.length;
-  const startIndex = (currentPage - 1) * 10;
-  const paginatedRecords = filteredRecords.slice(startIndex, startIndex + 10);
+  const totalItems = filteredRecords.length
+  const startIndex = (currentPage - 1) * 10
+  const paginatedRecords = filteredRecords.slice(startIndex, startIndex + 10)
 
   return (
     <div className={styles.pageWrapper}>
@@ -436,9 +474,9 @@ export default function IssueForm() {
             <div className={styles.subtitle}>Оперативная выдача, групповая раздача и возвраты</div>
           </div>
           {isAdmin && (
-          <button className="btn" onClick={() => setShowModal(true)}>
-            <Icon name="plus" size={16} /> Новая выдача
-          </button>
+            <button className="btn" onClick={() => setShowModal(true)}>
+              <Icon name="plus" size={16} /> Новая выдача
+            </button>
           )}
         </div>
       </div>
@@ -448,13 +486,19 @@ export default function IssueForm() {
             <div className={styles.printBanner}>
               <span>
                 Выдача от {new Date(printableIssue.issue_date).toLocaleDateString()} создана.
-                Распечатать {printableIssue.mode === 'group' ? 'листы выдачи по сотрудникам (zip)' : 'лист выдачи'}?
+                Распечатать{' '}
+                {printableIssue.mode === 'group'
+                  ? 'листы выдачи по сотрудникам (zip)'
+                  : 'лист выдачи'}
+                ?
               </span>
               <div className={styles.printBannerActions}>
                 <button className="btn" disabled={exportingSheet} onClick={printSheets}>
                   {exportingSheet ? 'Формирование...' : 'Распечатать'}
                 </button>
-                <button className="btn btn-secondary" onClick={() => setPrintableIssue(null)}>Закрыть</button>
+                <button className="btn btn-secondary" onClick={() => setPrintableIssue(null)}>
+                  Закрыть
+                </button>
               </div>
             </div>
           </div>
@@ -466,29 +510,55 @@ export default function IssueForm() {
               onChange={setSearch}
               placeholder="Поиск по сотруднику или наименованию..."
             />
-            <FilterSelect label="Сотрудник" value={filters.employee_id} onChange={(value) => setFilter('employee_id', value)}>
+            <FilterSelect
+              label="Сотрудник"
+              value={filters.employee_id}
+              onChange={(value) => setFilter('employee_id', value)}
+            >
               <option value="">Все</option>
               {employees.map((emp) => (
-                <option key={emp.id} value={String(emp.id)}>{emp.full_name}</option>
+                <option key={emp.id} value={String(emp.id)}>
+                  {emp.full_name}
+                </option>
               ))}
             </FilterSelect>
-            <FilterSelect label="Способ выдачи" value={filters.issue_method} onChange={(value) => setFilter('issue_method', value)}>
+            <FilterSelect
+              label="Способ выдачи"
+              value={filters.issue_method}
+              onChange={(value) => setFilter('issue_method', value)}
+            >
               <option value="">Все</option>
-              <option value={ISSUE_METHOD_VALUES[0]}>{ISSUE_METHODS[ISSUE_METHOD_VALUES[0]]}</option>
-              <option value={ISSUE_METHOD_VALUES[1]}>{ISSUE_METHODS[ISSUE_METHOD_VALUES[1]]}</option>
+              <option value={ISSUE_METHOD_VALUES[0]}>
+                {ISSUE_METHODS[ISSUE_METHOD_VALUES[0]]}
+              </option>
+              <option value={ISSUE_METHOD_VALUES[1]}>
+                {ISSUE_METHODS[ISSUE_METHOD_VALUES[1]]}
+              </option>
             </FilterSelect>
-            <FilterSelect label="Наименование" value={filters.item_type_id} onChange={(value) => setFilter('item_type_id', value)}>
+            <FilterSelect
+              label="Наименование"
+              value={filters.item_type_id}
+              onChange={(value) => setFilter('item_type_id', value)}
+            >
               <option value="">Все</option>
               {items.map((item) => (
-                <option key={item.id} value={item.id}>{item.name}</option>
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
               ))}
             </FilterSelect>
-            <FilterSelect label="Статус" value={filters.status} onChange={(value) => setFilter('status', value)}>
+            <FilterSelect
+              label="Статус"
+              value={filters.status}
+              onChange={(value) => setFilter('status', value)}
+            >
               <option value="">Все</option>
               <option value={ISSUE_STATUSES.issued}>{ISSUE_STATUS_LABELS.issued}</option>
               <option value={ISSUE_STATUSES.disposed}>{ISSUE_STATUS_LABELS.disposed}</option>
               <option value={ISSUE_STATUSES.returned}>{ISSUE_STATUS_LABELS.returned}</option>
-              <option value={ISSUE_STATUSES.due_for_disposal}>{ISSUE_STATUS_LABELS.due_for_disposal}</option>
+              <option value={ISSUE_STATUSES.due_for_disposal}>
+                {ISSUE_STATUS_LABELS.due_for_disposal}
+              </option>
             </FilterSelect>
             <DateRange
               from={filters.date_from}
@@ -505,65 +575,141 @@ export default function IssueForm() {
 
           {loading && <LoadingState label="Загрузка выдач..." />}
           {!loading && error && <ErrorState message={error} onRetry={refetchRecords} />}
-          {!loading && !error && (
-            filteredRecords.length === 0 ? (
+          {!loading &&
+            !error &&
+            (filteredRecords.length === 0 ? (
               <EmptyState
                 icon={<Icon name="package" size={48} />}
                 title="Выдач пока нет"
-                description={hasActiveFilters ? 'По заданным фильтрам ничего не найдено.' : 'Зарегистрируйте первую выдачу спецодежды или СИЗ.'}
-                action={isAdmin ? <button className="btn" onClick={() => setShowModal(true)}><Icon name="plus" size={16} /> Новая выдача</button> : null}
+                description={
+                  hasActiveFilters
+                    ? 'По заданным фильтрам ничего не найдено.'
+                    : 'Зарегистрируйте первую выдачу спецодежды или СИЗ.'
+                }
+                action={
+                  isAdmin ? (
+                    <button className="btn" onClick={() => setShowModal(true)}>
+                      <Icon name="plus" size={16} /> Новая выдача
+                    </button>
+                  ) : null
+                }
               />
             ) : (
               <>
-                 <div className="tableScroll">
-                 <table className="table">
-                   <thead>
-                    <tr>
-                      <SortableTh label="Сотрудник" sortKey="full_name" sort={sort} onSort={toggleSort} />
-                      <SortableTh label="Наименование" sortKey="item_type_name" sort={sort} onSort={toggleSort} />
-                      <SortableTh label="Способ выдачи" sortKey="issue_method" sort={sort} onSort={toggleSort} />
-                      <SortableTh label="Кол-во" sortKey="quantity" sort={sort} onSort={toggleSort} />
-                      <SortableTh label="Срок годности" sortKey="expiry_date" sort={sort} onSort={toggleSort} />
-                      <th>Лист карточки</th>
-                      <SortableTh label="Статус" sortKey="status" sort={sort} onSort={toggleSort} />
-                      <th>Действия</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedRecords.map((record) => (
-                      <tr key={record.id}>
-                        <td>{record.full_name}</td>
-                        <td>{record.item_type_name}</td>
-                        <td>{ISSUE_METHODS[record.issue_method] || '-'}</td>
-                        <td>{record.quantity}</td>
-                        <td>{record.expiry_date ? new Date(record.expiry_date).toLocaleDateString() : '-'}</td>
-                        <td>{record.sheet_number ?? '-'}</td>
-                         <td>
-                           {record.status === ISSUE_STATUSES.issued ? (
-                             <span className="badge badge-success">{ISSUE_STATUS_LABELS.issued}</span>
-                           ) : record.status === ISSUE_STATUSES.disposed ? (
-                             <span className="badge badge-danger">{ISSUE_STATUS_LABELS.disposed}</span>
-                           ) : record.status === ISSUE_STATUSES.returned ? (
-                             <span className="badge badge-info">{ISSUE_STATUS_LABELS.returned}</span>
-                           ) : record.status === ISSUE_STATUSES.due_for_disposal ? (
-                             <span className="badge badge-warning">{ISSUE_STATUS_LABELS.due_for_disposal}</span>
-                           ) : (
-                             <span className="badge">{record.status}</span>
-                           )}
-                         </td>
-                        <td>
-                             {(record.status === ISSUE_STATUSES.issued || record.status === ISSUE_STATUSES.due_for_disposal) && isAdmin && (
-                               <div className="action-buttons">
-                                 <button className="btn action-btn" aria-label="Редактировать" data-tooltip="Редактировать" onClick={() => handleEdit(record)}><Icon name="pencil" size={14} /></button>
-                                 <button className="btn btn-danger action-btn" aria-label="Удалить" data-tooltip="Удалить" onClick={() => setDeleteId(record.id)}><Icon name="trash" size={14} /></button>
-                                 <button className="btn btn-secondary action-btn" aria-label="Списать" data-tooltip="Списать" onClick={() => setDisposeId(record.id)}><Icon name="archiveX" size={14} /></button>
-                </div>
-            )}
-                        </td>
+                <div className="tableScroll">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <SortableTh
+                          label="Сотрудник"
+                          sortKey="full_name"
+                          sort={sort}
+                          onSort={toggleSort}
+                        />
+                        <SortableTh
+                          label="Наименование"
+                          sortKey="item_type_name"
+                          sort={sort}
+                          onSort={toggleSort}
+                        />
+                        <SortableTh
+                          label="Способ выдачи"
+                          sortKey="issue_method"
+                          sort={sort}
+                          onSort={toggleSort}
+                        />
+                        <SortableTh
+                          label="Кол-во"
+                          sortKey="quantity"
+                          sort={sort}
+                          onSort={toggleSort}
+                        />
+                        <SortableTh
+                          label="Срок годности"
+                          sortKey="expiry_date"
+                          sort={sort}
+                          onSort={toggleSort}
+                        />
+                        <th>Лист карточки</th>
+                        <SortableTh
+                          label="Статус"
+                          sortKey="status"
+                          sort={sort}
+                          onSort={toggleSort}
+                        />
+                        <th>Действия</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {paginatedRecords.map((record) => (
+                        <tr key={record.id}>
+                          <td>{record.full_name}</td>
+                          <td>{record.item_type_name}</td>
+                          <td>{ISSUE_METHODS[record.issue_method] || '-'}</td>
+                          <td>{record.quantity}</td>
+                          <td>
+                            {record.expiry_date
+                              ? new Date(record.expiry_date).toLocaleDateString()
+                              : '-'}
+                          </td>
+                          <td>{record.sheet_number ?? '-'}</td>
+                          <td>
+                            {record.status === ISSUE_STATUSES.issued ? (
+                              <span className="badge badge-success">
+                                {ISSUE_STATUS_LABELS.issued}
+                              </span>
+                            ) : record.status === ISSUE_STATUSES.disposed ? (
+                              <span className="badge badge-danger">
+                                {ISSUE_STATUS_LABELS.disposed}
+                              </span>
+                            ) : record.status === ISSUE_STATUSES.returned ? (
+                              <span className="badge badge-info">
+                                {ISSUE_STATUS_LABELS.returned}
+                              </span>
+                            ) : record.status === ISSUE_STATUSES.due_for_disposal ? (
+                              <span className="badge badge-warning">
+                                {ISSUE_STATUS_LABELS.due_for_disposal}
+                              </span>
+                            ) : (
+                              <span className="badge">{record.status}</span>
+                            )}
+                          </td>
+                          <td>
+                            {(record.status === ISSUE_STATUSES.issued ||
+                              record.status === ISSUE_STATUSES.due_for_disposal) &&
+                              isAdmin && (
+                                <div className="action-buttons">
+                                  <button
+                                    className="btn action-btn"
+                                    aria-label="Редактировать"
+                                    data-tooltip="Редактировать"
+                                    onClick={() => handleEdit(record)}
+                                  >
+                                    <Icon name="pencil" size={14} />
+                                  </button>
+                                  <button
+                                    className="btn btn-danger action-btn"
+                                    aria-label="Удалить"
+                                    data-tooltip="Удалить"
+                                    onClick={() => setDeleteId(record.id)}
+                                  >
+                                    <Icon name="trash" size={14} />
+                                  </button>
+                                  <button
+                                    className="btn btn-secondary action-btn"
+                                    aria-label="Списать"
+                                    data-tooltip="Списать"
+                                    onClick={() => setDisposeId(record.id)}
+                                  >
+                                    <Icon name="archiveX" size={14} />
+                                  </button>
+                                </div>
+                              )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
                 <Pagination
                   totalItems={totalItems}
@@ -572,176 +718,221 @@ export default function IssueForm() {
                   onPageChange={setCurrentPage}
                 />
               </>
-            )
-          )}
+            ))}
         </div>
       </div>
 
-      <Modal isOpen={showModal} onClose={handleClose} title={editingRecord && issueMode !== 'group' ? 'Редактировать выдачу' : 'Выдача спецодежды и СИЗ'}>
-        <form onSubmit={editingRecord && issueMode !== 'group' ? handleUpdate : handleSubmit} className={styles.formSection}>
+      <Modal
+        isOpen={showModal}
+        onClose={handleClose}
+        title={
+          editingRecord && issueMode !== 'group'
+            ? 'Редактировать выдачу'
+            : 'Выдача спецодежды и СИЗ'
+        }
+      >
+        <form
+          onSubmit={editingRecord && issueMode !== 'group' ? handleUpdate : handleSubmit}
+          className={styles.formSection}
+        >
           {!editingRecord && (
-          <IssueModeSelector
-            issueMode={issueMode}
-            setIssueMode={setIssueMode}
-            setBatchItems={setBatchItems}
-          />
+            <IssueModeSelector
+              issueMode={issueMode}
+              setIssueMode={setIssueMode}
+              setBatchItems={setBatchItems}
+            />
           )}
 
           <div className={styles.formGrid}>
             {issueMode === 'group' && (
-                <div className={`form-group ${styles.field}`}>
-                  <label>Объект *</label>
-                  <select
-                    className="form-control"
-                    value={selectedSite}
-                    onChange={(e) => handleSiteChange(e.target.value)}
-                    required
-                    aria-invalid={Boolean(fieldErrors.site_id)}
-                    aria-describedby={fieldErrors.site_id ? 'site-error' : undefined}
-                  >
-                    <option value="">Выберите объект...</option>
-                    {sites.map((s) => (
-                <option key={s.id} value={String(s.id)}>{s.name}</option>
-                    ))}
-                  </select>
-                  {fieldErrors.site_id && <div id="site-error" className={styles.fieldError} role="alert">{fieldErrors.site_id}</div>}
-                </div>
+              <div className={`form-group ${styles.field}`}>
+                <label>Объект *</label>
+                <select
+                  className="form-control"
+                  value={selectedSite}
+                  onChange={(e) => handleSiteChange(e.target.value)}
+                  required
+                  aria-invalid={Boolean(fieldErrors.site_id)}
+                  aria-describedby={fieldErrors.site_id ? 'site-error' : undefined}
+                >
+                  <option value="">Выберите объект...</option>
+                  {sites.map((s) => (
+                    <option key={s.id} value={String(s.id)}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+                {fieldErrors.site_id && (
+                  <div id="site-error" className={styles.fieldError} role="alert">
+                    {fieldErrors.site_id}
+                  </div>
+                )}
+              </div>
             )}
             {issueMode === 'group' && selectedSite && (
-                <div className={`form-group ${styles.field}`}>
-                  <label>Должность</label>
-                  <select
-                    className="form-control"
-                    value={groupPosition}
-                    onChange={(e) => setGroupPosition(e.target.value)}
-                  >
-                    <option value="">Все должности объекта</option>
-                    {sitePositions.map((position) => (
-                      <option key={position} value={position}>{position}</option>
-                    ))}
-                  </select>
-                  {groupPosition && (
-                    <small className={styles.signatureHint}>
-                      Выдача будет создана только для должности «{groupPosition}»
-                    </small>
-                  )}
-                </div>
+              <div className={`form-group ${styles.field}`}>
+                <label>Должность</label>
+                <select
+                  className="form-control"
+                  value={groupPosition}
+                  onChange={(e) => setGroupPosition(e.target.value)}
+                >
+                  <option value="">Все должности объекта</option>
+                  {sitePositions.map((position) => (
+                    <option key={position} value={position}>
+                      {position}
+                    </option>
+                  ))}
+                </select>
+                {groupPosition && (
+                  <small className={styles.signatureHint}>
+                    Выдача будет создана только для должности «{groupPosition}»
+                  </small>
+                )}
+              </div>
             )}
             {(issueMode === 'single' || issueMode === 'batch-single') && (
-                <div className={`form-group ${styles.field}`}>
-                  <label>Сотрудник *</label>
-                  <select
-                    className="form-control"
-                    value={form.values.employee_id}
-                    onChange={(e) => form.setMany({ employee_id: e.target.value })}
-                    required
-                    aria-invalid={Boolean(fieldErrors.employee_id)}
-                    aria-describedby={fieldErrors.employee_id ? 'employee-error' : undefined}
-                  >
-                    <option value="">Выберите...</option>
-                    {visibleEmployees.map((emp) => (
-                      <option key={emp.id} value={emp.id}>{emp.full_name} ({emp.position})</option>
-                    ))}
-                  </select>
-                  {fieldErrors.employee_id && <div id="employee-error" className={styles.fieldError} role="alert">{fieldErrors.employee_id}</div>}
-                </div>
+              <div className={`form-group ${styles.field}`}>
+                <label>Сотрудник *</label>
+                <select
+                  className="form-control"
+                  value={form.values.employee_id}
+                  onChange={(e) => form.setMany({ employee_id: e.target.value })}
+                  required
+                  aria-invalid={Boolean(fieldErrors.employee_id)}
+                  aria-describedby={fieldErrors.employee_id ? 'employee-error' : undefined}
+                >
+                  <option value="">Выберите...</option>
+                  {visibleEmployees.map((emp) => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.full_name} ({emp.position})
+                    </option>
+                  ))}
+                </select>
+                {fieldErrors.employee_id && (
+                  <div id="employee-error" className={styles.fieldError} role="alert">
+                    {fieldErrors.employee_id}
+                  </div>
+                )}
+              </div>
             )}
             {(issueMode === 'single' || issueMode === 'group') && (
-                <div className={`form-group ${styles.field}`}>
-                  <label>Наименование *</label>
-                  <select
-                    className="form-control"
-                    value={form.values.item_type_id}
-                    onChange={(e) => handleItemChange(e.target.value)}
-                    required
-                    aria-invalid={Boolean(fieldErrors.item_type_id)}
-                    aria-describedby={fieldErrors.item_type_id ? 'item-type-error' : undefined}
-                  >
-                    <option value="">Выберите...</option>
-                    {items.map((item) => (
-                      <option key={item.id} value={item.id}>{item.name}</option>
-                    ))}
-                  </select>
-                  {fieldErrors.item_type_id && <div id="item-type-error" className={styles.fieldError} role="alert">{fieldErrors.item_type_id}</div>}
-                </div>
+              <div className={`form-group ${styles.field}`}>
+                <label>Наименование *</label>
+                <select
+                  className="form-control"
+                  value={form.values.item_type_id}
+                  onChange={(e) => handleItemChange(e.target.value)}
+                  required
+                  aria-invalid={Boolean(fieldErrors.item_type_id)}
+                  aria-describedby={fieldErrors.item_type_id ? 'item-type-error' : undefined}
+                >
+                  <option value="">Выберите...</option>
+                  {items.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+                {fieldErrors.item_type_id && (
+                  <div id="item-type-error" className={styles.fieldError} role="alert">
+                    {fieldErrors.item_type_id}
+                  </div>
+                )}
+              </div>
             )}
           </div>
 
           {issueMode !== 'batch-single' && (
             <div className={styles.formGrid}>
-                <div className={`form-group ${styles.field}`}>
-                  <label>Способ выдачи</label>
-                  <div className={styles.radioGroup}>
-                    <label>
-                      <input
-                        type="radio"
-                        name="issue_method"
-                        value="personal"
-                        checked={form.values.issue_method === 'personal'}
-                        onChange={(e) => form.setMany({ issue_method: e.target.value })}
-                      /> {ISSUE_METHODS.personal}
-                    </label>
-                    <label>
-                      <input
-                        type="radio"
-                        name="issue_method"
-                        value="dosator"
-                        checked={form.values.issue_method === 'dosator'}
-                        onChange={(e) => form.setMany({ issue_method: e.target.value })}
-                      /> {ISSUE_METHODS.dosator}
-                    </label>
-                  </div>
-                </div>
-                <div className={`form-group ${styles.field}`}>
-                  <label>Количество</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    value={form.values.quantity}
-                    onChange={(e) => form.setMany({ quantity: e.target.value })}
-                    aria-invalid={Boolean(fieldErrors.quantity)}
-                    aria-describedby={fieldErrors.quantity ? 'quantity-error' : undefined}
-                  />
-                  {fieldErrors.quantity && <div id="quantity-error" className={styles.fieldError} role="alert">{fieldErrors.quantity}</div>}
-                </div>
-                <div className={`form-group ${styles.field} ${styles.fullWidth}`}>
-                  <label>Сертификат</label>
-                  <select
-                    className="form-control"
-                    value={form.values.certificate_id}
-                    onChange={(e) => form.setMany({ certificate_id: e.target.value })}
-                    aria-invalid={Boolean(fieldErrors.certificate_id)}
-                    aria-describedby={fieldErrors.certificate_id ? 'cert-error' : undefined}
-                  >
-                    <option value="">Без сертификата</option>
-                    {certificates.map((cert) => (
-                      <option key={cert.id} value={cert.id}>
-                        {cert.certificate_number} (до {new Date(cert.expiry_date).toLocaleDateString()})
-                      </option>
-                    ))}
-                  </select>
-                  {fieldErrors.certificate_id && <div id="cert-error" className={styles.fieldError} role="alert">{fieldErrors.certificate_id}</div>}
+              <div className={`form-group ${styles.field}`}>
+                <label>Способ выдачи</label>
+                <div className={styles.radioGroup}>
+                  <label>
+                    <input
+                      type="radio"
+                      name="issue_method"
+                      value="personal"
+                      checked={form.values.issue_method === 'personal'}
+                      onChange={(e) => form.setMany({ issue_method: e.target.value })}
+                    />{' '}
+                    {ISSUE_METHODS.personal}
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="issue_method"
+                      value="dosator"
+                      checked={form.values.issue_method === 'dosator'}
+                      onChange={(e) => form.setMany({ issue_method: e.target.value })}
+                    />{' '}
+                    {ISSUE_METHODS.dosator}
+                  </label>
                 </div>
               </div>
-            )}
+              <div className={`form-group ${styles.field}`}>
+                <label>Количество</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={form.values.quantity}
+                  onChange={(e) => form.setMany({ quantity: e.target.value })}
+                  aria-invalid={Boolean(fieldErrors.quantity)}
+                  aria-describedby={fieldErrors.quantity ? 'quantity-error' : undefined}
+                />
+                {fieldErrors.quantity && (
+                  <div id="quantity-error" className={styles.fieldError} role="alert">
+                    {fieldErrors.quantity}
+                  </div>
+                )}
+              </div>
+              <div className={`form-group ${styles.field} ${styles.fullWidth}`}>
+                <label>Сертификат</label>
+                <select
+                  className="form-control"
+                  value={form.values.certificate_id}
+                  onChange={(e) => form.setMany({ certificate_id: e.target.value })}
+                  aria-invalid={Boolean(fieldErrors.certificate_id)}
+                  aria-describedby={fieldErrors.certificate_id ? 'cert-error' : undefined}
+                >
+                  <option value="">Без сертификата</option>
+                  {certificates.map((cert) => (
+                    <option key={cert.id} value={cert.id}>
+                      {cert.certificate_number} (до{' '}
+                      {new Date(cert.expiry_date).toLocaleDateString()})
+                    </option>
+                  ))}
+                </select>
+                {fieldErrors.certificate_id && (
+                  <div id="cert-error" className={styles.fieldError} role="alert">
+                    {fieldErrors.certificate_id}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {issueMode !== 'batch-single' && (
             <div className={styles.formGrid}>
               <div className={`form-group ${styles.field}`}>
                 <label>Срок носки (мес.)</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    placeholder="Автоматически из нормы"
-                    value={form.values.wear_time_override}
-                    onChange={(e) => form.setMany({ wear_time_override: e.target.value })}
-                    aria-invalid={Boolean(fieldErrors.wear_time_override)}
-                    aria-describedby={fieldErrors.wear_time_override ? 'wear-error' : undefined}
-                  />
-                  {fieldErrors.wear_time_override && <div id="wear-error" className={styles.fieldError} role="alert">{fieldErrors.wear_time_override}</div>}
-                 </div>
+                <input
+                  type="number"
+                  className="form-control"
+                  placeholder="Автоматически из нормы"
+                  value={form.values.wear_time_override}
+                  onChange={(e) => form.setMany({ wear_time_override: e.target.value })}
+                  aria-invalid={Boolean(fieldErrors.wear_time_override)}
+                  aria-describedby={fieldErrors.wear_time_override ? 'wear-error' : undefined}
+                />
+                {fieldErrors.wear_time_override && (
+                  <div id="wear-error" className={styles.fieldError} role="alert">
+                    {fieldErrors.wear_time_override}
+                  </div>
+                )}
               </div>
-             )}
+            </div>
+          )}
 
           {issueMode === 'batch-single' && (
             <BatchItemsTable
@@ -765,7 +956,9 @@ export default function IssueForm() {
                 accept=".png,.jpg,.jpeg,.gif,.webp,.pdf"
                 onChange={(e) => setSignatureFile(e.target.files[0] || null)}
               />
-              {signatureFile && <small className={styles.signatureHint}>Выбран файл: {signatureFile.name}</small>}
+              {signatureFile && (
+                <small className={styles.signatureHint}>Выбран файл: {signatureFile.name}</small>
+              )}
             </div>
           )}
 
@@ -782,7 +975,10 @@ export default function IssueForm() {
               {lastSignature && editingRecord && (
                 <div className={`form-group ${styles.field} ${styles.fullWidth}`}>
                   <div className={styles.signatureSuccess}>
-                    <strong>Подпись загружена:</strong> <a href={lastSignature} target="_blank" rel="noreferrer">Открыть подпись</a>
+                    <strong>Подпись загружена:</strong>{' '}
+                    <a href={lastSignature} target="_blank" rel="noreferrer">
+                      Открыть подпись
+                    </a>
                   </div>
                 </div>
               )}
@@ -793,18 +989,24 @@ export default function IssueForm() {
             <button type="submit" className="btn" disabled={uploading}>
               {uploading
                 ? 'Загрузка...'
-                : (editingRecord
+                : editingRecord
                   ? 'Сохранить'
-                   : (issueMode === 'group'
-                     ? `Выдать сотрудникам (${[
-                         selectedSite ? sites.find(s => s.id == selectedSite)?.name : 'объект не выбран',
-                         groupPosition || 'все должности',
-                       ].join(' / ')})`
-                     : issueMode === 'batch-single'
+                  : issueMode === 'group'
+                    ? `Выдать сотрудникам (${[
+                        selectedSite
+                          ? sites.find((s) => s.id == selectedSite)?.name
+                          : 'объект не выбран',
+                        groupPosition || 'все должности',
+                      ].join(' / ')})`
+                    : issueMode === 'batch-single'
                       ? 'Выдать все позиции сотруднику'
-                      : 'Выдать'))}
+                      : 'Выдать'}
             </button>
-            {editingRecord && <button type="button" className="btn btn-secondary" onClick={handleClose}>Отмена</button>}
+            {editingRecord && (
+              <button type="button" className="btn btn-secondary" onClick={handleClose}>
+                Отмена
+              </button>
+            )}
           </div>
         </form>
       </Modal>
@@ -825,5 +1027,5 @@ export default function IssueForm() {
         message="Вы уверены, что хотите удалить эту запись о выдаче?"
       />
     </div>
-  );
+  )
 }

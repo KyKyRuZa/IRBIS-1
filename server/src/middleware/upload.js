@@ -1,14 +1,14 @@
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-import { fileTypeFromBuffer } from 'file-type';
-import { childLogger } from '../utils/logger.js';
+import multer from 'multer'
+import path from 'path'
+import fs from 'fs'
+import { fileTypeFromBuffer } from 'file-type'
+import { childLogger } from '../utils/logger.js'
 
-const log = childLogger('upload');
+const log = childLogger('upload')
 
-const uploadDir = path.join(process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads'));
+const uploadDir = path.join(process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads'))
 if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+  fs.mkdirSync(uploadDir, { recursive: true })
 }
 
 const ALLOWED_MAGIC_TYPES = new Set([
@@ -17,48 +17,51 @@ const ALLOWED_MAGIC_TYPES = new Set([
   'image/gif',
   'image/webp',
   'application/pdf',
-]);
+])
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const subDir = file.fieldname === 'certificate' ? 'certificates' : 'signatures';
-    const dir = path.join(uploadDir, subDir);
+    const subDir = file.fieldname === 'certificate' ? 'certificates' : 'signatures'
+    const dir = path.join(uploadDir, subDir)
     if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+      fs.mkdirSync(dir, { recursive: true })
     }
-    cb(null, dir);
+    cb(null, dir)
   },
   filename: (req, file, cb) => {
-    const unique = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, `${unique}${ext}`);
-  }
-});
+    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9)
+    const ext = path.extname(file.originalname)
+    cb(null, `${unique}${ext}`)
+  },
+})
 
 const fileFilter = (req, file, cb) => {
-  const allowedExt = /\.(pdf|png|jpe?g|gif|webp)$/i;
-  const allowedMime = /^(application\/pdf|image\/(png|jpeg|gif|webp))$/;
-  const ext = allowedExt.test(path.extname(file.originalname));
-  const mime = allowedMime.test(file.mimetype);
+  const allowedExt = /\.(pdf|png|jpe?g|gif|webp)$/i
+  const allowedMime = /^(application\/pdf|image\/(png|jpeg|gif|webp))$/
+  const ext = allowedExt.test(path.extname(file.originalname))
+  const mime = allowedMime.test(file.mimetype)
   if (ext && mime) {
-    cb(null, true);
+    cb(null, true)
   } else {
-    log.warn({ originalname: file.originalname, mimetype: file.mimetype }, 'Rejected upload: unsupported file type');
-    cb(new Error('Only PDF and image files are allowed'), false);
+    log.warn(
+      { originalname: file.originalname, mimetype: file.mimetype },
+      'Rejected upload: unsupported file type'
+    )
+    cb(new Error('Only PDF and image files are allowed'), false)
   }
-};
+}
 
 export const upload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter
-});
+  fileFilter,
+})
 
 export async function validateUploadedFileType(file) {
-  const buffer = await fs.promises.readFile(file.path);
-  const detected = await fileTypeFromBuffer(buffer);
+  const buffer = await fs.promises.readFile(file.path)
+  const detected = await fileTypeFromBuffer(buffer)
   if (!detected || !ALLOWED_MAGIC_TYPES.has(detected.mime)) {
-    await fs.promises.unlink(file.path).catch(() => {});
-    throw new Error('Uploaded file type does not match its extension');
+    await fs.promises.unlink(file.path).catch(() => {})
+    throw new Error('Uploaded file type does not match its extension')
   }
 }

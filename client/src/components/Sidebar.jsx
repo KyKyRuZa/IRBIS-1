@@ -1,14 +1,14 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '@hooks/useAuth.js';
-import Icon from '@components/ui/Icon.jsx';
-import styles from '@styles/Sidebar.module.css';
+import { useState, useCallback, useMemo, useEffect } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { useAuth } from '@hooks/useAuth.js'
+import Icon from '@components/ui/Icon.jsx'
+import styles from '@styles/Sidebar.module.css'
 
 // ВАШИ ОРИГИНАЛЬНЫЕ ССЫЛКИ
 const USER_LINKS = [
   { to: '/', label: 'Сотрудники', icon: 'users' },
   { to: '/issue', label: 'Выдача', icon: 'issue' },
-];
+]
 
 const ADMIN_LINKS = [
   { to: '/objects', label: 'Объекты', icon: 'objects' },
@@ -16,8 +16,8 @@ const ADMIN_LINKS = [
   { to: '/norms', label: 'Нормы выдачи', icon: 'norms' },
   { to: '/certificates', label: 'Сертификаты', icon: 'certificates' },
   { to: '/forms', label: 'Учёт форм', icon: 'forms' },
-  { to: '/reports', label: 'Аналитика', icon: 'reports' }
-];
+  { to: '/reports', label: 'Аналитика', icon: 'reports' },
+]
 
 function NavItem({ to, label, icon, isActive, collapsed, onClick }) {
   return (
@@ -32,58 +32,58 @@ function NavItem({ to, label, icon, isActive, collapsed, onClick }) {
       </div>
       <span className={styles.navItemLabel}>{label}</span>
     </Link>
-  );
+  )
 }
 
 function Sidebar({ collapsed, onToggleCollapse }) {
-  const location = useLocation();
-  const { user, isAdmin, logout } = useAuth();
+  const location = useLocation()
+  const { user, isAdmin, logout } = useAuth()
 
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [notifications, setNotifications] = useState([]);
+  const [isMobileOpen, setIsMobileOpen] = useState(false)
+  const [notifications, setNotifications] = useState([])
 
   // Формируем список ссылок в зависимости от роли
   const allLinks = useMemo(() => {
-    const base = isAdmin ? [...USER_LINKS, ...ADMIN_LINKS] : USER_LINKS;
-    return base;
-  }, [isAdmin]);
+    const base = isAdmin ? [...USER_LINKS, ...ADMIN_LINKS] : USER_LINKS
+    return base
+  }, [isAdmin])
 
   const handleLinkClick = useCallback(() => {
-    setIsMobileOpen(false);
-  }, []);
+    setIsMobileOpen(false)
+  }, [])
 
   useEffect(() => {
-    let cancelled = false;
+    let cancelled = false
     const load = async () => {
       try {
-        const { adminService } = await import('@/lib/services/admin.service.js');
-        const data = await adminService.getNotifications();
-        const notifications = data && typeof data === 'object' && 'pagination' in data
-          ? data.data
-          : data;
-        if (!cancelled) setNotifications(Array.isArray(notifications) ? notifications : []);
+        const { adminService } = await import('@/lib/services/admin.service.js')
+        const data = await adminService.getNotifications()
+        const notifications =
+          data && typeof data === 'object' && 'pagination' in data ? data.data : data
+        if (!cancelled) setNotifications(Array.isArray(notifications) ? notifications : [])
       } catch {
         // ignore
       }
-    };
-    load();
-    const intervalId = setInterval(load, 30000);
-    const handleFocus = () => { load(); };
-    const handleNotificationsUpdated = () => { load(); };
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('notifications:updated', handleNotificationsUpdated);
+    }
+    load()
+    const intervalId = setInterval(load, 30000)
+    const handleFocus = () => {
+      load()
+    }
+    const handleNotificationsUpdated = () => {
+      load()
+    }
+    window.addEventListener('focus', handleFocus)
+    window.addEventListener('notifications:updated', handleNotificationsUpdated)
     return () => {
-      cancelled = true;
-      clearInterval(intervalId);
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('notifications:updated', handleNotificationsUpdated);
-    };
-  }, []);
+      cancelled = true
+      clearInterval(intervalId)
+      window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('notifications:updated', handleNotificationsUpdated)
+    }
+  }, [])
 
-  const unreadCount = useMemo(
-    () => notifications.filter(n => !n.read).length,
-    [notifications]
-  );
+  const unreadCount = useMemo(() => notifications.filter((n) => !n.read).length, [notifications])
 
   return (
     <>
@@ -92,7 +92,6 @@ function Sidebar({ collapsed, onToggleCollapse }) {
         aria-label="Основная навигация"
       >
         <div className={styles.sidebarInner}>
-
           {/* Header: Logo + Toggle */}
           <div className={styles.header}>
             <Link to="/" className={styles.brand} onClick={handleLinkClick}>
@@ -112,7 +111,12 @@ function Sidebar({ collapsed, onToggleCollapse }) {
 
           {/* Notifications quick link */}
           {isAdmin && (
-            <Link to="/notifications" className={styles.quickLink} onClick={handleLinkClick} data-label="Уведомления">
+            <Link
+              to="/notifications"
+              className={styles.quickLink}
+              onClick={handleLinkClick}
+              data-label="Уведомления"
+            >
               <div className={styles.quickLinkLeft}>
                 <Icon name={unreadCount > 0 ? 'bellDot' : 'bell'} size={20} />
                 <span>Уведомления</span>
@@ -146,7 +150,7 @@ function Sidebar({ collapsed, onToggleCollapse }) {
           {/* User Profile */}
           <div className={styles.userProfile} onClick={logout} title="Выйти">
             <div className={styles.userAvatar}>
-               <Icon name="user" size={20} />
+              <Icon name="user" size={20} />
             </div>
             <div className={styles.userInfo}>
               <div className={styles.userName}>{user?.username || 'Пользователь'}</div>
@@ -154,7 +158,6 @@ function Sidebar({ collapsed, onToggleCollapse }) {
             </div>
             <Icon name="logout" size={16} className={styles.userChevron} />
           </div>
-
         </div>
       </aside>
 
@@ -171,7 +174,7 @@ function Sidebar({ collapsed, onToggleCollapse }) {
         <span className={styles.burgerLine} />
       </button>
     </>
-  );
+  )
 }
 
-export default Sidebar;
+export default Sidebar

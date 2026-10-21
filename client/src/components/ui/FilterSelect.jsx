@@ -1,4 +1,4 @@
-import Dropdown from '@components/ui/Dropdown.jsx';
+import Dropdown from '@components/ui/Dropdown.jsx'
 
 export default function FilterSelect({ label, value, onChange, children, className }) {
   return (
@@ -8,5 +8,5 @@ export default function FilterSelect({ label, value, onChange, children, classNa
         {children}
       </Dropdown>
     </div>
-  );
+  )
 }

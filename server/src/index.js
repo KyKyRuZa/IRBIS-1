@@ -1,219 +1,255 @@
-import 'dotenv/config';
-import { randomUUID } from 'node:crypto';
-import express from 'express';
-import cors from 'cors';
-import cron from 'node-cron';
-import employeeRoutes from './routes/employeeRoutes.js';
-import siteRoutes from './routes/siteRoutes.js';
-import itemTypeRoutes from './routes/itemTypeRoutes.js';
-import issueNormRoutes from './routes/issueNormRoutes.js';
-import issueRecordRoutes from './routes/issueRecordRoutes.js';
-import certificateRoutes from './routes/certificateRoutes.js';
-import reportRoutes from './routes/reportRoutes.js';
-import exportRoutes from './routes/exportRoutes.js';
-import adminRoutes from './routes/adminRoutes.js';
-import authRoutes from './routes/authRoutes.js';
-import formRoutes from './routes/formRoutes.js';
-import pushRoutes from './routes/pushRoutes.js';
-import uploadRoutes from './routes/uploadRoutes.js';
-import logRoutes from './routes/logRoutes.js';
-import { logger, runWithRequestContext, getRequestLogger } from './utils/logger.js';
-import { initDB, pool } from './models/db.js';
-import { aggregateNotifications } from './services/notificationService.js';
-import { updateExpiredIssueRecordsStatus } from './models/issueRecordModel.js';
-import { updateCertificateStatus } from './models/certificateModel.js';
-import { cookiesMiddleware, authMiddleware } from './middleware/auth.js';
-import { redisClient, acquireLock, releaseLock, disconnectRedis } from './utils/redis.js';
-import rateLimit from 'express-rate-limit';
-import { RedisStore } from 'rate-limit-redis';
+import 'dotenv/config'
+import { randomUUID } from 'node:crypto'
+import express from 'express'
+import cors from 'cors'
+import cron from 'node-cron'
+import employeeRoutes from './routes/employeeRoutes.js'
+import siteRoutes from './routes/siteRoutes.js'
+import itemTypeRoutes from './routes/itemTypeRoutes.js'
+import issueNormRoutes from './routes/issueNormRoutes.js'
+import issueRecordRoutes from './routes/issueRecordRoutes.js'
+import certificateRoutes from './routes/certificateRoutes.js'
+import reportRoutes from './routes/reportRoutes.js'
+import exportRoutes from './routes/exportRoutes.js'
+import adminRoutes from './routes/adminRoutes.js'
+import authRoutes from './routes/authRoutes.js'
+import formRoutes from './routes/formRoutes.js'
+import pushRoutes from './routes/pushRoutes.js'
+import uploadRoutes from './routes/uploadRoutes.js'
+import logRoutes from './routes/logRoutes.js'
+import { logger, runWithRequestContext, getRequestLogger } from './utils/logger.js'
+import { initDB, pool } from './models/db.js'
+import { aggregateNotifications } from './services/notificationService.js'
+import { updateExpiredIssueRecordsStatus } from './models/issueRecordModel.js'
+import { updateCertificateStatus } from './models/certificateModel.js'
+import { cookiesMiddleware, authMiddleware } from './middleware/auth.js'
+import { redisClient, acquireLock, releaseLock, disconnectRedis } from './utils/redis.js'
+import rateLimit from 'express-rate-limit'
+import { RedisStore } from 'rate-limit-redis'
 
-const isProd = process.env.NODE_ENV === 'production';
-const isTest = process.env.NODE_ENV === 'test';
-const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === 'true';
+const isProd = process.env.NODE_ENV === 'production'
+const isTest = process.env.NODE_ENV === 'test'
+const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === 'true'
 
 if (isProd && rateLimitDisabled) {
-  logger.error('RATE_LIMIT_DISABLED=true is not allowed in production');
-  process.exit(1);
+  logger.error('RATE_LIMIT_DISABLED=true is not allowed in production')
+  process.exit(1)
 }
 
-const redisStoreOpts = redisClient
-  ? { store: new RedisStore({ sendCommand: (...args) => redisClient.sendCommand(args) }) }
-  : {};
-
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: () => rateLimitDisabled,
-  message: { error: 'Too many login attempts, please try again later' },
-  ...redisStoreOpts,
-});
-
-const refreshLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: () => rateLimitDisabled,
-  message: { error: 'Too many refresh attempts, please try again later' },
-  ...redisStoreOpts,
-});
-
-const globalLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000,
-  max: 600,
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: () => rateLimitDisabled,
-  message: { error: 'Too many requests, please try again later' },
-  ...redisStoreOpts,
-});
+let loginLimiter
+let refreshLimiter
+let globalLimiter
 
 function securityHeaders(req, res, next) {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('Referrer-Policy', 'no-referrer');
-  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
-  res.setHeader('Content-Security-Policy', "default-src 'self'; img-src 'self' data: https:; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'");
-  next();
+  res.setHeader('X-Content-Type-Options', 'nosniff')
+  res.setHeader('X-Frame-Options', 'DENY')
+  res.setHeader('Referrer-Policy', 'no-referrer')
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload')
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; img-src 'self' data: https:; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'"
+  )
+  next()
 }
 
 function requestLogger(req, res, next) {
-  if (req.path === '/api/health') return next();
-  const reqId = req.headers['x-request-id'] || randomUUID();
-  req.id = reqId;
-  const log = logger.child({ reqId });
-  const start = Date.now();
+  if (req.path === '/api/health') return next()
+  const reqId = req.headers['x-request-id'] || randomUUID()
+  req.id = reqId
+  const log = logger.child({ reqId })
+  const start = Date.now()
   res.on('finish', () => {
-    const durationMs = Date.now() - start;
-    const level = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info';
-    log[level]({ method: req.method, url: req.originalUrl, status: res.statusCode, durationMs });
-  });
-  runWithRequestContext(reqId, log, next);
+    const durationMs = Date.now() - start
+    const level = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info'
+    log[level]({ method: req.method, url: req.originalUrl, status: res.statusCode, durationMs })
+  })
+  runWithRequestContext(reqId, log, next)
 }
 
-const app = express();
-app.set('trust proxy', 1);
-app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') || false, credentials: true }));
-app.use(securityHeaders);
-app.use(cookiesMiddleware);
-app.use(express.json());
-app.use(requestLogger);
-app.use('/uploads', authMiddleware, express.static('uploads', {
-  setHeaders: (res) => res.setHeader('X-Content-Type-Options', 'nosniff'),
-}));
-app.use('/certs', authMiddleware, express.static('certs', {
-  setHeaders: (res) => res.setHeader('X-Content-Type-Options', 'nosniff'),
-}));
+const app = express()
+app.set('trust proxy', 1)
+app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') || false, credentials: true }))
+app.use(securityHeaders)
+app.use(cookiesMiddleware)
+app.use(express.json())
+app.use(requestLogger)
+app.use(
+  '/uploads',
+  authMiddleware,
+  express.static('uploads', {
+    setHeaders: (res) => res.setHeader('X-Content-Type-Options', 'nosniff'),
+  })
+)
+app.use(
+  '/certs',
+  authMiddleware,
+  express.static('certs', {
+    setHeaders: (res) => res.setHeader('X-Content-Type-Options', 'nosniff'),
+  })
+)
 
 app.get('/api/health', async (req, res) => {
   try {
-    await pool.query('SELECT 1');
-    res.status(200).json({ status: 'ok', db: 'up' });
+    await pool.query('SELECT 1')
+    const redisStatus = redisClient ? await redisClient.ping() : 'not-configured'
+    res.status(200).json({ status: 'ok', db: 'up', redis: redisStatus === 'PONG' ? 'up' : 'down' })
   } catch (err) {
-    logger.error(err, 'Health check failed');
-    res.status(503).json({ status: 'error', db: 'down' });
+    logger.error(err, 'Health check failed')
+    const status = { status: 'error', db: 'down' }
+    if (redisClient) status.redis = 'down'
+    res.status(503).json(status)
   }
-});
+})
 
-app.use('/api', globalLimiter);
+app.use('/api', (req, res, next) => {
+  if (globalLimiter) return globalLimiter(req, res, next)
+  next()
+})
 
-app.use('/api/auth/login', loginLimiter);
-app.use('/api/auth/refresh', refreshLimiter);
-app.use('/api/auth', authRoutes);
-app.use('/api/employees', employeeRoutes);
-app.use('/api/sites', siteRoutes);
-app.use('/api/items', itemTypeRoutes);
-app.use('/api/norms', issueNormRoutes);
-app.use('/api/issues', issueRecordRoutes);
-app.use('/api/certificates', certificateRoutes);
-app.use('/api/reports', reportRoutes);
-app.use('/api/export', exportRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/forms', formRoutes);
-app.use('/api/push', pushRoutes);
-app.use('/api/upload', uploadRoutes);
-app.use('/api/log', logRoutes);
+app.use('/api/auth/login', (req, res, next) => {
+  if (loginLimiter) return loginLimiter(req, res, next)
+  next()
+})
 
-app.use((err, req, res, next) => {
-  getRequestLogger().error({ err, method: req.method, url: req.originalUrl }, err.message || 'Request failed');
-  const status = err.status || 500;
-  const message = isProd || isTest ? 'Internal Server Error' : (err.message || 'Internal Server Error');
-  res.status(status).json({ error: message });
-});
+app.use('/api/auth/refresh', (req, res, next) => {
+  if (refreshLimiter) return refreshLimiter(req, res, next)
+  next()
+})
+
+app.use('/api/auth', authRoutes)
+app.use('/api/employees', employeeRoutes)
+app.use('/api/sites', siteRoutes)
+app.use('/api/items', itemTypeRoutes)
+app.use('/api/norms', issueNormRoutes)
+app.use('/api/issues', issueRecordRoutes)
+app.use('/api/certificates', certificateRoutes)
+app.use('/api/reports', reportRoutes)
+app.use('/api/export', exportRoutes)
+app.use('/api/admin', adminRoutes)
+app.use('/api/forms', formRoutes)
+app.use('/api/push', pushRoutes)
+app.use('/api/upload', uploadRoutes)
+app.use('/api/log', logRoutes)
+
+app.use((err, req, res, _next) => {
+  getRequestLogger().error(
+    { err, method: req.method, url: req.originalUrl },
+    err.message || 'Request failed'
+  )
+  const status = err.status || 500
+  const message =
+    isProd || isTest ? 'Internal Server Error' : err.message || 'Internal Server Error'
+  res.status(status).json({ error: message })
+})
 
 app.use((req, res) => {
-  getRequestLogger().warn({ method: req.method, url: req.originalUrl }, 'Route not found');
-  res.status(404).json({ error: 'Not found' });
-});
+  getRequestLogger().warn({ method: req.method, url: req.originalUrl }, 'Route not found')
+  res.status(404).json({ error: 'Not found' })
+})
 
 process.on('unhandledRejection', (reason, promise) => {
-  logger.error({ reason, promise }, 'Unhandled promise rejection, shutting down');
-  gracefulShutdown(1);
-});
+  logger.error({ reason, promise }, 'Unhandled promise rejection, shutting down')
+  gracefulShutdown(1)
+})
 
 process.on('uncaughtException', (err) => {
-  logger.error(err, 'Uncaught exception, shutting down');
-  gracefulShutdown(1);
-});
+  logger.error(err, 'Uncaught exception, shutting down')
+  gracefulShutdown(1)
+})
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000
 
 const gracefulShutdown = async (exitCode = 0) => {
-  logger.info('Shutting down services...');
+  logger.info('Shutting down services...')
   try {
-    await pool.end();
-    logger.info('Database pool closed');
+    await pool.end()
+    logger.info('Database pool closed')
   } catch (err) {
-    logger.error(err, 'Error closing database pool');
+    logger.error(err, 'Error closing database pool')
   }
   try {
-    await disconnectRedis();
+    await disconnectRedis()
   } catch (err) {
-    logger.error(err, 'Error closing Redis connection');
+    logger.error(err, 'Error closing Redis connection')
   }
-  process.exit(exitCode);
-};
+  process.exit(exitCode)
+}
 
-process.on('SIGTERM', gracefulShutdown);
-process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', gracefulShutdown)
+process.on('SIGINT', gracefulShutdown)
 
-  if (process.env.NODE_ENV !== 'test') {
-    (async () => {
-      if (redisClient) {
-        await redisClient.connect();
-        logger.info('Redis connected');
-      }
-      await initDB();
-      updateExpiredIssueRecordsStatus()
-        .then(() => updateCertificateStatus())
-        .then(() => aggregateNotifications())
-        .catch(err => logger.error(err, 'Initial startup failed'));
-      cron.schedule('0 8 * * *', async () => {
-        let lockToken = null;
-        try {
-          lockToken = await acquireLock('cron:daily-jobs', 5 * 60 * 1000);
-          if (!lockToken) {
-            logger.info('Cron job already running, skipping');
-            return;
+if (process.env.NODE_ENV !== 'test') {
+  ;(async () => {
+    if (redisClient) {
+      await redisClient.connect()
+      logger.info('Redis connected')
+    }
+    const createRedisOpts = (prefix) =>
+      redisClient
+        ? {
+            store: new RedisStore({
+              sendCommand: (...args) => redisClient.sendCommand(args),
+              prefix,
+            }),
           }
-          await updateExpiredIssueRecordsStatus();
-          await updateCertificateStatus();
-          await aggregateNotifications();
-        } catch (err) {
-          logger.error(err, 'Scheduled job failed');
-        } finally {
-          if (lockToken) await releaseLock('cron:daily-jobs', lockToken);
-        }
-      });
-      app.listen(PORT, () => {
-        logger.info(`Server running on port ${PORT}`);
-      });
-    })().catch(err => {
-      logger.error(err, 'Failed to initialize server');
-      process.exit(1);
-    });
-  }
+        : {}
 
-export default app;
+    globalLimiter = rateLimit({
+      windowMs: 10 * 60 * 1000,
+      max: 600,
+      standardHeaders: true,
+      legacyHeaders: false,
+      skip: () => rateLimitDisabled,
+      message: { error: 'Too many requests, please try again later' },
+      ...createRedisOpts('rl:global:'),
+    })
+    loginLimiter = rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 5,
+      standardHeaders: true,
+      legacyHeaders: false,
+      skip: () => rateLimitDisabled,
+      message: { error: 'Too many login attempts, please try again later' },
+      ...createRedisOpts('rl:login:'),
+    })
+    refreshLimiter = rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 10,
+      standardHeaders: true,
+      legacyHeaders: false,
+      skip: () => rateLimitDisabled,
+      message: { error: 'Too many refresh attempts, please try again later' },
+      ...createRedisOpts('rl:refresh:'),
+    })
+    await initDB()
+    updateExpiredIssueRecordsStatus()
+      .then(() => updateCertificateStatus())
+      .then(() => aggregateNotifications())
+      .catch((err) => logger.error(err, 'Initial startup failed'))
+    cron.schedule('0 8 * * *', async () => {
+      let lockToken = null
+      try {
+        lockToken = await acquireLock('cron:daily-jobs', 5 * 60 * 1000)
+        if (!lockToken) {
+          logger.info('Cron job already running, skipping')
+          return
+        }
+        await updateExpiredIssueRecordsStatus()
+        await updateCertificateStatus()
+        await aggregateNotifications()
+      } catch (err) {
+        logger.error(err, 'Scheduled job failed')
+      } finally {
+        if (lockToken) await releaseLock('cron:daily-jobs', lockToken)
+      }
+    })
+    app.listen(PORT, () => {
+      logger.info(`Server running on port ${PORT}`)
+    })
+  })().catch((err) => {
+    logger.error(err, 'Failed to initialize server')
+    process.exit(1)
+  })
+}
+
+export default app

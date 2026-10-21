@@ -3,4 +3,4 @@ export const ITEM_CATEGORIES = {
   footwear: 'Обувь',
   siz: 'СИЗ',
   consumable: 'Расходники',
-};
+}

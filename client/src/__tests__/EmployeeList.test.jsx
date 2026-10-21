@@ -1,11 +1,11 @@
-import '@testing-library/jest-dom';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { AuthProvider } from '@contexts/AuthContext.jsx';
-import EmployeeList from '@features/employees/EmployeeList.jsx';
-import { employeesService } from '@/lib/services/employees.service.js';
-import { sitesService } from '@/lib/services/sites.service.js';
+import '@testing-library/jest-dom'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
+import { AuthProvider } from '@contexts/AuthContext.jsx'
+import EmployeeList from '@features/employees/EmployeeList.jsx'
+import { employeesService } from '@/lib/services/employees.service.js'
+import { sitesService } from '@/lib/services/sites.service.js'
 
 vi.mock('@/lib/services/employees.service.js', () => {
   const employeesService = {
@@ -17,25 +17,25 @@ vi.mock('@/lib/services/employees.service.js', () => {
     delete: vi.fn(),
     search: vi.fn(),
     bySite: vi.fn(),
-  };
-  return { employeesService };
-});
+  }
+  return { employeesService }
+})
 
 vi.mock('@/lib/services/sites.service.js', () => {
-  const sitesService = { list: vi.fn() };
-  return { sitesService };
-});
+  const sitesService = { list: vi.fn() }
+  return { sitesService }
+})
 
 function renderWithRouter(ui, role = 'admin') {
-  localStorage.setItem('user', JSON.stringify({ username: 'u', role }));
-  window.history.pushState({}, 'Test', '/');
+  localStorage.setItem('user', JSON.stringify({ username: 'u', role }))
+  window.history.pushState({}, 'Test', '/')
   return render(
     <AuthProvider>
       <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         {ui}
       </MemoryRouter>
     </AuthProvider>
-  );
+  )
 }
 
 const activeEmployee = {
@@ -50,26 +50,26 @@ const activeEmployee = {
   respirator_size: 'M',
   gloves_size: 'L',
   status: 'active',
-};
+}
 
-const terminatedEmployee = { ...activeEmployee, id: 2, status: 'terminated' };
+const terminatedEmployee = { ...activeEmployee, id: 2, status: 'terminated' }
 
 describe('EmployeeList', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    sitesService.list.mockResolvedValue([]);
-  });
+    vi.clearAllMocks()
+    sitesService.list.mockResolvedValue([])
+  })
 
   it('renders terminate button for an active employee', async () => {
-    employeesService.list.mockResolvedValue([activeEmployee]);
-    renderWithRouter(<EmployeeList />);
-    expect(await screen.findByRole('button', { name: 'Уволить' })).toBeInTheDocument();
-  });
+    employeesService.list.mockResolvedValue([activeEmployee])
+    renderWithRouter(<EmployeeList />)
+    expect(await screen.findByRole('button', { name: 'Уволить' })).toBeInTheDocument()
+  })
 
   it('does not render terminate button for a terminated employee', async () => {
-    employeesService.list.mockResolvedValue([terminatedEmployee]);
-    renderWithRouter(<EmployeeList />);
-    expect(await screen.findByText('Иван Иванов')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Уволить' })).toBeNull();
-  });
-});
+    employeesService.list.mockResolvedValue([terminatedEmployee])
+    renderWithRouter(<EmployeeList />)
+    expect(await screen.findByText('Иван Иванов')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Уволить' })).toBeNull()
+  })
+})

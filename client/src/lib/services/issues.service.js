@@ -1,36 +1,27 @@
-import { api } from '@/lib/api.js';
+import { api } from '@/lib/api.js'
 
 export const issuesService = {
-  list: (params = {}) =>
-    api.get('/api/issues', { params }).then(r => r.data),
+  list: (params = {}) => api.get('/api/issues', { params }).then((r) => r.data),
 
-  listPaginated: (params = {}) =>
-    api.get('/api/issues', { params }).then(r => r.data),
+  listPaginated: (params = {}) => api.get('/api/issues', { params }).then((r) => r.data),
 
-  get: (id) =>
-    api.get(`/api/issues/${id}`).then(r => r.data),
+  get: (id) => api.get(`/api/issues/${id}`).then((r) => r.data),
 
-  create: (data) =>
-    api.post('/api/issues', data).then(r => r.data),
+  create: (data) => api.post('/api/issues', data).then((r) => r.data),
 
-  update: (id, data) =>
-    api.put(`/api/issues/${id}`, data).then(r => r.data),
+  update: (id, data) => api.put(`/api/issues/${id}`, data).then((r) => r.data),
 
-  delete: (id) =>
-    api.delete(`/api/issues/${id}`).then(r => r.data),
+  delete: (id) => api.delete(`/api/issues/${id}`).then((r) => r.data),
 
-  batchCreate: (data) =>
-    api.post('/api/issues/batch', data).then(r => r.data),
+  batchCreate: (data) => api.post('/api/issues/batch', data).then((r) => r.data),
 
-  batchSingleCreate: (data) =>
-    api.post('/api/issues/batch-single', data).then(r => r.data),
+  batchSingleCreate: (data) => api.post('/api/issues/batch-single', data).then((r) => r.data),
 
-  dispose: (id) =>
-    api.patch(`/api/issues/${id}/dispose`).then(r => r.data),
+  dispose: (id) => api.patch(`/api/issues/${id}/dispose`).then((r) => r.data),
 
   returnItem: (id, returnData) =>
-    api.patch(`/api/issues/${id}/return`, returnData).then(r => r.data),
+    api.patch(`/api/issues/${id}/return`, returnData).then((r) => r.data),
 
   getExpiring: (months = 2, filters = {}) =>
-    api.get('/api/issues/expiring', { params: { ...filters, months } }).then(r => r.data),
-};
+    api.get('/api/issues/expiring', { params: { ...filters, months } }).then((r) => r.data),
+}

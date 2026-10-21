@@ -118,7 +118,7 @@
   padding: 6px 2px;
 }
 
-.checkboxLabel input[type="checkbox"] {
+.checkboxLabel input[type='checkbox'] {
   width: 20px;
   height: 20px;
   accent-color: var(--primary);

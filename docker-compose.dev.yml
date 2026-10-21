@@ -19,6 +19,7 @@ services:
       POSTGRES_DB: irbis
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
     # Publish on 5433 to avoid clashing with any Postgres already on host 5432.
     ports:
       - "5433:5432"
@@ -38,6 +39,7 @@ services:
       - DB_USER=postgres
       - DB_PASSWORD=postgres
       - DB_DATABASE=irbis
+      - AUTH_TYPE=trust
     ports:
       - "6432:6432"
     depends_on:
@@ -47,7 +49,7 @@ services:
   redis:
     image: redis:8.2.6-alpine
     ports:
-      - "6379:6379"
+      - "6380:6379"
     command: redis-server --save 60 1 --loglevel warning
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -69,7 +71,7 @@ services:
       DB_NAME: irbis
       DB_USER: postgres
       DB_PASSWORD: postgres
-      DATABASE_URL: postgresql://postgres:postgres@pgbouncer:6432/irbis
+      DATABASE_URL: postgresql://postgres:postgres@pgbouncer:5432/irbis
       REDIS_URL: redis://redis:6379
       PORT: 5000
       JWT_SECRET: ${JWT_SECRET}

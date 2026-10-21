@@ -1,15 +1,15 @@
-import { api } from '@/lib/api.js';
+import { api } from '@/lib/api.js'
 
 export const authService = {
   login: (username, password) =>
-    api.post('/api/auth/login', { username, password }).then(r => r.data),
+    api.post('/api/auth/login', { username, password }).then((r) => r.data),
 
   changePassword: (oldPassword, newPassword) =>
-    api.post('/api/auth/change-password', { old_password: oldPassword, new_password: newPassword }).then(r => r.data),
+    api
+      .post('/api/auth/change-password', { old_password: oldPassword, new_password: newPassword })
+      .then((r) => r.data),
 
-  me: () =>
-    api.get('/api/auth/me').then(r => r.data),
+  me: () => api.get('/api/auth/me').then((r) => r.data),
 
-  logout: () =>
-    api.post('/api/auth/logout').then(r => r.data),
-};
+  logout: () => api.post('/api/auth/logout').then((r) => r.data),
+}

@@ -36,7 +36,6 @@
   margin-top: 5px;
 }
 
-
 /* =========================
    FORM
    ========================= */
@@ -79,7 +78,6 @@
   margin-bottom: 4px;
 }
 
-
 /* =========================
    LABELS
    ========================= */
@@ -94,7 +92,6 @@
 
   color: #374151;
 }
-
 
 /* =========================
    INPUTS
@@ -137,7 +134,6 @@
   color: #9ca3af;
 }
 
-
 /* =========================
    SELECT
    ========================= */
@@ -147,13 +143,12 @@
   appearance: auto;
 }
 
-
 /* =========================
    ERRORS
    ========================= */
 
-.field input[aria-invalid="true"],
-.field select[aria-invalid="true"] {
+.field input[aria-invalid='true'],
+.field select[aria-invalid='true'] {
   border-color: #b42318;
 }
 
@@ -164,7 +159,6 @@
   font-size: 12px;
   line-height: 1.4;
 }
-
 
 /* =========================
    COLLAPSIBLE SECTIONS
@@ -182,7 +176,6 @@
 
   background: #fff;
 }
-
 
 /* Заголовок details */
 
@@ -205,7 +198,6 @@
   list-style-position: inside;
 }
 
-
 /* Убираем стандартный маркер */
 
 .sizesGroup summary::-webkit-details-marker {
@@ -216,13 +208,11 @@
   color: #555;
 }
 
-
 /* При открытии заголовок */
 
 .sizesGroup[open] summary {
   border-bottom: 1px solid #e1e4e8;
 }
-
 
 /* Содержимое details */
 
@@ -234,7 +224,6 @@
 .sizesGroup > .formRow + .formRow {
   padding-top: 0;
 }
-
 
 /* =========================
    ACTION BUTTONS
@@ -250,7 +239,6 @@
 
   border-top: 1px solid #e5e7eb;
 }
-
 
 /* Сохранить */
 
@@ -276,7 +264,6 @@
     border-color 0.12s ease;
 }
 
-
 /* Никаких прыжков */
 
 .actionButtons .btn:hover {
@@ -296,7 +283,6 @@
   box-shadow: 0 0 0 2px rgba(169, 39, 64, 0.15);
 }
 
-
 /* =========================
    CANCEL
    ========================= */
@@ -313,7 +299,6 @@
   color: #222;
 }
 
-
 /* =========================
    DISABLED
    ========================= */
@@ -327,7 +312,6 @@
   background: #a92740;
   border-color: #a92740;
 }
-
 
 /* =========================
    TABLE / STATUS
@@ -387,7 +371,6 @@
   background: #f6f8fa;
 }
 
-
 /* =========================
    RESPONSIVE
    ========================= */
@@ -407,7 +390,6 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-
 
 @media (max-width: 768px) {
   .container {
@@ -444,7 +426,6 @@
     width: 100%;
   }
 }
-
 
 @media (max-width: 480px) {
   .title {

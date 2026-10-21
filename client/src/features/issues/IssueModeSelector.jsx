@@ -1,5 +1,5 @@
-import { ISSUE_METHODS } from '@/lib/constants/issue-methods.js';
-import styles from '@styles/IssueForm.module.css';
+import { ISSUE_METHODS } from '@/lib/constants/issue-methods.js'
+import styles from '@styles/IssueForm.module.css'
 
 export default function IssueModeSelector({ issueMode, setIssueMode, setBatchItems }) {
   return (
@@ -10,7 +10,10 @@ export default function IssueModeSelector({ issueMode, setIssueMode, setBatchIte
           name="issue_mode"
           value="single"
           checked={issueMode === 'single'}
-          onChange={() => { setIssueMode('single'); setBatchItems([]); }}
+          onChange={() => {
+            setIssueMode('single')
+            setBatchItems([])
+          }}
         />
         <span className={styles.modeCardTitle}>Одиночная</span>
       </label>
@@ -20,7 +23,10 @@ export default function IssueModeSelector({ issueMode, setIssueMode, setBatchIte
           name="issue_mode"
           value="group"
           checked={issueMode === 'group'}
-          onChange={() => { setIssueMode('group'); setBatchItems([]); }}
+          onChange={() => {
+            setIssueMode('group')
+            setBatchItems([])
+          }}
         />
         <span className={styles.modeCardTitle}>Групповая</span>
       </label>
@@ -30,10 +36,21 @@ export default function IssueModeSelector({ issueMode, setIssueMode, setBatchIte
           name="issue_mode"
           value="batch-single"
           checked={issueMode === 'batch-single'}
-          onChange={() => { setIssueMode('batch-single'); setBatchItems([{ item_type_id: '', quantity: 1, certificate_id: '', issue_method: 'personal', notes: '' }]); }}
+          onChange={() => {
+            setIssueMode('batch-single')
+            setBatchItems([
+              {
+                item_type_id: '',
+                quantity: 1,
+                certificate_id: '',
+                issue_method: 'personal',
+                notes: '',
+              },
+            ])
+          }}
         />
         <span className={styles.modeCardTitle}>Несколько позиций</span>
       </label>
     </div>
-  );
+  )
 }

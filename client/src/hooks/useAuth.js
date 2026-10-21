@@ -1,1 +1,1 @@
-export { useAuth } from '@contexts/AuthContext.jsx';
+export { useAuth } from '@contexts/AuthContext.jsx'

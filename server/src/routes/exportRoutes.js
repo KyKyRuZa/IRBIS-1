@@ -1,5 +1,10 @@
-import { Router } from 'express';
-import { exportToExcel, exportDemandReport, exportIssuesReport, exportExpiringReport } from '../controllers/reportController.js';
+import { Router } from 'express'
+import {
+  exportToExcel,
+  exportDemandReport,
+  exportIssuesReport,
+  exportExpiringReport,
+} from '../controllers/reportController.js'
 import {
   exportEmployeeCard,
   exportEmployeeCardSheets,
@@ -8,24 +13,24 @@ import {
   exportItemsReport,
   exportGroupConsumablesReport,
   exportIssueSheets,
-} from '../controllers/exportController.js';
-import { authMiddleware, adminOnly } from '../middleware/auth.js';
+} from '../controllers/exportController.js'
+import { authMiddleware, adminOnly } from '../middleware/auth.js'
 
-const router = Router();
+const router = Router()
 
-router.use(authMiddleware);
-router.use(adminOnly);
+router.use(authMiddleware)
+router.use(adminOnly)
 
-router.get('/excel', exportToExcel);
-router.get('/demand/excel', exportDemandReport);
-router.get('/employee-card/:id', exportEmployeeCard);
-router.get('/employee-card/:id/sheets', exportEmployeeCardSheets);
-router.get('/issue-sheets', exportIssueSheets);
-router.get('/consumables/:id', exportConsumables);
-router.get('/all-cards', exportAllCards);
-router.get('/issues-report', exportIssuesReport);
-router.get('/expiring-report', exportExpiringReport);
-router.get('/items-report', exportItemsReport);
-router.get('/group-consumables', exportGroupConsumablesReport);
+router.get('/excel', exportToExcel)
+router.get('/demand/excel', exportDemandReport)
+router.get('/employee-card/:id', exportEmployeeCard)
+router.get('/employee-card/:id/sheets', exportEmployeeCardSheets)
+router.get('/issue-sheets', exportIssueSheets)
+router.get('/consumables/:id', exportConsumables)
+router.get('/all-cards', exportAllCards)
+router.get('/issues-report', exportIssuesReport)
+router.get('/expiring-report', exportExpiringReport)
+router.get('/items-report', exportItemsReport)
+router.get('/group-consumables', exportGroupConsumablesReport)
 
-export default router;
+export default router

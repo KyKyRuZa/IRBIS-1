@@ -1,13 +1,13 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
-import { AuthProvider } from '@contexts/AuthContext.jsx';
-import App from '@/App.jsx';
-import ErrorBoundary from '@/components/ErrorBoundary.jsx';
-import { initGlobalErrorHandlers } from '@/lib/errorHandler.js';
-import '@styles/index.css';
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
+import { AuthProvider } from '@contexts/AuthContext.jsx'
+import App from '@/App.jsx'
+import ErrorBoundary from '@/components/ErrorBoundary.jsx'
+import { initGlobalErrorHandlers } from '@/lib/errorHandler.js'
+import '@styles/index.css'
 
-initGlobalErrorHandlers();
+initGlobalErrorHandlers()
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -19,4 +19,4 @@ createRoot(document.getElementById('root')).render(
       </AuthProvider>
     </BrowserRouter>
   </StrictMode>
-);
+)

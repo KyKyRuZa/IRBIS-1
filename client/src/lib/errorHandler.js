@@ -1,9 +1,9 @@
-import { childLogger } from '@/lib/logger.js';
+import { childLogger } from '@/lib/logger.js'
 
-const log = childLogger('global');
+const log = childLogger('global')
 
 export function initGlobalErrorHandlers() {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') return
 
   window.addEventListener('error', (event) => {
     log.error(
@@ -15,17 +15,17 @@ export function initGlobalErrorHandlers() {
         stack: event.error?.stack,
       },
       'Uncaught client error'
-    );
-  });
+    )
+  })
 
   window.addEventListener('unhandledrejection', (event) => {
-    const reason = event.reason;
+    const reason = event.reason
     log.error(
       {
         reason: reason?.message || String(reason),
         stack: reason?.stack,
       },
       'Unhandled promise rejection'
-    );
-  });
+    )
+  })
 }

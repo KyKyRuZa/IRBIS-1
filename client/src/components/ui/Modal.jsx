@@ -1,22 +1,25 @@
-import { useEffect } from 'react';
-import Icon from '@components/ui/Icon.jsx';
-import styles from '@styles/Modal.module.css';
+import { useEffect } from 'react'
+import Icon from '@components/ui/Icon.jsx'
+import styles from '@styles/Modal.module.css'
 
 export default function Modal({ isOpen, onClose, title, children, size }) {
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) return
     const handleEsc = (e) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', handleEsc);
-    return () => document.removeEventListener('keydown', handleEsc);
-  }, [isOpen, onClose]);
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleEsc)
+    return () => document.removeEventListener('keydown', handleEsc)
+  }, [isOpen, onClose])
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   return (
     <div className={styles.overlay}>
-      <div className={`${styles.content} ${size === 'compact' ? styles.compact : ''}`} onClick={(e) => e.stopPropagation()}>
+      <div
+        className={`${styles.content} ${size === 'compact' ? styles.compact : ''}`}
+        onClick={(e) => e.stopPropagation()}
+      >
         {title && <h3 className={styles.header}>{title}</h3>}
         <button className={styles.closeButton} onClick={onClose} aria-label="Закрыть">
           <Icon name="x" size={18} />
@@ -24,5 +27,5 @@ export default function Modal({ isOpen, onClose, title, children, size }) {
         {children}
       </div>
     </div>
-  );
+  )
 }

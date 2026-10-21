@@ -1,80 +1,78 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { sitesService } from '@lib/services/sites.service.js';
-import { itemsService } from '@/lib/services/items.service.js';
-import { issuesService } from '@/lib/services/issues.service.js';
-import { reportsService } from '@/lib/services/reports.service.js';
-import { exportsService } from '@/lib/services/exports.service.js';
-import { adminService } from '@/lib/services/admin.service.js';
-import { ITEM_CATEGORIES } from '@/lib/constants/item-categories.js';
-import { useExport } from '@hooks/useExport.js';
-import { useTableControls, filterAndSort } from '@/hooks/useTableControls.js';
-import Pagination from '@/components/ui/Pagination.jsx';
-import EmptyState from '@/components/ui/EmptyState.jsx';
-import SortableTh from '@/components/ui/SortableTh.jsx';
-import Icon from '@components/ui/Icon.jsx';
-import SearchBox from '@/components/ui/SearchBox.jsx';
-import FilterSelect from '@/components/ui/FilterSelect.jsx';
-import DateRange from '@/components/ui/DateRange.jsx';
-import styles from '@styles/Reports.module.css';
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { sitesService } from '@lib/services/sites.service.js'
+import { itemsService } from '@/lib/services/items.service.js'
+import { issuesService } from '@/lib/services/issues.service.js'
+import { reportsService } from '@/lib/services/reports.service.js'
+import { exportsService } from '@/lib/services/exports.service.js'
+import { adminService } from '@/lib/services/admin.service.js'
+import { ITEM_CATEGORIES } from '@/lib/constants/item-categories.js'
+import { useExport } from '@hooks/useExport.js'
+import { useTableControls, filterAndSort } from '@/hooks/useTableControls.js'
+import Pagination from '@/components/ui/Pagination.jsx'
+import EmptyState from '@/components/ui/EmptyState.jsx'
+import SortableTh from '@/components/ui/SortableTh.jsx'
+import Icon from '@components/ui/Icon.jsx'
+import SearchBox from '@/components/ui/SearchBox.jsx'
+import FilterSelect from '@/components/ui/FilterSelect.jsx'
+import DateRange from '@/components/ui/DateRange.jsx'
+import styles from '@styles/Reports.module.css'
 
 const TABS = [
   { id: 'demand', label: 'Потребность в СИЗ' },
   { id: 'records', label: 'Сводка выдач' },
   { id: 'expiring', label: 'Истекающие сроки' },
-];
+]
 
 export default function Reports() {
-  const [records, setRecords] = useState([]);
-  const [expiring, setExpiring] = useState([]);
-  const [sites, setSites] = useState([]);
-  const [items, setItems] = useState([]);
-  const [demand, setDemand] = useState([]);
-  const [activeTab, setActiveTab] = useState('demand');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [expiringPage, setExpiringPage] = useState(1);
-  const [recordsPage, setRecordsPage] = useState(1);
-  const [showExportMenu, setShowExportMenu] = useState(false);
-  const exportMenuRef = useRef(null);
-  const { download } = useExport();
+  const [records, setRecords] = useState([])
+  const [expiring, setExpiring] = useState([])
+  const [sites, setSites] = useState([])
+  const [items, setItems] = useState([])
+  const [demand, setDemand] = useState([])
+  const [activeTab, setActiveTab] = useState('demand')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [expiringPage, setExpiringPage] = useState(1)
+  const [recordsPage, setRecordsPage] = useState(1)
+  const [showExportMenu, setShowExportMenu] = useState(false)
+  const exportMenuRef = useRef(null)
+  const { download } = useExport()
 
   const extractData = (response) => {
-    if (response && typeof response === 'object' && !Array.isArray(response) && 'pagination' in response) {
-      return response.data || [];
+    if (
+      response &&
+      typeof response === 'object' &&
+      !Array.isArray(response) &&
+      'pagination' in response
+    ) {
+      return response.data || []
     }
-    return response;
-  };
+    return response
+  }
 
-  const {
-    search,
-    setSearch,
-    sort,
-    toggleSort,
-    filters,
-    setFilter,
-    resetFilters
-  } = useTableControls({
-    filters: {
-      site_id: '',
-      item_type_id: '',
-      date_from: '',
-      date_to: '',
-      status: ''
-    },
-    sort: null
-  });
+  const { search, setSearch, sort, toggleSort, filters, setFilter, resetFilters } =
+    useTableControls({
+      filters: {
+        site_id: '',
+        item_type_id: '',
+        date_from: '',
+        date_to: '',
+        status: '',
+      },
+      sort: null,
+    })
 
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (exportMenuRef.current && !exportMenuRef.current.contains(e.target)) {
-        setShowExportMenu(false);
+        setShowExportMenu(false)
       }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   useEffect(() => {
-    let mounted = true;
+    let mounted = true
     const load = async () => {
       try {
         const [sitesRes, itemsRes, recordsRes, expiringRes] = await Promise.all([
@@ -82,139 +80,192 @@ export default function Reports() {
           itemsService.list(),
           issuesService.list(),
           issuesService.getExpiring(2),
-        ]);
-        if (!mounted) return;
-        setSites(Array.isArray(sitesRes) ? sitesRes : []);
-        setItems(Array.isArray(itemsRes) ? itemsRes : []);
-        setRecords(Array.isArray(extractData(recordsRes)) ? extractData(recordsRes) : []);
-        setExpiring(Array.isArray(expiringRes) ? expiringRes : []);
+        ])
+        if (!mounted) return
+        setSites(Array.isArray(sitesRes) ? sitesRes : [])
+        setItems(Array.isArray(itemsRes) ? itemsRes : [])
+        setRecords(Array.isArray(extractData(recordsRes)) ? extractData(recordsRes) : [])
+        setExpiring(Array.isArray(expiringRes) ? expiringRes : [])
       } catch (e) {
-        console.error('Failed to load base reports data', e);
+        console.error('Failed to load base reports data', e)
       }
-      if (!mounted) return;
+      if (!mounted) return
       try {
-        const demandRes = await adminService.getDemand(filters.site_id);
-        setDemand(Array.isArray(demandRes) ? demandRes : []);
+        const demandRes = await adminService.getDemand(filters.site_id)
+        setDemand(Array.isArray(demandRes) ? demandRes : [])
       } catch (e) {
-        console.error('Failed to load demand report', e);
-        setDemand([]);
+        console.error('Failed to load demand report', e)
+        setDemand([])
       }
-    };
-    load();
-    return () => { mounted = false; };
-  }, []);
+    }
+    load()
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   const fetchRecords = async () => {
-    const res = await issuesService.list(filters);
-    setRecords(Array.isArray(extractData(res)) ? extractData(res) : []);
-  };
+    const res = await issuesService.list(filters)
+    setRecords(Array.isArray(extractData(res)) ? extractData(res) : [])
+  }
 
   const fetchDemand = async () => {
-    const res = await adminService.getDemand(filters.site_id);
-    setDemand(res);
-  };
+    const res = await adminService.getDemand(filters.site_id)
+    setDemand(res)
+  }
 
   const fetchExpiring = async () => {
-    const res = await issuesService.getExpiring(2, filters);
-    setExpiring(res);
-  };
+    const res = await issuesService.getExpiring(2, filters)
+    setExpiring(res)
+  }
 
   useEffect(() => {
     const timer = setTimeout(() => {
       if (activeTab === 'records') {
-        fetchRecords();
+        fetchRecords()
       }
       if (activeTab === 'demand') {
-        fetchDemand();
+        fetchDemand()
       }
       if (activeTab === 'expiring') {
-        fetchExpiring();
+        fetchExpiring()
       }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [filters.site_id, filters.item_type_id, filters.date_from, filters.date_to, filters.status, activeTab]);
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [
+    filters.site_id,
+    filters.item_type_id,
+    filters.date_from,
+    filters.date_to,
+    filters.status,
+    activeTab,
+  ])
 
   const handleReset = () => {
-    resetFilters();
-    setCurrentPage(1);
-    setRecordsPage(1);
-    setExpiringPage(1);
-    issuesService.list().then(res => setRecords(Array.isArray(extractData(res)) ? extractData(res) : []));
-    adminService.getDemand('').then(res => setDemand(Array.isArray(res) ? res : []));
-    issuesService.getExpiring(2).then(res => setExpiring(Array.isArray(res) ? res : []));
-  };
+    resetFilters()
+    setCurrentPage(1)
+    setRecordsPage(1)
+    setExpiringPage(1)
+    issuesService
+      .list()
+      .then((res) => setRecords(Array.isArray(extractData(res)) ? extractData(res) : []))
+    adminService.getDemand('').then((res) => setDemand(Array.isArray(res) ? res : []))
+    issuesService.getExpiring(2).then((res) => setExpiring(Array.isArray(res) ? res : []))
+  }
 
-  const formatDate = (dateStr) => dateStr ? new Date(dateStr).toLocaleDateString('ru-RU') : '';
+  const formatDate = (dateStr) => (dateStr ? new Date(dateStr).toLocaleDateString('ru-RU') : '')
   const reportDateRange = () => {
-    const from = formatDate(filters.date_from);
-    const to = formatDate(filters.date_to);
-    if (from && to) return `${from} - ${to}`;
-    if (from) return `с ${from}`;
-    if (to) return `по ${to}`;
-    return new Date().toLocaleDateString('ru-RU');
-  };
+    const from = formatDate(filters.date_from)
+    const to = formatDate(filters.date_to)
+    if (from && to) return `${from} - ${to}`
+    if (from) return `с ${from}`
+    if (to) return `по ${to}`
+    return new Date().toLocaleDateString('ru-RU')
+  }
 
   const handleExcelExport = async () => {
-    setShowExportMenu(false);
-    download(() => reportsService.exportExcel(filters), `Экспорт в Excel ${reportDateRange()}.xlsx`);
-  };
+    setShowExportMenu(false)
+    download(() => reportsService.exportExcel(filters), `Экспорт в Excel ${reportDateRange()}.xlsx`)
+  }
 
   const handleDemandExport = async () => {
-    setShowExportMenu(false);
-    download(() => reportsService.exportDemandExcel(filters.site_id), `Потребность в СИЗ ${reportDateRange()}.xlsx`);
-  };
+    setShowExportMenu(false)
+    download(
+      () => reportsService.exportDemandExcel(filters.site_id),
+      `Потребность в СИЗ ${reportDateRange()}.xlsx`
+    )
+  }
 
   const handleIssuesReport = async () => {
-    setShowExportMenu(false);
-    download(() => exportsService.exportIssuesReport(), `Отчёт по выдачам ${new Date().toLocaleDateString('ru-RU')}.docx`);
-  };
+    setShowExportMenu(false)
+    download(
+      () => exportsService.exportIssuesReport(),
+      `Отчёт по выдачам ${new Date().toLocaleDateString('ru-RU')}.docx`
+    )
+  }
 
   const handleExpiringReport = async () => {
-    setShowExportMenu(false);
-    download(() => exportsService.exportExpiringReport(), `Отчёт по истекающим срокам ${new Date().toLocaleDateString('ru-RU')}.docx`);
-  };
+    setShowExportMenu(false)
+    download(
+      () => exportsService.exportExpiringReport(),
+      `Отчёт по истекающим срокам ${new Date().toLocaleDateString('ru-RU')}.docx`
+    )
+  }
 
   const handleGroupConsumables = async () => {
-    setShowExportMenu(false);
+    setShowExportMenu(false)
     if (!filters.site_id) {
-      alert('Выберите объект в фильтре «Объект» для формирования групповой ведомости расходников.');
-      return;
+      alert('Выберите объект в фильтре «Объект» для формирования групповой ведомости расходников.')
+      return
     }
-    download(() => exportsService.exportGroupConsumables(filters.site_id), `Групповая ведомость расходников ${new Date().toLocaleDateString('ru-RU')}.docx`);
-  };
+    download(
+      () => exportsService.exportGroupConsumables(filters.site_id),
+      `Групповая ведомость расходников ${new Date().toLocaleDateString('ru-RU')}.docx`
+    )
+  }
 
   const handleAllCards = async () => {
-    setShowExportMenu(false);
-    download(() => exportsService.exportAllCards(), `Все карточки СИЗ (Word ZIP)`);
-  };
+    setShowExportMenu(false)
+    download(() => exportsService.exportAllCards(), `Все карточки СИЗ (Word ZIP)`)
+  }
 
   const handleBackup = async () => {
-    setShowExportMenu(false);
-    download(() => adminService.backupDatabase(), `Резервная копия БД ${new Date().toISOString().replace(/[:.]/g, '-')}.sql`);
-  };
+    setShowExportMenu(false)
+    download(
+      () => adminService.backupDatabase(),
+      `Резервная копия БД ${new Date().toISOString().replace(/[:.]/g, '-')}.sql`
+    )
+  }
 
-  const sortedDemand = useMemo(() => filterAndSort(demand, {
-    search, filters: {}, sort, searchFields: ['item_name', 'category']
-  }), [demand, search, sort]);
+  const sortedDemand = useMemo(
+    () =>
+      filterAndSort(demand, {
+        search,
+        filters: {},
+        sort,
+        searchFields: ['item_name', 'category'],
+      }),
+    [demand, search, sort]
+  )
 
-  const sortedRecords = useMemo(() => filterAndSort(records, {
-    search, filters: {}, sort, searchFields: ['full_name', 'position', 'item_type_name']
-  }), [records, search, sort]);
+  const sortedRecords = useMemo(
+    () =>
+      filterAndSort(records, {
+        search,
+        filters: {},
+        sort,
+        searchFields: ['full_name', 'position', 'item_type_name'],
+      }),
+    [records, search, sort]
+  )
 
-  const sortedExpiring = useMemo(() => filterAndSort(expiring, {
-    search, filters: {}, sort, searchFields: ['full_name', 'item_type_name']
-  }), [expiring, search, sort]);
+  const sortedExpiring = useMemo(
+    () =>
+      filterAndSort(expiring, {
+        search,
+        filters: {},
+        sort,
+        searchFields: ['full_name', 'item_type_name'],
+      }),
+    [expiring, search, sort]
+  )
 
-  const demandStart = (currentPage - 1) * 10;
-  const paginatedDemand = sortedDemand.slice(demandStart, demandStart + 10);
+  const demandStart = (currentPage - 1) * 10
+  const paginatedDemand = sortedDemand.slice(demandStart, demandStart + 10)
 
-  const recordsStart = (recordsPage - 1) * 10;
-  const paginatedRecords = sortedRecords.slice(recordsStart, recordsStart + 10);
+  const recordsStart = (recordsPage - 1) * 10
+  const paginatedRecords = sortedRecords.slice(recordsStart, recordsStart + 10)
 
-  const expiringStart = (expiringPage - 1) * 10;
-  const paginatedExpiring = sortedExpiring.slice(expiringStart, expiringStart + 10);
+  const expiringStart = (expiringPage - 1) * 10
+  const paginatedExpiring = sortedExpiring.slice(expiringStart, expiringStart + 10)
 
-  const hasActiveFilters = Boolean(search) || Boolean(filters.site_id) || Boolean(filters.item_type_id) || Boolean(filters.date_from) || Boolean(filters.date_to) || Boolean(filters.status);
+  const hasActiveFilters =
+    Boolean(search) ||
+    Boolean(filters.site_id) ||
+    Boolean(filters.item_type_id) ||
+    Boolean(filters.date_from) ||
+    Boolean(filters.date_to) ||
+    Boolean(filters.status)
 
   const exportMenuItems = [
     { label: 'Экспорт в Excel', onClick: handleExcelExport },
@@ -224,7 +275,7 @@ export default function Reports() {
     { label: 'Групповая ведомость расходников', onClick: handleGroupConsumables },
     { label: 'Все карточки СИЗ (Word ZIP)', onClick: handleAllCards },
     { label: 'Резервная копия БД', onClick: handleBackup },
-  ];
+  ]
 
   return (
     <div className={styles.pageWrapper}>
@@ -240,18 +291,30 @@ export default function Reports() {
       <div className={styles.container}>
         <div className="card">
           <div className="table-controls">
-            <SearchBox
-              value={search}
-              onChange={setSearch}
-              placeholder="Поиск по таблице..."
-            />
-            <FilterSelect label="Объект" value={filters.site_id} onChange={(value) => setFilter('site_id', value)}>
+            <SearchBox value={search} onChange={setSearch} placeholder="Поиск по таблице..." />
+            <FilterSelect
+              label="Объект"
+              value={filters.site_id}
+              onChange={(value) => setFilter('site_id', value)}
+            >
               <option value="">Все</option>
-              {sites.map((s) => <option key={s.id} value={String(s.id)}>{s.name}</option>)}
+              {sites.map((s) => (
+                <option key={s.id} value={String(s.id)}>
+                  {s.name}
+                </option>
+              ))}
             </FilterSelect>
-            <FilterSelect label="Вид СИЗ" value={filters.item_type_id} onChange={(value) => setFilter('item_type_id', value)}>
+            <FilterSelect
+              label="Вид СИЗ"
+              value={filters.item_type_id}
+              onChange={(value) => setFilter('item_type_id', value)}
+            >
               <option value="">Все</option>
-              {items.map((item) => <option key={item.id} value={String(item.id)}>{item.name}</option>)}
+              {items.map((item) => (
+                <option key={item.id} value={String(item.id)}>
+                  {item.name}
+                </option>
+              ))}
             </FilterSelect>
             <DateRange
               from={filters.date_from}
@@ -259,7 +322,11 @@ export default function Reports() {
               onFromChange={(value) => setFilter('date_from', value)}
               onToChange={(value) => setFilter('date_to', value)}
             />
-            <FilterSelect label="Статус" value={filters.status} onChange={(value) => setFilter('status', value)}>
+            <FilterSelect
+              label="Статус"
+              value={filters.status}
+              onChange={(value) => setFilter('status', value)}
+            >
               <option value="">Все</option>
               <option value="issued">Выдано</option>
               <option value="disposed">Списано</option>
@@ -290,7 +357,7 @@ export default function Reports() {
           </div>
 
           <div className={styles.tabs}>
-            {TABS.map(tab => (
+            {TABS.map((tab) => (
               <button
                 key={tab.id}
                 className={`${styles.tab} ${activeTab === tab.id ? styles.tabActive : ''}`}
@@ -307,36 +374,72 @@ export default function Reports() {
           {activeTab === 'demand' && (
             <>
               {sortedDemand.length === 0 ? (
-                <EmptyState icon={<Icon name="barChart3" size={48} />} title="Нет данных о потребности" description={Boolean(search) ? 'Поиску ничего не найдено.' : 'Добавьте сотрудников, нормы и выдачи, чтобы увидеть потребность в СИЗ.'} />
+                <EmptyState
+                  icon={<Icon name="barChart3" size={48} />}
+                  title="Нет данных о потребности"
+                  description={
+                    search
+                      ? 'Поиску ничего не найдено.'
+                      : 'Добавьте сотрудников, нормы и выдачи, чтобы увидеть потребность в СИЗ.'
+                  }
+                />
               ) : (
                 <>
                   <div className="tableScroll">
-
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <SortableTh label="Наименование" sortKey="item_name" sort={sort} onSort={toggleSort} />
-                        <SortableTh label="Категория" sortKey="category" sort={sort} onSort={toggleSort} />
-                        <SortableTh label="Используется (шт)" sortKey="in_use_qty" sort={sort} onSort={toggleSort} />
-                        <SortableTh label="Норма (шт)" sortKey="norm_qty" sort={sort} onSort={toggleSort} />
-                        <SortableTh label="Потребность (шт)" sortKey="demand_qty" sort={sort} onSort={toggleSort} />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedDemand.map((d) => (
-                        <tr key={d.item_type_id}>
-                          <td>{d.item_name}</td>
-                           <td>{ITEM_CATEGORIES[d.category] || d.category}</td>
-                          <td>{d.in_use_qty}</td>
-                          <td>{d.norm_qty}</td>
-                          <td className={styles.demandValue}>{d.demand_qty}</td>
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <SortableTh
+                            label="Наименование"
+                            sortKey="item_name"
+                            sort={sort}
+                            onSort={toggleSort}
+                          />
+                          <SortableTh
+                            label="Категория"
+                            sortKey="category"
+                            sort={sort}
+                            onSort={toggleSort}
+                          />
+                          <SortableTh
+                            label="Используется (шт)"
+                            sortKey="in_use_qty"
+                            sort={sort}
+                            onSort={toggleSort}
+                          />
+                          <SortableTh
+                            label="Норма (шт)"
+                            sortKey="norm_qty"
+                            sort={sort}
+                            onSort={toggleSort}
+                          />
+                          <SortableTh
+                            label="Потребность (шт)"
+                            sortKey="demand_qty"
+                            sort={sort}
+                            onSort={toggleSort}
+                          />
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-
+                      </thead>
+                      <tbody>
+                        {paginatedDemand.map((d) => (
+                          <tr key={d.item_type_id}>
+                            <td>{d.item_name}</td>
+                            <td>{ITEM_CATEGORIES[d.category] || d.category}</td>
+                            <td>{d.in_use_qty}</td>
+                            <td>{d.norm_qty}</td>
+                            <td className={styles.demandValue}>{d.demand_qty}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                  <Pagination totalItems={sortedDemand.length} itemsPerPage={10} currentPage={currentPage} onPageChange={setCurrentPage} />
+                  <Pagination
+                    totalItems={sortedDemand.length}
+                    itemsPerPage={10}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
+                  />
                 </>
               )}
             </>
@@ -345,36 +448,74 @@ export default function Reports() {
           {activeTab === 'records' && (
             <>
               {sortedRecords.length === 0 ? (
-                <EmptyState icon={<Icon name="clipboardList" size={48} />} title="Нет записей о выдачах" description={Boolean(search) ? 'Поиску ничего не найдено.' : 'Выдачи сотрудникам ещё не зарегистрированы.'} />
+                <EmptyState
+                  icon={<Icon name="clipboardList" size={48} />}
+                  title="Нет записей о выдачах"
+                  description={
+                    search
+                      ? 'Поиску ничего не найдено.'
+                      : 'Выдачи сотрудникам ещё не зарегистрированы.'
+                  }
+                />
               ) : (
                 <>
                   <div className="tableScroll">
-
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <SortableTh label="Сотрудник" sortKey="full_name" sort={sort} onSort={toggleSort} />
-                        <SortableTh label="Должность" sortKey="position" sort={sort} onSort={toggleSort} />
-                        <SortableTh label="Наименование" sortKey="item_type_name" sort={sort} onSort={toggleSort} />
-                        <SortableTh label="Дата выдачи" sortKey="issue_date" sort={sort} onSort={toggleSort} />
-                        <SortableTh label="Срок годности" sortKey="expiry_date" sort={sort} onSort={toggleSort} />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedRecords.map((r) => (
-                        <tr key={r.id}>
-                          <td>{r.full_name}</td>
-                          <td>{r.position}</td>
-                          <td>{r.item_type_name}</td>
-                          <td>{new Date(r.issue_date).toLocaleDateString()}</td>
-                          <td>{r.expiry_date ? new Date(r.expiry_date).toLocaleDateString() : '-'}</td>
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <SortableTh
+                            label="Сотрудник"
+                            sortKey="full_name"
+                            sort={sort}
+                            onSort={toggleSort}
+                          />
+                          <SortableTh
+                            label="Должность"
+                            sortKey="position"
+                            sort={sort}
+                            onSort={toggleSort}
+                          />
+                          <SortableTh
+                            label="Наименование"
+                            sortKey="item_type_name"
+                            sort={sort}
+                            onSort={toggleSort}
+                          />
+                          <SortableTh
+                            label="Дата выдачи"
+                            sortKey="issue_date"
+                            sort={sort}
+                            onSort={toggleSort}
+                          />
+                          <SortableTh
+                            label="Срок годности"
+                            sortKey="expiry_date"
+                            sort={sort}
+                            onSort={toggleSort}
+                          />
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-
+                      </thead>
+                      <tbody>
+                        {paginatedRecords.map((r) => (
+                          <tr key={r.id}>
+                            <td>{r.full_name}</td>
+                            <td>{r.position}</td>
+                            <td>{r.item_type_name}</td>
+                            <td>{new Date(r.issue_date).toLocaleDateString()}</td>
+                            <td>
+                              {r.expiry_date ? new Date(r.expiry_date).toLocaleDateString() : '-'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                  <Pagination totalItems={sortedRecords.length} itemsPerPage={10} currentPage={recordsPage} onPageChange={setRecordsPage} />
+                  <Pagination
+                    totalItems={sortedRecords.length}
+                    itemsPerPage={10}
+                    currentPage={recordsPage}
+                    onPageChange={setRecordsPage}
+                  />
                 </>
               )}
             </>
@@ -383,35 +524,70 @@ export default function Reports() {
           {activeTab === 'expiring' && (
             <>
               {sortedExpiring.length === 0 ? (
-                <EmptyState icon={<Icon name="clock" size={48} />} title="Нет истекающих сроков" description={Boolean(search) ? 'Поиску ничего не найдено.' : 'В ближайшие 2 месяца сроки годности не истекают.'} />
+                <EmptyState
+                  icon={<Icon name="clock" size={48} />}
+                  title="Нет истекающих сроков"
+                  description={
+                    search
+                      ? 'Поиску ничего не найдено.'
+                      : 'В ближайшие 2 месяца сроки годности не истекают.'
+                  }
+                />
               ) : (
                 <>
-                  <p className={styles.sectionSubtitle}>Истекающие сроки годности (в течение 2 месяцев)</p>
+                  <p className={styles.sectionSubtitle}>
+                    Истекающие сроки годности (в течение 2 месяцев)
+                  </p>
                   <div className="tableScroll">
-
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <SortableTh label="Сотрудник" sortKey="full_name" sort={sort} onSort={toggleSort} />
-                        <SortableTh label="Наименование" sortKey="item_type_name" sort={sort} onSort={toggleSort} />
-                        <SortableTh label="Дата выдачи" sortKey="issue_date" sort={sort} onSort={toggleSort} />
-                        <SortableTh label="Срок годности" sortKey="expiry_date" sort={sort} onSort={toggleSort} />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedExpiring.map((r) => (
-                        <tr key={r.id}>
-                          <td>{r.full_name}</td>
-                          <td>{r.item_type_name}</td>
-                          <td>{new Date(r.issue_date).toLocaleDateString()}</td>
-                          <td>{r.expiry_date ? new Date(r.expiry_date).toLocaleDateString() : '-'}</td>
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <SortableTh
+                            label="Сотрудник"
+                            sortKey="full_name"
+                            sort={sort}
+                            onSort={toggleSort}
+                          />
+                          <SortableTh
+                            label="Наименование"
+                            sortKey="item_type_name"
+                            sort={sort}
+                            onSort={toggleSort}
+                          />
+                          <SortableTh
+                            label="Дата выдачи"
+                            sortKey="issue_date"
+                            sort={sort}
+                            onSort={toggleSort}
+                          />
+                          <SortableTh
+                            label="Срок годности"
+                            sortKey="expiry_date"
+                            sort={sort}
+                            onSort={toggleSort}
+                          />
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-
+                      </thead>
+                      <tbody>
+                        {paginatedExpiring.map((r) => (
+                          <tr key={r.id}>
+                            <td>{r.full_name}</td>
+                            <td>{r.item_type_name}</td>
+                            <td>{new Date(r.issue_date).toLocaleDateString()}</td>
+                            <td>
+                              {r.expiry_date ? new Date(r.expiry_date).toLocaleDateString() : '-'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                  <Pagination totalItems={sortedExpiring.length} itemsPerPage={10} currentPage={expiringPage} onPageChange={setExpiringPage} />
+                  <Pagination
+                    totalItems={sortedExpiring.length}
+                    itemsPerPage={10}
+                    currentPage={expiringPage}
+                    onPageChange={setExpiringPage}
+                  />
                 </>
               )}
             </>
@@ -419,5 +595,5 @@ export default function Reports() {
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -1,59 +1,65 @@
-import { childLogger } from '../utils/logger.js';
-const log = childLogger('site');
+import { childLogger } from '../utils/logger.js'
+const log = childLogger('site')
 
-import { createSite, getAllSites, getSiteById, updateSite as updateSiteModel, deleteSite as deleteSiteModel } from '../models/siteModel.js';
+import {
+  createSite,
+  getAllSites,
+  getSiteById,
+  updateSite as updateSiteModel,
+  deleteSite as deleteSiteModel,
+} from '../models/siteModel.js'
 
 export async function addSite(req, res, next) {
   try {
-    const { name, responsible_person } = req.body;
-    if (!name) return res.status(400).json({ error: 'Введите название объекта' });
-    const site = await createSite(name, responsible_person);
-    res.status(201).json(site);
+    const { name, responsible_person } = req.body
+    if (!name) return res.status(400).json({ error: 'Введите название объекта' })
+    const site = await createSite(name, responsible_person)
+    res.status(201).json(site)
   } catch (error) {
-    log.error(error);
-    next(error);
+    log.error(error)
+    next(error)
   }
 }
 
 export async function listSites(req, res, next) {
   try {
-    const sites = await getAllSites();
-    res.json(sites);
+    const sites = await getAllSites()
+    res.json(sites)
   } catch (error) {
-    log.error(error);
-    next(error);
+    log.error(error)
+    next(error)
   }
 }
 
 export async function getSite(req, res, next) {
   try {
-    const site = await getSiteById(req.params.id);
-    if (!site) return res.status(404).json({ error: 'Объект не найден' });
-    res.json(site);
+    const site = await getSiteById(req.params.id)
+    if (!site) return res.status(404).json({ error: 'Объект не найден' })
+    res.json(site)
   } catch (error) {
-    log.error(error);
-    next(error);
+    log.error(error)
+    next(error)
   }
 }
 
 export async function updateSite(req, res, next) {
   try {
-    const site = await updateSiteModel(req.params.id, req.body);
-    if (!site) return res.status(404).json({ error: 'Объект не найден' });
-    res.json(site);
+    const site = await updateSiteModel(req.params.id, req.body)
+    if (!site) return res.status(404).json({ error: 'Объект не найден' })
+    res.json(site)
   } catch (error) {
-    log.error(error);
-    next(error);
+    log.error(error)
+    next(error)
   }
 }
 
 export async function deleteSite(req, res, next) {
   try {
-    const site = await deleteSiteModel(req.params.id);
-    if (!site) return res.status(404).json({ error: 'Объект не найден' });
-    res.json({ message: 'Объект удалён' });
+    const site = await deleteSiteModel(req.params.id)
+    if (!site) return res.status(404).json({ error: 'Объект не найден' })
+    res.json({ message: 'Объект удалён' })
   } catch (error) {
-    log.error(error);
-    next(error);
+    log.error(error)
+    next(error)
   }
 }

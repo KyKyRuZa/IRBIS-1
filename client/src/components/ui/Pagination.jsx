@@ -1,20 +1,20 @@
-import Icon from '@components/ui/Icon.jsx';
-import styles from '@styles/Pagination.module.css';
+import Icon from '@components/ui/Icon.jsx'
+import styles from '@styles/Pagination.module.css'
 
 export default function Pagination({ totalItems, itemsPerPage = 10, currentPage, onPageChange }) {
-  if (totalItems <= itemsPerPage) return null;
+  if (totalItems <= itemsPerPage) return null
 
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const maxVisible = 5;
-  let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-  let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+  const totalPages = Math.ceil(totalItems / itemsPerPage)
+  const maxVisible = 5
+  let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2))
+  let endPage = Math.min(totalPages, startPage + maxVisible - 1)
   if (endPage - startPage + 1 < maxVisible) {
-    startPage = Math.max(1, endPage - maxVisible + 1);
+    startPage = Math.max(1, endPage - maxVisible + 1)
   }
 
-  const pages = [];
+  const pages = []
   for (let i = startPage; i <= endPage; i++) {
-    pages.push(i);
+    pages.push(i)
   }
 
   return (
@@ -29,7 +29,9 @@ export default function Pagination({ totalItems, itemsPerPage = 10, currentPage,
       </button>
       {startPage > 1 && (
         <>
-          <button className={styles.button} onClick={() => onPageChange(1)}>1</button>
+          <button className={styles.button} onClick={() => onPageChange(1)}>
+            1
+          </button>
           {startPage > 2 && <span className={styles.ellipsis}>...</span>}
         </>
       )}
@@ -45,7 +47,9 @@ export default function Pagination({ totalItems, itemsPerPage = 10, currentPage,
       {endPage < totalPages && (
         <>
           {endPage < totalPages - 1 && <span className={styles.ellipsis}>...</span>}
-          <button className={styles.button} onClick={() => onPageChange(totalPages)}>{totalPages}</button>
+          <button className={styles.button} onClick={() => onPageChange(totalPages)}>
+            {totalPages}
+          </button>
         </>
       )}
       <button
@@ -57,5 +61,5 @@ export default function Pagination({ totalItems, itemsPerPage = 10, currentPage,
         <Icon name="chevronRight" size={16} />
       </button>
     </div>
-  );
+  )
 }

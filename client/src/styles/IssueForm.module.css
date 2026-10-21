@@ -241,11 +241,11 @@
 .modeCard.active {
   background: white;
   color: var(--primary-dark);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   font-weight: 600;
 }
 
-.modeCard input[type="radio"] {
+.modeCard input[type='radio'] {
   position: absolute;
   opacity: 0;
   width: 0;

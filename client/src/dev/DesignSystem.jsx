@@ -1,49 +1,64 @@
-import { useState } from 'react';
-import Icon from '@components/ui/Icon.jsx';
-import LoadingState from '@/components/ui/LoadingState.jsx';
-import ErrorState from '@/components/ui/ErrorState.jsx';
-import EmptyState from '@/components/ui/EmptyState.jsx';
-import ErrorBoundary from '@/components/ErrorBoundary.jsx';
-import StatusBadge from '@/components/ui/StatusBadge.jsx';
-import Pagination from '@/components/ui/Pagination.jsx';
-import Modal from '@/components/ui/Modal.jsx';
-import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx';
-import styles from '@styles/DesignSystem.module.css';
+import { useState } from 'react'
+import Icon from '@components/ui/Icon.jsx'
+import LoadingState from '@/components/ui/LoadingState.jsx'
+import ErrorState from '@/components/ui/ErrorState.jsx'
+import EmptyState from '@/components/ui/EmptyState.jsx'
+import ErrorBoundary from '@/components/ErrorBoundary.jsx'
+import StatusBadge from '@/components/ui/StatusBadge.jsx'
+import Pagination from '@/components/ui/Pagination.jsx'
+import Modal from '@/components/ui/Modal.jsx'
+import ConfirmDialog from '@/components/ui/ConfirmDialog.jsx'
+import styles from '@styles/DesignSystem.module.css'
 
 const TOKENS = [
-  'primary', 'primary-light', 'primary-dark', 'secondary', 'success',
-  'warning', 'danger', 'light', 'dark', 'border', 'page-accent',
-];
+  'primary',
+  'primary-light',
+  'primary-dark',
+  'secondary',
+  'success',
+  'warning',
+  'danger',
+  'light',
+  'dark',
+  'border',
+  'page-accent',
+]
 
 const STATUSES = [
-  'active', 'expiring', 'expired', 'issued', 'disposed', 'returned', 'due_for_disposal',
-];
+  'active',
+  'expiring',
+  'expired',
+  'issued',
+  'disposed',
+  'returned',
+  'due_for_disposal',
+]
 
 function Boom() {
-  const [boom, setBoom] = useState(false);
-  if (boom) throw new Error('Тестовая ошибка для проверки ErrorBoundary');
+  const [boom, setBoom] = useState(false)
+  if (boom) throw new Error('Тестовая ошибка для проверки ErrorBoundary')
   return (
     <button className="btn btn-danger" onClick={() => setBoom(true)}>
       Выбросить ошибку
     </button>
-  );
+  )
 }
 
 export default function DesignSystem() {
-  const [inputText, setInputText] = useState('');
-  const [disabled, setDisabled] = useState(false);
-  const [page, setPage] = useState(1);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [stateKind, setStateKind] = useState('loading');
-  const [badgeKind, setBadgeKind] = useState('success');
+  const [inputText, setInputText] = useState('')
+  const [disabled, setDisabled] = useState(false)
+  const [page, setPage] = useState(1)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [stateKind, setStateKind] = useState('loading')
+  const [badgeKind, setBadgeKind] = useState('success')
 
   return (
     <div className={styles.layout}>
       <h1>Дизайн-система IRBIS</h1>
       <p className={styles.muted}>
-        Живая документация компонентов. Все элементы — реальные, интерактивные.
-        Доступна только в режиме разработки.
+        Живая документация компонентов. Все элементы — реальные, интерактивные. Доступна только в
+        режиме разработки.
       </p>
 
       <nav className={styles.nav}>
@@ -81,15 +96,27 @@ export default function DesignSystem() {
             <button className="btn btn-secondary">Вторичная</button>
             <button className="btn btn-success">Успех</button>
             <button className="btn btn-danger">Опасная</button>
-            <button className="btn" disabled>Заблокирована</button>
-            <button className="btn btn-secondary" disabled>Заблокирована</button>
+            <button className="btn" disabled>
+              Заблокирована
+            </button>
+            <button className="btn btn-secondary" disabled>
+              Заблокирована
+            </button>
           </div>
           <div className={styles.spacer} />
           <div className={styles.grid}>
-            <button className="btn"><Icon name="plus" size={16} /> Добавить</button>
-            <button className="btn btn-secondary"><Icon name="download" size={16} /> Скачать</button>
-            <button className="btn btn-danger"><Icon name="trash" size={16} /> Удалить</button>
-            <button className="btn btn-success"><Icon name="check" size={16} /> Готово</button>
+            <button className="btn">
+              <Icon name="plus" size={16} /> Добавить
+            </button>
+            <button className="btn btn-secondary">
+              <Icon name="download" size={16} /> Скачать
+            </button>
+            <button className="btn btn-danger">
+              <Icon name="trash" size={16} /> Удалить
+            </button>
+            <button className="btn btn-success">
+              <Icon name="check" size={16} /> Готово
+            </button>
           </div>
         </div>
       </section>
@@ -143,7 +170,11 @@ export default function DesignSystem() {
           </div>
           <div className={styles.spacer} />
           <div className={styles.grid}>
-            <input className="form-control" disabled={disabled} placeholder="Поле с переключением" />
+            <input
+              className="form-control"
+              disabled={disabled}
+              placeholder="Поле с переключением"
+            />
             <button className="btn btn-secondary" onClick={() => setDisabled((d) => !d)}>
               {disabled ? 'Включить' : 'Отключить'} поле
             </button>
@@ -164,7 +195,9 @@ export default function DesignSystem() {
           <div className={styles.spacer} />
           <h4>StatusBadge (все статусы)</h4>
           <div className={styles.grid}>
-            {STATUSES.map((s) => <StatusBadge key={s} status={s} />)}
+            {STATUSES.map((s) => (
+              <StatusBadge key={s} status={s} />
+            ))}
           </div>
           <div className={styles.spacer} />
           <div className={styles.grid}>
@@ -196,7 +229,9 @@ export default function DesignSystem() {
               <tr>
                 <td>Иванов Иван</td>
                 <td>Сварщик</td>
-                <td><StatusBadge status="active" /></td>
+                <td>
+                  <StatusBadge status="active" />
+                </td>
                 <td>
                   <div className="action-buttons">
                     <button className="btn">Карточка</button>
@@ -207,7 +242,9 @@ export default function DesignSystem() {
               <tr>
                 <td>Петрова Анна</td>
                 <td>Лаборант</td>
-                <td><StatusBadge status="expired" /></td>
+                <td>
+                  <StatusBadge status="expired" />
+                </td>
                 <td>
                   <div className="action-buttons">
                     <button className="btn">Карточка</button>
@@ -224,12 +261,7 @@ export default function DesignSystem() {
       <section id="pagination" className={styles.section}>
         <h2>Пагинация</h2>
         <div className={styles.preview}>
-          <Pagination
-            totalItems={53}
-            itemsPerPage={10}
-            currentPage={page}
-            onPageChange={setPage}
-          />
+          <Pagination totalItems={53} itemsPerPage={10} currentPage={page} onPageChange={setPage} />
           <p className={styles.muted}>Текущая страница: {page} (всего 6)</p>
         </div>
       </section>
@@ -239,8 +271,12 @@ export default function DesignSystem() {
         <h2>Модальные окна</h2>
         <div className={styles.preview}>
           <div className={styles.grid}>
-            <button className="btn" onClick={() => setModalOpen(true)}>Открыть Modal</button>
-            <button className="btn btn-danger" onClick={() => setConfirmOpen(true)}>Открыть ConfirmDialog</button>
+            <button className="btn" onClick={() => setModalOpen(true)}>
+              Открыть Modal
+            </button>
+            <button className="btn btn-danger" onClick={() => setConfirmOpen(true)}>
+              Открыть ConfirmDialog
+            </button>
           </div>
         </div>
         <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Демо модального окна">
@@ -253,8 +289,12 @@ export default function DesignSystem() {
             <textarea className="form-control" rows={3} />
           </div>
           <div className={styles.grid}>
-            <button className="btn" onClick={() => setModalOpen(false)}>Сохранить</button>
-            <button className="btn btn-secondary" onClick={() => setModalOpen(false)}>Закрыть</button>
+            <button className="btn" onClick={() => setModalOpen(false)}>
+              Сохранить
+            </button>
+            <button className="btn btn-secondary" onClick={() => setModalOpen(false)}>
+              Закрыть
+            </button>
           </div>
         </Modal>
         <ConfirmDialog
@@ -271,9 +311,15 @@ export default function DesignSystem() {
         <h2>Состояния (Loading / Error / Empty)</h2>
         <div className={styles.preview}>
           <div className={styles.grid}>
-            <button className="btn btn-secondary" onClick={() => setStateKind('loading')}>LoadingState</button>
-            <button className="btn btn-secondary" onClick={() => setStateKind('error')}>ErrorState</button>
-            <button className="btn btn-secondary" onClick={() => setStateKind('empty')}>EmptyState</button>
+            <button className="btn btn-secondary" onClick={() => setStateKind('loading')}>
+              LoadingState
+            </button>
+            <button className="btn btn-secondary" onClick={() => setStateKind('error')}>
+              ErrorState
+            </button>
+            <button className="btn btn-secondary" onClick={() => setStateKind('empty')}>
+              EmptyState
+            </button>
           </div>
           <div className={styles.spacer} />
           {stateKind === 'loading' && <LoadingState label="Загрузка данных..." />}
@@ -304,5 +350,5 @@ export default function DesignSystem() {
         </div>
       </section>
     </div>
-  );
+  )
 }

@@ -1,20 +1,28 @@
-import { useState } from 'react';
-import Modal from '@components/ui/Modal.jsx';
-import Icon from '@components/ui/Icon.jsx';
-import styles from '@styles/ConfirmDialog.module.css';
+import { useState } from 'react'
+import Modal from '@components/ui/Modal.jsx'
+import Icon from '@components/ui/Icon.jsx'
+import styles from '@styles/ConfirmDialog.module.css'
 
-export default function ConfirmDialog({ isOpen, onClose, onConfirm, title, message, confirmText = 'Подтвердить', cancelText = 'Отмена' }) {
-  const [loading, setLoading] = useState(false);
+export default function ConfirmDialog({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText = 'Подтвердить',
+  cancelText = 'Отмена',
+}) {
+  const [loading, setLoading] = useState(false)
 
   const handleConfirm = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
-      await onConfirm();
-      onClose();
+      await onConfirm()
+      onClose()
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title}>
@@ -24,9 +32,15 @@ export default function ConfirmDialog({ isOpen, onClose, onConfirm, title, messa
           <Icon name="x" size={16} /> {cancelText}
         </button>
         <button className="btn" onClick={handleConfirm} disabled={loading}>
-          {loading ? '...' : <><Icon name="check" size={16} /> {confirmText}</>}
+          {loading ? (
+            '...'
+          ) : (
+            <>
+              <Icon name="check" size={16} /> {confirmText}
+            </>
+          )}
         </button>
       </div>
     </Modal>
-  );
+  )
 }

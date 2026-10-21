@@ -1,10 +1,10 @@
-import '@testing-library/jest-dom';
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { AuthProvider, useAuth } from '@contexts/AuthContext.jsx';
+import '@testing-library/jest-dom'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { AuthProvider, useAuth } from '@contexts/AuthContext.jsx'
 
 function Probe() {
-  const { user, isAuthenticated, login, logout } = useAuth();
+  const { user, isAuthenticated, login, logout } = useAuth()
   return (
     <div>
       <span data-testid="auth">{String(isAuthenticated)}</span>
@@ -12,53 +12,53 @@ function Probe() {
       <button onClick={() => login({ username: 'alice', role: 'admin' })}>login</button>
       <button onClick={() => logout()}>logout</button>
     </div>
-  );
+  )
 }
 
 describe('AuthContext', () => {
-  beforeEach(() => localStorage.clear());
+  beforeEach(() => localStorage.clear())
 
   it('starts unauthenticated with no stored data', () => {
     render(
       <AuthProvider>
         <Probe />
       </AuthProvider>
-    );
-    expect(screen.getByTestId('auth').textContent).toBe('false');
-    expect(screen.getByTestId('user').textContent).toBe('none');
-  });
+    )
+    expect(screen.getByTestId('auth').textContent).toBe('false')
+    expect(screen.getByTestId('user').textContent).toBe('none')
+  })
 
   it('login sets user and persists it', () => {
     render(
       <AuthProvider>
         <Probe />
       </AuthProvider>
-    );
-    fireEvent.click(screen.getByText('login'));
-    expect(screen.getByTestId('auth').textContent).toBe('true');
-    expect(screen.getByTestId('user').textContent).toBe('alice');
-    expect(JSON.parse(localStorage.getItem('user')).username).toBe('alice');
-  });
+    )
+    fireEvent.click(screen.getByText('login'))
+    expect(screen.getByTestId('auth').textContent).toBe('true')
+    expect(screen.getByTestId('user').textContent).toBe('alice')
+    expect(JSON.parse(localStorage.getItem('user')).username).toBe('alice')
+  })
 
   it('logout clears state and storage', async () => {
-    localStorage.setItem('user', JSON.stringify({ username: 'bob' }));
+    localStorage.setItem('user', JSON.stringify({ username: 'bob' }))
     render(
       <AuthProvider>
         <Probe />
       </AuthProvider>
-    );
-    fireEvent.click(screen.getByText('logout'));
-    await waitFor(() => expect(screen.getByTestId('auth').textContent).toBe('false'));
-    expect(localStorage.getItem('user')).toBeNull();
-  });
+    )
+    fireEvent.click(screen.getByText('logout'))
+    await waitFor(() => expect(screen.getByTestId('auth').textContent).toBe('false'))
+    expect(localStorage.getItem('user')).toBeNull()
+  })
 
   it('throws when useAuth is used outside the provider', () => {
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const Comp = () => {
-      useAuth();
-      return null;
-    };
-    expect(() => render(<Comp />)).toThrow('useAuth must be used within AuthProvider');
-    spy.mockRestore();
-  });
-});
+      useAuth()
+      return null
+    }
+    expect(() => render(<Comp />)).toThrow('useAuth must be used within AuthProvider')
+    spy.mockRestore()
+  })
+})

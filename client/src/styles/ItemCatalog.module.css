@@ -176,7 +176,7 @@
   border-bottom: 1px solid #f0f0f0;
 }
 
-.detailField:nth-last-child(-n+3) {
+.detailField:nth-last-child(-n + 3) {
   border-bottom: none;
 }
 
@@ -213,7 +213,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .loadingText {
@@ -287,10 +289,18 @@
   color: red;
 }
 
-.categoryClothing { background: #e3f2fd; }
-.categoryFootwear { background: #f3e5f5; }
-.categorySiz { background: #e8f5e9; }
-.categoryConsumable { background: #fff3e0; }
+.categoryClothing {
+  background: #e3f2fd;
+}
+.categoryFootwear {
+  background: #f3e5f5;
+}
+.categorySiz {
+  background: #e8f5e9;
+}
+.categoryConsumable {
+  background: #fff3e0;
+}
 
 .actionButtons {
   margin-top: 10px;

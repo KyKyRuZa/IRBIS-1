@@ -1,5 +1,5 @@
-import LoadingSpinner from './LoadingSpinner.jsx';
-import styles from '@styles/LoadingState.module.css';
+import LoadingSpinner from './LoadingSpinner.jsx'
+import styles from '@styles/LoadingState.module.css'
 
 export default function LoadingState({ label = 'Загрузка...', size = 40 }) {
   return (
@@ -7,5 +7,5 @@ export default function LoadingState({ label = 'Загрузка...', size = 40 
       <LoadingSpinner size={size} />
       {label && <p className={styles.label}>{label}</p>}
     </div>
-  );
+  )
 }

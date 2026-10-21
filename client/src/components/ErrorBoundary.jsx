@@ -1,23 +1,23 @@
-import { Component } from 'react';
-import { childLogger } from '@/lib/logger.js';
+import { Component } from 'react'
+import { childLogger } from '@/lib/logger.js'
 
-const log = childLogger('ErrorBoundary');
+const log = childLogger('ErrorBoundary')
 
 export default class ErrorBoundary extends Component {
   constructor(props) {
-    super(props);
-    this.state = { hasError: false };
+    super(props)
+    this.state = { hasError: false }
   }
 
   static getDerivedStateFromError() {
-    return { hasError: true };
+    return { hasError: true }
   }
 
   componentDidCatch(error, info) {
     log.error(
       { message: error?.message, stack: error?.stack, componentStack: info?.componentStack },
       'React render error'
-    );
+    )
   }
 
   render() {
@@ -29,8 +29,8 @@ export default class ErrorBoundary extends Component {
             <p>Произошла непредвиденная ошибка. Попробуйте перезагрузить страницу.</p>
           </div>
         )
-      );
+      )
     }
-    return this.props.children;
+    return this.props.children
   }
 }

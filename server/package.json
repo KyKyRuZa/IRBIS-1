@@ -8,7 +8,11 @@
     "dev": "nodemon src/index.js",
     "seed": "node src/scripts/seed.js",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "format": "prettier --write src/",
+    "format:check": "prettier --check src/"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",
@@ -40,8 +44,13 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "dotenv": "^17.4.2",
+    "eslint": "^10.13.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.13.0",
     "nodemon": "^3.1.4",
+    "prettier": "^3.9.10",
     "supertest": "^7.1.1",
     "tsx": "^4.23.12",
     "vitest": "^3.2.4"

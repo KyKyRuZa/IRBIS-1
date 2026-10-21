@@ -1,5 +1,5 @@
 :root {
-  --primary: #AA2A40;
+  --primary: #aa2a40;
   --primary-light: #c53d52;
   --primary-dark: #8a1e33;
   --secondary: #666666;
@@ -30,7 +30,7 @@ body {
   background: #ffffff;
   padding: 12px 0;
   border-bottom: 1px solid var(--border);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .navbar .logo {
@@ -61,7 +61,7 @@ body {
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 20px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .btn {
@@ -232,8 +232,8 @@ body {
 }
 
 .filter-field select,
-.filter-field input[type="date"],
-.filter-field input[type="number"] {
+.filter-field input[type='date'],
+.filter-field input[type='number'] {
   padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: 4px;
@@ -244,8 +244,8 @@ body {
 }
 
 .filter-field select:focus,
-.filter-field input[type="date"]:focus,
-.filter-field input[type="number"]:focus {
+.filter-field input[type='date']:focus,
+.filter-field input[type='number']:focus {
   outline: none;
   border-color: var(--primary);
 }
@@ -317,23 +317,31 @@ body {
   gap: 20px;
 }
 
-.category-clothing { background: white; }
-.category-footwear { background: white; }
-.category-siz { background: white; }
-.category-consumable { background: white; }
+.category-clothing {
+  background: white;
+}
+.category-footwear {
+  background: white;
+}
+.category-siz {
+  background: white;
+}
+.category-consumable {
+  background: white;
+}
 
 .page-wrapper {
   min-height: calc(100vh - 60px);
   background: var(--page-bg);
 }
 
-  .page-wrapper .page-header {
-    background: white;
-    color: var(--dark);
-    padding: 30px 0;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
+.page-wrapper .page-header {
+  background: white;
+  color: var(--dark);
+  padding: 30px 0;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
 
 .page-wrapper .page-header h1 {
   margin: 0;
@@ -345,7 +353,6 @@ body {
   font-size: 18px;
   margin-top: 5px;
 }
-
 
 .page-wrapper .card {
   border-top: 4px solid var(--page-accent);
@@ -457,7 +464,6 @@ body {
     min-width: 140px;
   }
 }
-
 
 /* Очень маленькие экраны */
 @media (max-width: 480px) {
