@@ -1,40 +1,53 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useQuery } from '@tanstack/react-query'
 
-export function useResource(service, params = {}) {
-  const [data, setData] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [pagination, setPagination] = useState(null)
-  const paramsKey = JSON.stringify(params)
+export function useResource(service, params = {}, options = {}) {
+  const isDynamic = typeof params === 'function'
+  const paramsKey = isDynamic ? 'dynamic' : JSON.stringify(params)
 
-  const fetch = useCallback(async () => {
-    setLoading(true)
-    setError('')
-    try {
-      const result = await service(params)
-      // Unwrap paginated responses: { data: [...], pagination: {...} }
-      if (
-        result &&
-        typeof result === 'object' &&
-        !Array.isArray(result) &&
-        'pagination' in result
-      ) {
-        setData(result.data || [])
-        setPagination(result.pagination || null)
-      } else {
-        setData(Array.isArray(result) ? result : [result])
-        setPagination(null)
+  const {
+    data: rawData,
+    isLoading: loading,
+    error: queryError,
+    refetch: rqRefetch,
+    ...rest
+  } = useQuery({
+    queryKey: ['resource', paramsKey],
+    queryFn: async () => {
+      if (isDynamic) {
+        return params()
       }
-    } catch (e) {
-      setError(e.message || 'Ошибка загрузки')
-    } finally {
-      setLoading(false)
+      return service(params)
+    },
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+    ...options,
+  })
+
+  let data = []
+  let pagination = null
+
+  if (rawData) {
+    if (
+      rawData &&
+      typeof rawData === 'object' &&
+      !Array.isArray(rawData) &&
+      'pagination' in rawData
+    ) {
+      data = rawData.data || []
+      pagination = rawData.pagination || null
+    } else {
+      data = Array.isArray(rawData) ? rawData : [rawData]
     }
-  }, [service, paramsKey])
+  }
 
-  useEffect(() => {
-    fetch()
-  }, [fetch])
+  const error = queryError
+    ? queryError.message || (queryError.error && queryError.error.message) || 'Ошибка загрузки'
+    : ''
 
-  return { data, loading, error, refetch: fetch }
+  const refetch = async () => {
+    return rqRefetch()
+  }
+
+  return { data, loading, error, pagination, refetch, ...rest }
 }

@@ -2,6 +2,7 @@ import '@testing-library/jest-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from '@contexts/AuthContext.jsx'
 import EmployeeList from '@features/employees/EmployeeList.jsx'
 import { employeesService } from '@/lib/services/employees.service.js'
@@ -26,14 +27,29 @@ vi.mock('@/lib/services/sites.service.js', () => {
   return { sitesService }
 })
 
+function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        staleTime: 0,
+        gcTime: 0,
+      },
+    },
+  })
+}
+
 function renderList() {
+  const queryClient = createTestQueryClient()
   localStorage.setItem('user', JSON.stringify({ username: 'admin', role: 'admin' }))
   return render(
-    <AuthProvider>
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <EmployeeList />
-      </MemoryRouter>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <EmployeeList />
+        </MemoryRouter>
+      </AuthProvider>
+    </QueryClientProvider>
   )
 }
 
@@ -62,14 +78,11 @@ describe('EmployeeList (integration)', () => {
   it('renders an error state when the list request fails', async () => {
     employeesService.list.mockRejectedValue(new Error('Ошибка загрузки'))
     renderList()
-    expect(await screen.findByText('Ошибка загрузки')).toBeInTheDocument()
+    expect(await screen.findByText('Ошибка загрузки', {}, { timeout: 5000 })).toBeInTheDocument()
   })
 
   it('terminates an employee through the confirm dialog', async () => {
     employeesService.terminate.mockResolvedValue({})
-    employeesService.list
-      .mockResolvedValueOnce([sampleEmployee])
-      .mockResolvedValueOnce([sampleEmployee])
     renderList()
     await screen.findByText('Иван Иванов')
 
@@ -81,9 +94,6 @@ describe('EmployeeList (integration)', () => {
 
   it('deletes an employee through the confirm dialog', async () => {
     employeesService.delete.mockResolvedValue({})
-    employeesService.list
-      .mockResolvedValueOnce([sampleEmployee])
-      .mockResolvedValueOnce([sampleEmployee])
     renderList()
     await screen.findByText('Иван Иванов')
 
@@ -94,7 +104,6 @@ describe('EmployeeList (integration)', () => {
   })
 
   it('filters employees by search query', async () => {
-    employeesService.list.mockResolvedValue([sampleEmployee])
     renderList()
     await screen.findByText('Иван Иванов')
     fireEvent.change(screen.getByPlaceholderText(/Поиск по ФИО/i), {

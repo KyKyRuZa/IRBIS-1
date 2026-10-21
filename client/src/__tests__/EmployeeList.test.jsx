@@ -2,6 +2,7 @@ import '@testing-library/jest-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from '@contexts/AuthContext.jsx'
 import EmployeeList from '@features/employees/EmployeeList.jsx'
 import { employeesService } from '@/lib/services/employees.service.js'
@@ -26,15 +27,30 @@ vi.mock('@/lib/services/sites.service.js', () => {
   return { sitesService }
 })
 
+function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        staleTime: 0,
+        gcTime: 0,
+      },
+    },
+  })
+}
+
 function renderWithRouter(ui, role = 'admin') {
+  const queryClient = createTestQueryClient()
   localStorage.setItem('user', JSON.stringify({ username: 'u', role }))
   window.history.pushState({}, 'Test', '/')
   return render(
-    <AuthProvider>
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        {ui}
-      </MemoryRouter>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          {ui}
+        </MemoryRouter>
+      </AuthProvider>
+    </QueryClientProvider>
   )
 }
 

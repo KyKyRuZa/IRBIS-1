@@ -15,6 +15,7 @@
     "format:check": "prettier --check src/"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.104.5",
     "axios": "^1.6.8",
     "lucide-react": "^1.46.0",
     "react": "^18.3.1",
