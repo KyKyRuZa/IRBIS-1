@@ -41,18 +41,6 @@ let loginLimiter
 let refreshLimiter
 let globalLimiter
 
-function securityHeaders(req, res, next) {
-  res.setHeader('X-Content-Type-Options', 'nosniff')
-  res.setHeader('X-Frame-Options', 'DENY')
-  res.setHeader('Referrer-Policy', 'no-referrer')
-  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload')
-  res.setHeader(
-    'Content-Security-Policy',
-    "default-src 'self'; img-src 'self' data: https:; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'"
-  )
-  next()
-}
-
 function requestLogger(req, res, next) {
   if (req.path === '/api/health') return next()
   const reqId = req.headers['x-request-id'] || randomUUID()
@@ -68,25 +56,21 @@ function requestLogger(req, res, next) {
 }
 
 const app = express()
+app.disable('x-powered-by')
 app.set('trust proxy', 1)
 app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') || false, credentials: true }))
-app.use(securityHeaders)
 app.use(cookiesMiddleware)
 app.use(express.json())
 app.use(requestLogger)
 app.use(
   '/uploads',
   authMiddleware,
-  express.static('uploads', {
-    setHeaders: (res) => res.setHeader('X-Content-Type-Options', 'nosniff'),
-  })
+  express.static('uploads')
 )
 app.use(
   '/certs',
   authMiddleware,
-  express.static('certs', {
-    setHeaders: (res) => res.setHeader('X-Content-Type-Options', 'nosniff'),
-  })
+  express.static('certs')
 )
 
 app.get('/api/health', async (req, res) => {

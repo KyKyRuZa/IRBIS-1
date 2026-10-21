@@ -2,55 +2,33 @@ import { describe, it, expect } from 'vitest';
 import { request, app, authHeaders, loginAs } from './helpers.js';
 
 describe('Security headers', () => {
-  it('sets X-Content-Type-Options: nosniff on all responses', async () => {
+  it('does not expose x-powered-by (nginx handles security headers in production)', async () => {
     const res = await request(app).get('/api/health');
-    expect(res.headers['x-content-type-options']).toBe('nosniff');
+    expect(res.headers['x-powered-by']).toBeUndefined();
   });
 
-  it('sets X-Frame-Options: DENY on all responses', async () => {
+  it('does not set X-Content-Type-Options (handled by nginx add_header)', async () => {
     const res = await request(app).get('/api/health');
-    expect(res.headers['x-frame-options']).toBe('DENY');
+    expect(res.headers['x-content-type-options']).toBeUndefined();
   });
 
-  it('sets Referrer-Policy: no-referrer', async () => {
+  it('does not set X-Frame-Options (handled by nginx add_header)', async () => {
     const res = await request(app).get('/api/health');
-    expect(res.headers['referrer-policy']).toBe('no-referrer');
+    expect(res.headers['x-frame-options']).toBeUndefined();
   });
 
-  it('sets Strict-Transport-Security with max-age and includeSubDomains', async () => {
+  it('does not set Content-Security-Policy (handled by nginx add_header)', async () => {
     const res = await request(app).get('/api/health');
-    expect(res.headers['strict-transport-security']).toContain('max-age=31536000');
-    expect(res.headers['strict-transport-security']).toContain('includeSubDomains');
-    expect(res.headers['strict-transport-security']).toContain('preload');
+    expect(res.headers['content-security-policy']).toBeUndefined();
   });
 
-  it('sets Content-Security-Policy with default-src self', async () => {
+  it('does not set Strict-Transport-Security (handled by nginx add_header)', async () => {
     const res = await request(app).get('/api/health');
-    expect(res.headers['content-security-policy']).toContain("default-src 'self'");
-    expect(res.headers['content-security-policy']).toContain("frame-ancestors 'none'");
-    expect(res.headers['content-security-policy']).toContain("script-src 'self'");
+    expect(res.headers['strict-transport-security']).toBeUndefined();
   });
 
-  it('sets security headers even on error responses (401)', async () => {
-    const res = await request(app).get('/api/employees');
-    expect(res.status).toBe(401);
-    expect(res.headers['x-content-type-options']).toBe('nosniff');
-    expect(res.headers['x-frame-options']).toBe('DENY');
-  });
-
-  it('sets security headers even on 404 responses', async () => {
-    const res = await request(app).get('/api/nonexistent-route');
-    expect(res.status).toBe(404);
-    expect(res.headers['x-content-type-options']).toBe('nosniff');
-    expect(res.headers['x-frame-options']).toBe('DENY');
-  });
-
-  it('sets security headers on authenticated routes', async () => {
-    const admin = await loginAs('admin');
-    const res = await admin.get('/api/admin/demand');
-    expect(res.status).toBe(200);
-    expect(res.headers['x-content-type-options']).toBe('nosniff');
-    expect(res.headers['strict-transport-security']).toBeDefined();
-    expect(res.headers['content-security-policy']).toBeDefined();
+  it('does not set Referrer-Policy (handled by nginx add_header)', async () => {
+    const res = await request(app).get('/api/health');
+    expect(res.headers['referrer-policy']).toBeUndefined();
   });
 });
