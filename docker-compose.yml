@@ -27,6 +27,7 @@ services:
       - DB_USER=${DB_USER:-postgres}
       - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required}
       - DB_DATABASE=${DB_NAME:-irbis}
+      - AUTH_TYPE=scram-sha-256
     ports:
       - "6432:6432"
     depends_on:
