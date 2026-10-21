@@ -1,6 +1,6 @@
 import 'dotenv/config'
 import { randomUUID } from 'node:crypto'
-import { createServer as createHttp2Server } from 'node:http2'
+import http from 'node:http'
 import express from 'express'
 import cors from 'cors'
 import cron from 'node-cron'
@@ -244,14 +244,10 @@ if (process.env.NODE_ENV !== 'test') {
         if (lockToken) await releaseLock('cron:daily-jobs', lockToken)
       }
     })
-    app.listen = undefined
-    const http2Server = createHttp2Server(app, {
-      allowHTTP1: true,
-      maxSendHeaderBlockSize: 1 << 20,
-    })
-
-    http2Server.listen(PORT, () => {
-      logger.info(`Server running on port ${PORT} (HTTP/2 enabled)`)
+app.listen = undefined
+    const httpServer = http.createServer(app)
+    httpServer.listen(PORT, () => {
+      logger.info(`Server running on port ${PORT}`)
     })
   })().catch((err) => {
     logger.error(err, 'Failed to initialize server')
