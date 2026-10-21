@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { employeesService } from '@/lib/services/employees.service.js'
 import {
   EMPLOYEE_STATUSES,
@@ -11,6 +12,7 @@ import StatusBadge from '@/components/ui/StatusBadge.jsx'
 import Dropdown from '@components/ui/Dropdown.jsx'
 import Pagination from '@/components/ui/Pagination.jsx'
 import LoadingState from '@/components/ui/LoadingState.jsx'
+import ErrorState from '@/components/ui/ErrorState.jsx'
 import EmptyState from '@/components/ui/EmptyState.jsx'
 import Icon from '@components/ui/Icon.jsx'
 import { exportsService } from '@/lib/services/exports.service.js'
@@ -32,17 +34,28 @@ function useIssueEvents(employee) {
 export default function EmployeeCard() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const [employee, setEmployee] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [currentPageNorms, setCurrentPageNorms] = useState(1)
   const [selectedEvent, setSelectedEvent] = useState('')
   const { download, exporting } = useExport()
 
-  const events = useIssueEvents(employee)
+  const {
+    data: employee,
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useQuery({
+    queryKey: ['employee', id],
+    queryFn: () => employeesService.get(id),
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+    enabled: !!id,
+  })
 
-  useEffect(() => {
-    employeesService.get(id).then(setEmployee)
-  }, [id])
+  const error = queryError ? (queryError.response?.data?.error || queryError.message || 'Ошибка загрузки') : ''
+
+  const events = useIssueEvents(employee)
 
   useEffect(() => {
     setCurrentPage(1)
@@ -53,6 +66,8 @@ export default function EmployeeCard() {
     if (events.length > 0) setSelectedEvent(events[events.length - 1].issue_date)
   }, [events])
 
+  if (loading) return <LoadingState label="Загрузка карточки..." />
+  if (error && !employee) return <ErrorState message={error} onRetry={refetch} />
   if (!employee) return <LoadingState label="Загрузка карточки..." />
 
   const currentYear = new Date().getFullYear()

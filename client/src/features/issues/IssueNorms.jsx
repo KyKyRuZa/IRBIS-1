@@ -34,7 +34,9 @@ export default function IssueNorms() {
     position: '',
   })
 
-  const { data: norms, loading, error, refetch } = useResource(normsService.list)
+  const { data: norms, loading, error, refetch } = useResource(normsService.list, {}, {
+    queryKey: ['norms'],
+  })
 
   const { search, searchApplied, setSearch, filters, setFilter, sort, toggleSort, resetFilters } =
     useTableControls({
@@ -49,7 +51,10 @@ export default function IssueNorms() {
     })
 
   useEffect(() => {
-    itemsService.list().then(setItems)
+    itemsService
+      .list()
+      .then(setItems)
+      .catch(() => setItems([]))
   }, [])
 
   useEffect(() => {

@@ -3,6 +3,11 @@ import { useQuery } from '@tanstack/react-query'
 export function useResource(service, params = {}, options = {}) {
   const isDynamic = typeof params === 'function'
   const paramsKey = isDynamic ? 'dynamic' : JSON.stringify(params)
+  const serviceKey = service?.name || 'unknown'
+
+  const { queryKey: customQueryKey, ...restOptions } = options
+
+  const queryKey = customQueryKey || ['resource', serviceKey, paramsKey]
 
   const {
     data: rawData,
@@ -11,7 +16,7 @@ export function useResource(service, params = {}, options = {}) {
     refetch: rqRefetch,
     ...rest
   } = useQuery({
-    queryKey: ['resource', paramsKey],
+    queryKey,
     queryFn: async () => {
       if (isDynamic) {
         return params()
@@ -21,7 +26,7 @@ export function useResource(service, params = {}, options = {}) {
     staleTime: 5 * 60 * 1000,
     retry: 1,
     refetchOnWindowFocus: false,
-    ...options,
+    ...restOptions,
   })
 
   let data = []

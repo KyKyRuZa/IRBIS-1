@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { employeesService } from '@/lib/services/employees.service.js'
 import { sitesService } from '@/lib/services/sites.service.js'
 import { useAuth } from '@/hooks/useAuth.js'
-import { toDateInput } from '@/lib/utils/date.js'
+import { fromDateInput, parseDateInput, dateMaskInput } from '@/lib/utils/date.js'
 import { useResource } from '@/hooks/useResource.js'
 import { useTableControls } from '@/hooks/useTableControls.js'
 import {
@@ -58,7 +58,7 @@ export default function EmployeeList() {
     loading,
     error,
     refetch: refetchEmployees,
-  } = useResource(useCallback(() => employeesService.list(), []))
+  } = useResource(employeesService.list, {}, { queryKey: ['employees'] })
 
   const { search, searchApplied, setSearch, filters, setFilter, sort, toggleSort, resetFilters } =
     useTableControls({
@@ -67,7 +67,10 @@ export default function EmployeeList() {
     })
 
   useEffect(() => {
-    sitesService.list().then(setSites)
+    sitesService
+      .list()
+      .then(setSites)
+      .catch(() => setSites([]))
   }, [])
 
   useEffect(() => {
@@ -88,12 +91,17 @@ export default function EmployeeList() {
       return
     }
     try {
+      const payload = {
+        ...result.data,
+        hire_date: parseDateInput(result.data.hire_date),
+        position_change_date: parseDateInput(result.data.position_change_date),
+      }
       if (editingEmployee) {
-        await employeesService.update(editingEmployee.id, result.data)
+        await employeesService.update(editingEmployee.id, payload)
         setEditingEmployee(null)
         showSuccess('Данные сотрудника обновлены')
       } else {
-        await employeesService.create(result.data)
+        await employeesService.create(payload)
         showSuccess('Сотрудник добавлен')
       }
       setFormData({
@@ -125,7 +133,7 @@ export default function EmployeeList() {
       position: emp.position,
       site_id: emp.site_id != null ? String(emp.site_id) : '',
       gender: emp.gender || '',
-      hire_date: toDateInput(emp.hire_date),
+      hire_date: fromDateInput(emp.hire_date),
       clothing_size: emp.clothing_size || '',
       shoe_size: emp.shoe_size || '',
       personnel_number: emp.personnel_number || '',
@@ -133,7 +141,7 @@ export default function EmployeeList() {
       respirator_size: emp.respirator_size || '',
       gloves_size: emp.gloves_size || '',
       height: emp.height || '',
-      position_change_date: toDateInput(emp.position_change_date),
+      position_change_date: fromDateInput(emp.position_change_date),
     })
     setShowModal(true)
   }
@@ -659,21 +667,23 @@ export default function EmployeeList() {
             <div className={`form-group ${styles.field}`}>
               <label>Дата приёма</label>
               <input
-                type="date"
+                type="text"
                 className="form-control"
                 value={formData.hire_date}
-                onChange={(e) => setFormData({ ...formData, hire_date: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, hire_date: dateMaskInput(e.target.value) })}
+                placeholder="DD.MM.YYYY"
               />
             </div>
             <div className={`form-group ${styles.field}`}>
-              <label>Дата изменения профессии/подразделения</label>
-              <input
-                type="date"
-                className="form-control"
-                value={formData.position_change_date}
-                onChange={(e) => setFormData({ ...formData, position_change_date: e.target.value })}
-              />
-            </div>
+                <label>Дата изменения профессии/подразделения</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={formData.position_change_date}
+                  onChange={(e) => setFormData({ ...formData, position_change_date: dateMaskInput(e.target.value) })}
+                  placeholder="DD.MM.YYYY"
+                />
+              </div>
           </div>
 
           <div className={styles.actionButtons}>

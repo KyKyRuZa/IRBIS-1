@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest'
-import { waitFor, act } from '@testing-library/react'
+import { waitFor, act, renderHook } from '@testing-library/react'
 import { useResource } from '@hooks/useResource.js'
-import { renderHookWithClient } from '@/__tests__/lib/test-utils.jsx'
+import { renderHookWithClient, createTestQueryClient } from '@/__tests__/lib/test-utils.jsx'
+import { QueryClientProvider } from '@tanstack/react-query'
 
 describe('useResource', () => {
   it('loads data and clears the loading flag', async () => {
@@ -59,5 +60,39 @@ describe('useResource', () => {
     const { result } = renderHookWithClient(() => useResource(() => service()))
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.data).toEqual([{ id: 1 }])
+  })
+
+  it('uses custom queryKey when provided', async () => {
+    const service = vi.fn().mockResolvedValue([{ id: 1 }])
+    const { result } = renderHookWithClient(() =>
+      useResource(service, {}, { queryKey: ['custom-key'] })
+    )
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.data).toEqual([{ id: 1 }])
+  })
+
+  it('does not collide when two services share default params', async () => {
+    const normsService = vi.fn().mockResolvedValue([{ type: 'norm' }])
+    const issuesService = vi.fn().mockResolvedValue([{ type: 'issue' }])
+
+    const wrapper = ({ children }) => {
+      const client = createTestQueryClient()
+      return <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    }
+
+    const { result: normsResult } = renderHook(
+      () => useResource(normsService, {}, { queryKey: ['norms'] }),
+      { wrapper }
+    )
+    const { result: issuesResult } = renderHook(
+      () => useResource(issuesService, {}, { queryKey: ['issues'] }),
+      { wrapper }
+    )
+
+    await waitFor(() => expect(normsResult.current.loading).toBe(false))
+    await waitFor(() => expect(issuesResult.current.loading).toBe(false))
+
+    expect(normsResult.current.data).toEqual([{ type: 'norm' }])
+    expect(issuesResult.current.data).toEqual([{ type: 'issue' }])
   })
 })

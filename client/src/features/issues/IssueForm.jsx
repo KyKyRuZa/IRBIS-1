@@ -73,7 +73,11 @@ export default function IssueForm() {
   const [fieldErrors, setFieldErrors] = useState({})
 
   const form = useFormState(formInitialState)
-  const { data: records, loading, error, refetch: refetchRecords } = useResource(issuesService.list)
+  const { data: records, loading, error, refetch: refetchRecords } = useResource(
+    issuesService.list,
+    {},
+    { queryKey: ['issues'] }
+  )
   const { download: downloadExport, exporting: exportingSheet } = useExport()
 
   const { search, setSearch, filters, setFilter, sort, toggleSort, resetFilters } =
@@ -122,15 +126,17 @@ export default function IssueForm() {
     filters.date_to !== ''
 
   useEffect(() => {
-    employeesService.list().then((res) => {
-      const employees =
-        res && typeof res === 'object' && !Array.isArray(res) && 'pagination' in res
-          ? res.data
-          : res
-      setEmployees(Array.isArray(employees) ? employees : [])
-    })
-    itemsService.list().then(setItems)
-    sitesService.list().then(setSites)
+    Promise.allSettled([
+      employeesService.list().then((res) => {
+        const employees =
+          res && typeof res === 'object' && !Array.isArray(res) && 'pagination' in res
+            ? res.data
+            : res
+        setEmployees(Array.isArray(employees) ? employees : [])
+      }),
+      itemsService.list().then(setItems),
+      sitesService.list().then(setSites),
+    ]).catch(() => {})
   }, [])
 
   useEffect(() => {
