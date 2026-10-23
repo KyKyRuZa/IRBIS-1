@@ -18,8 +18,8 @@ export async function aggregateNotifications() {
       JOIN employees e ON r.employee_id = e.id
       JOIN item_types it ON r.item_type_id = it.id
       LEFT JOIN sites s ON e.site_id = s.id
-      WHERE r.expiry_date <= NOW() + make_interval(months => 1)
-        AND r.status = 'issued'
+      WHERE r.expiry_date <= CURRENT_DATE + make_interval(months => 1)
+        AND r.status IN ('issued', 'due_for_disposal')
       ORDER BY r.expiry_date ASC
     `),
       pool.query(`
@@ -27,20 +27,21 @@ export async function aggregateNotifications() {
       FROM issue_records r
       JOIN employees e ON r.employee_id = e.id
       JOIN item_types it ON r.item_type_id = it.id
-      WHERE r.expiry_date < NOW()
+      WHERE r.expiry_date < CURRENT_DATE
+        AND r.status IN ('issued', 'due_for_disposal')
     `),
       pool.query(`
       SELECT c.id, it.name as item_name, c.certificate_number, c.expiry_date
       FROM certificates c
       JOIN item_types it ON c.item_type_id = it.id
-      WHERE c.expiry_date <= NOW() + make_interval(months => 1)
+      WHERE c.expiry_date <= CURRENT_DATE + make_interval(months => 1)
         AND c.status != 'expired'
     `),
       pool.query(`
       SELECT c.id, it.name as item_name, c.certificate_number, c.expiry_date
       FROM certificates c
       JOIN item_types it ON c.item_type_id = it.id
-      WHERE c.expiry_date < NOW()
+      WHERE c.expiry_date < CURRENT_DATE
         AND c.status != 'expired'
     `),
       pool.query(`
@@ -48,7 +49,7 @@ export async function aggregateNotifications() {
       FROM issue_records r
       JOIN employees e ON r.employee_id = e.id
       JOIN item_types it ON r.item_type_id = it.id
-      WHERE r.reorder_date <= NOW()
+      WHERE r.reorder_date <= CURRENT_DATE
         AND r.status = 'issued'
     `),
     ])

@@ -20,7 +20,7 @@ export async function registerEmployee(req, res, next) {
     const employee = await createEmployee(
       data.full_name,
       data.position,
-      data.site_id === '' || data.site_id === null ? null : Number(data.site_id),
+       data.site_id === '' || data.site_id === null || data.site_id === undefined ? null : Number(data.site_id),
       data.gender || null,
       data.hire_date || null,
       data.clothing_size || null,
@@ -104,18 +104,34 @@ export async function getEmployee(req, res, next) {
 export async function editEmployee(req, res, next) {
   try {
     const data = { ...req.body }
-    if (data.site_id !== undefined && data.site_id !== null && data.site_id !== '') {
-      const parsedSite = Number(data.site_id)
-      data.site_id = Number.isFinite(parsedSite) ? parsedSite : null
+    // Only normalize fields that are actually present in the request body.
+    // undefined means "not changed" (keep existing value), not "set to NULL".
+    if (Object.prototype.hasOwnProperty.call(data, 'site_id')) {
+      if (data.site_id !== '' && data.site_id !== null && data.site_id !== undefined) {
+        const parsedSite = Number(data.site_id)
+        data.site_id = Number.isFinite(parsedSite) ? parsedSite : null
+      } else {
+        data.site_id = data.site_id === undefined ? undefined : null
+      }
     }
-    if (data.height === '' || data.height === null || data.height === undefined) data.height = null
-    else {
-      const parsedHeight = Number(data.height)
-      data.height = Number.isFinite(parsedHeight) ? parsedHeight : null
+    if (Object.prototype.hasOwnProperty.call(data, 'height')) {
+      if (data.height === '' || data.height === null || data.height === undefined) {
+        data.height = null
+      } else {
+        const parsedHeight = Number(data.height)
+        data.height = Number.isFinite(parsedHeight) ? parsedHeight : null
+      }
     }
-    ;['hire_date', 'position_change_date'].forEach((f) => {
-      if (data[f] === '' || data[f] === null || data[f] === undefined) data[f] = null
-    })
+    if (Object.prototype.hasOwnProperty.call(data, 'hire_date')) {
+      if (data.hire_date === '' || data.hire_date === null || data.hire_date === undefined) {
+        data.hire_date = null
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(data, 'position_change_date')) {
+      if (data.position_change_date === '' || data.position_change_date === null || data.position_change_date === undefined) {
+        data.position_change_date = null
+      }
+    }
     const employee = await updateEmployee(req.params.id, data)
     if (!employee) return res.status(404).json({ error: 'Сотрудник не найден' })
     res.json(employee)
@@ -140,7 +156,7 @@ export async function deleteEmployee(req, res, next) {
   try {
     const employee = await deleteEmployeeModel(req.params.id)
     if (!employee) return res.status(404).json({ error: 'Сотрудник не найден' })
-    res.json({ message: 'Employee deleted' })
+    res.json({ message: 'Сотрудник удалён' })
   } catch (error) {
     log.error(error)
     next(error)

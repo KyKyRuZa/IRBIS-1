@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { useAuth } from '@/hooks/useAuth.js'
 import { employeesService } from '@/lib/services/employees.service.js'
 import {
   EMPLOYEE_STATUSES,
@@ -17,6 +18,7 @@ import EmptyState from '@/components/ui/EmptyState.jsx'
 import Icon from '@components/ui/Icon.jsx'
 import { exportsService } from '@/lib/services/exports.service.js'
 import { useExport } from '@hooks/useExport.js'
+import { formatDate } from '@/lib/utils/date.js'
 import styles from '@styles/EmployeeCard.module.css'
 
 function useIssueEvents(employee) {
@@ -39,13 +41,14 @@ export default function EmployeeCard() {
   const [selectedEvent, setSelectedEvent] = useState('')
   const { download, exporting } = useExport()
 
+  const { user } = useAuth()
   const {
     data: employee,
     isLoading: loading,
     error: queryError,
     refetch,
   } = useQuery({
-    queryKey: ['employee', id],
+    queryKey: ['employee', user?.id, id],
     queryFn: () => employeesService.get(id),
     staleTime: 5 * 60 * 1000,
     retry: 1,
@@ -103,13 +106,11 @@ export default function EmployeeCard() {
                 </p>
                 <p>
                   <strong>Дата приёма:</strong>{' '}
-                  {employee.hire_date ? new Date(employee.hire_date).toLocaleDateString() : '-'}
+                  {formatDate(employee.hire_date) || '-'}
                 </p>
                 <p>
                   <strong>Дата изменения профессии/подразделения:</strong>{' '}
-                  {employee.position_change_date
-                    ? new Date(employee.position_change_date).toLocaleDateString()
-                    : '-'}
+                  {formatDate(employee.position_change_date) || '-'}
                 </p>
                 <p>
                   <strong>Пол:</strong>{' '}
@@ -179,8 +180,7 @@ export default function EmployeeCard() {
                     >
                       {events.map((event) => (
                         <option key={event.issue_date} value={event.issue_date}>
-                          Лист {event.sheetNumber} —{' '}
-                          {new Date(event.issue_date).toLocaleDateString()}
+                        Лист {event.sheetNumber} — {formatDate(event.issue_date)}
                         </option>
                       ))}
                     </Dropdown>
@@ -313,14 +313,10 @@ export default function EmployeeCard() {
                         ?.slice((currentPage - 1) * 10, currentPage * 10)
                         .map((record) => (
                           <tr key={record.id}>
-                            <td>{new Date(record.issue_date).toLocaleDateString()}</td>
+                            <td>{formatDate(record.issue_date)}</td>
                             <td>{record.item_type_name}</td>
                             <td>{record.quantity}</td>
-                            <td>
-                              {record.expiry_date
-                                ? new Date(record.expiry_date).toLocaleDateString()
-                                : '-'}
-                            </td>
+                            <td>{record.expiry_date ? formatDate(record.expiry_date) : '-'}</td>
                             <td>{record.sheet_number ?? '-'}</td>
                             <td>
                               {record.status === ISSUE_STATUSES.issued ? (

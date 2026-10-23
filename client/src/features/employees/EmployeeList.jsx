@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { employeesService } from '@/lib/services/employees.service.js'
 import { sitesService } from '@/lib/services/sites.service.js'
 import { useAuth } from '@/hooks/useAuth.js'
@@ -27,8 +27,7 @@ import DateRange from '@components/ui/DateRange.jsx'
 import styles from '@styles/EmployeeList.module.css'
 
 export default function EmployeeList() {
-  const { user } = useAuth()
-  const isAdmin = user?.role === 'admin'
+  const { user, isAdmin } = useAuth()
   const navigate = useNavigate()
   const [showModal, setShowModal] = useState(false)
   const [editingEmployee, setEditingEmployee] = useState(null)
@@ -53,18 +52,35 @@ export default function EmployeeList() {
   const [currentPage, setCurrentPage] = useState(1)
   const [fieldErrors, setFieldErrors] = useState({})
 
-  const {
-    data: employees,
-    loading,
-    error,
-    refetch: refetchEmployees,
-  } = useResource(employeesService.list, {}, { queryKey: ['employees'] })
-
   const { search, searchApplied, setSearch, filters, setFilter, sort, toggleSort, resetFilters } =
     useTableControls({
       filters: { status: '', site_id: '', gender: '', hire_date_from: '', hire_date_to: '' },
       sort: { key: 'full_name', dir: 'asc' },
     })
+
+  const queryParams = useMemo(
+    () => ({
+      page: currentPage,
+      limit: 10,
+      search: searchApplied || undefined,
+      status: filters.status || undefined,
+      site_id: filters.site_id || undefined,
+      gender: filters.gender || undefined,
+    }),
+    [currentPage, searchApplied, filters]
+  )
+
+  const {
+    data: employees,
+    loading,
+    error,
+    pagination,
+    refetch: refetchEmployees,
+  } = useResource(
+    employeesService.list,
+    queryParams,
+    { queryKey: ['employees', user?.id, queryParams] }
+  )
 
   useEffect(() => {
     sitesService
@@ -75,7 +91,7 @@ export default function EmployeeList() {
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchApplied, filters, employees])
+  }, [searchApplied, filters])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -190,64 +206,17 @@ export default function EmployeeList() {
     [employees]
   )
 
-  const filteredEmployees = useMemo(() => {
-    let result = normalizedEmployees
-    const searchFields = [
-      'full_name',
-      'personnel_number',
-      'position',
-      'site_name',
-      'clothing_size',
-      'shoe_size',
-      'hat_size',
-      'respirator_size',
-      'gloves_size',
-    ]
+  const sortedEmployees = useMemo(() => {
+    if (!sort || !sort.key) return normalizedEmployees
+    const { key, dir } = sort
+    return [...normalizedEmployees].sort((a, b) => {
+      const cmp = String(a[key] || '').localeCompare(String(b[key] || ''), 'ru')
+      return dir === 'desc' ? -cmp : cmp
+    })
+  },     [normalizedEmployees, sort]
+  )
 
-    const query = searchApplied.trim().toLowerCase()
-    if (query) {
-      result = result.filter((emp) =>
-        searchFields.some((field) => {
-          const value = emp[field]
-          return value != null && String(value).toLowerCase().includes(query)
-        })
-      )
-    }
-
-    if (filters.status) {
-      result = result.filter((emp) => emp.status === filters.status)
-    }
-    if (filters.site_id) {
-      result = result.filter((emp) => emp.site_id === Number(filters.site_id))
-    }
-    if (filters.gender) {
-      result = result.filter((emp) => emp.gender === filters.gender)
-    }
-    const hireFrom = filters.hire_date_from
-    const hireTo = filters.hire_date_to
-    if (hireFrom || hireTo) {
-      result = result.filter((emp) => {
-        if (!emp.hire_date) return false
-        if (hireFrom && emp.hire_date < hireFrom) return false
-        if (hireTo && emp.hire_date > hireTo) return false
-        return true
-      })
-    }
-
-    if (sort && sort.key) {
-      const { key, dir } = sort
-      result = [...result].sort((a, b) => {
-        const cmp = String(a[key] || '').localeCompare(String(b[key] || ''), 'ru')
-        return dir === 'desc' ? -cmp : cmp
-      })
-    }
-
-    return result
-  }, [normalizedEmployees, searchApplied, filters, sort])
-
-  const totalItems = filteredEmployees.length
-  const startIndex = (currentPage - 1) * 10
-  const paginatedEmployees = filteredEmployees.slice(startIndex, startIndex + 10)
+  const displayedEmployees = sortedEmployees
 
   const hasActiveFilters =
     Boolean(search) ||
@@ -329,7 +298,7 @@ export default function EmployeeList() {
           {!loading && error && <ErrorState message={error} onRetry={refetchEmployees} />}
           {!loading &&
             !error &&
-            (filteredEmployees.length === 0 ? (
+            (displayedEmployees.length === 0 ? (
               <EmptyState
                 icon={<Icon name="users" size={48} />}
                 title="Сотрудники не найдены"
@@ -433,7 +402,7 @@ export default function EmployeeList() {
                       </tr>
                     </thead>
                     <tbody>
-                      {paginatedEmployees.map((emp) => (
+                      {displayedEmployees.map((emp) => (
                         <tr
                           key={emp.id}
                           onClick={() => handleRowClick(emp)}
@@ -510,16 +479,18 @@ export default function EmployeeList() {
                     </tbody>
                   </table>
                 </div>
-                <Pagination
-                  totalItems={totalItems}
-                  itemsPerPage={10}
-                  currentPage={currentPage}
-                  onPageChange={setCurrentPage}
-                />
+                {pagination && (
+                  <Pagination
+                    totalItems={pagination.total}
+                    itemsPerPage={pagination.limit}
+                    currentPage={pagination.page}
+                    onPageChange={(page) => setCurrentPage(page)}
+                  />
+                )}
               </>
             ))}
+          </div>
         </div>
-      </div>
 
       <Modal
         isOpen={showModal}

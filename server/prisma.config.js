@@ -11,4 +11,10 @@ export default defineConfig({
   datasource: {
     url: process.env["DATABASE_URL"],
   },
+  // Use DIRECT_URL for migrations when available to bypass PgBouncer
+  // (Prisma Migrate requires a direct connection to PostgreSQL).
+  // See: https://www.prisma.io/docs/orm/prisma-client/setup-and-configuration/databases-connections/pgbouncer
+  db: {
+    url: process.env["DIRECT_URL"] || process.env["DATABASE_URL"],
+  },
 });

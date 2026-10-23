@@ -60,6 +60,19 @@ docker compose exec backend node src/scripts/seed.js --reset
 
 Тестовая БД: `postgresql://postgres:postgres@localhost:5433/irbis_test`
 
+Перед запуском тестов создайте и настройте тестовую БД:
+
+```bash
+# Создать тестовую БД (один раз)
+docker compose -f docker-compose.dev.yml exec postgres psql -U postgres -d postgres -c "CREATE DATABASE irbis_test;"
+
+# Применить схему
+DATABASE_URL='postgresql://postgres:postgres@localhost:5433/irbis_test' npx prisma db push
+
+# Или использовать миграции
+DATABASE_URL='postgresql://postgres:postgres@localhost:5433/irbis_test' npx prisma migrate deploy
+```
+
 ```bash
 cd server
 npm test              # один запуск

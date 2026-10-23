@@ -102,10 +102,15 @@ export async function sendPushToEmployee(req, res, next) {
       return res.status(404).json({ error: 'Подписки не найдены' })
     }
     const payload = notificationId
-      ? JSON.stringify({ notificationId })
+      ? JSON.stringify({
+          title: 'Уведомление IRBIS',
+          body: `Новое уведомление (ID: ${notificationId})`,
+          url: `/notifications`,
+        })
       : JSON.stringify({
           title: 'Тестовое уведомление',
           body: 'Это тестовое push-уведомление от IRBIS',
+          url: '/',
         })
     const promises = subscriptions.map((sub) => {
       const pushSubscription = {

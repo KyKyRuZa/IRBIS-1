@@ -16,5 +16,5 @@ export const employeesService = {
   search: (query) => api.get('/api/employees', { params: { search: query } }).then((r) => r.data),
 
   bySite: (siteId, status = 'active') =>
-    api.get('/api/employees', { params: { site_id: siteId, status } }).then((r) => r.data),
+    api.get('/api/employees', { params: { site_id: siteId, status, limit: 200 } }).then((r) => (r.data.data || r.data)),
 }

@@ -86,8 +86,8 @@ function restrictUploadAccess(req, res, next) {
   const isAdmin = req.user?.role === 'admin'
   if (isAdmin) return next()
   const filePath = req.path
-  if (filePath.startsWith('signatures/')) {
-    return res.status(403).json({ error: 'Access to signatures is admin-only' })
+  if (filePath.startsWith('/signatures/')) {
+    return res.status(403).json({ error: 'Доступ к подписям только для администраторов' })
   }
   next()
 }

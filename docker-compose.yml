@@ -35,7 +35,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-p", "5432", "-U", "${DB_USER:-irbis}", "-d", "${DB_NAME:-irbis}"]
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-p", "5432", "-U", "${DB_USER:-postgres}", "-d", "${DB_NAME:-irbis}"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -79,6 +79,7 @@ services:
       PORT: ${PORT}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@pgbouncer:5432/${DB_NAME}
+      DIRECT_URL: postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:?VAPID_PUBLIC_KEY is required}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:?VAPID_PRIVATE_KEY is required}

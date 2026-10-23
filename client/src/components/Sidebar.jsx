@@ -4,16 +4,12 @@ import { useAuth } from '@hooks/useAuth.js'
 import Icon from '@components/ui/Icon.jsx'
 import styles from '@styles/Sidebar.module.css'
 
-// ВАШИ ОРИГИНАЛЬНЫЕ ССЫЛКИ
-const USER_LINKS = [
-  { to: '/', label: 'Сотрудники', icon: 'users' },
-  { to: '/issue', label: 'Выдача', icon: 'issue' },
-]
-
 const ADMIN_LINKS = [
+  { to: '/', label: 'Сотрудники', icon: 'users' },
   { to: '/objects', label: 'Объекты', icon: 'objects' },
   { to: '/items', label: 'Номенклатура', icon: 'items' },
   { to: '/norms', label: 'Нормы выдачи', icon: 'norms' },
+  { to: '/issue', label: 'Выдача', icon: 'issue' },
   { to: '/certificates', label: 'Сертификаты', icon: 'certificates' },
   { to: '/forms', label: 'Учёт форм', icon: 'forms' },
   { to: '/reports', label: 'Аналитика', icon: 'reports' },
@@ -44,9 +40,8 @@ function Sidebar({ collapsed, onToggleCollapse }) {
 
   // Формируем список ссылок в зависимости от роли
   const allLinks = useMemo(() => {
-    const base = isAdmin ? [...USER_LINKS, ...ADMIN_LINKS] : USER_LINKS
-    return base
-  }, [isAdmin])
+    return ADMIN_LINKS
+  }, [])
 
   const handleLinkClick = useCallback(() => {
     setIsMobileOpen(false)

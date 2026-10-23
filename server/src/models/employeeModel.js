@@ -22,7 +22,7 @@ export async function createEmployee(
     [
       fullName,
       position,
-      sanitize(siteId) && siteId !== '' ? Number(siteId) : null,
+       sanitize(siteId) && siteId !== '' && siteId !== undefined && siteId !== null ? Number(siteId) : null,
       sanitize(gender),
       sanitize(hireDate),
       sanitize(clothingSize),

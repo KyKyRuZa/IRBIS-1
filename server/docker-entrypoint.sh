@@ -7,7 +7,10 @@ mkdir -p /app/uploads/certificates /app/uploads/signatures
 chown -R nextjs:nodejs /app/uploads
 
 # Apply database migrations on every start so a fresh prod database gets its schema.
+# Use DIRECT_URL (direct PostgreSQL connection) for migrations — Prisma Migrate
+# is incompatible with PgBouncer transaction pooling.
 echo "Applying database migrations..."
+export DATABASE_URL="${DIRECT_URL:-${DATABASE_URL}}"
 npx prisma migrate deploy
 
 exec su-exec nextjs:nodejs node src/index.js

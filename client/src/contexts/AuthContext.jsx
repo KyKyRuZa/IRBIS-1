@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import { authService } from '@lib/services/auth.service.js'
+import queryClient from '@/lib/queryClient.js'
 
 const AuthContext = createContext(null)
 
@@ -13,6 +14,14 @@ function useAuthState() {
     }
   })
   const [ready, setReady] = useState(false)
+  const prevUserIdRef = useRef(null)
+
+  useEffect(() => {
+    if (prevUserIdRef.current !== null && prevUserIdRef.current !== user?.id) {
+      queryClient.clear()
+    }
+    prevUserIdRef.current = user?.id
+  }, [user?.id])
 
   useEffect(() => {
     let active = true
@@ -40,7 +49,9 @@ function useAuthState() {
       /* ignore network errors on logout */
     }
     localStorage.removeItem('user')
+    await queryClient.clear()
     setUser(null)
+    prevUserIdRef.current = null
   }, [])
 
   const isAuthenticated = Boolean(user)

@@ -1,7 +1,17 @@
 import { z } from 'zod'
 import { childLogger } from '../utils/logger.js'
+import { cleanupUploadedFile } from './upload.js'
 
 const log = childLogger('validate')
+
+function cleanupMulterFile(req) {
+  if (req.file) cleanupUploadedFile(req.file).catch(() => {})
+  if (req.files) {
+    for (const arr of Object.values(req.files)) {
+      for (const f of arr) cleanupUploadedFile(f).catch(() => {})
+    }
+  }
+}
 
 export function validate(schema) {
   return (req, res, next) => {
@@ -10,6 +20,7 @@ export function validate(schema) {
       req.body = parsed
       next()
     } catch (err) {
+      cleanupMulterFile(req)
       if (err instanceof z.ZodError) {
         log.warn(
           { path: req.path, issues: err.issues.map((e) => e.path.join('.')) },

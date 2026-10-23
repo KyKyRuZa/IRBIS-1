@@ -4,6 +4,7 @@ import { employeesService } from '@/lib/services/employees.service.js'
 import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js'
 import { showError, showSuccess, showFieldErrors } from '@/lib/toast.js'
 import { formTrackerSchema, formUpdateSchema, formTakeSchema } from '@/lib/validation/forms.js'
+import { formatDate } from '@/lib/utils/date.js'
 import Pagination from '@/components/ui/Pagination.jsx'
 import EmptyState from '@/components/ui/EmptyState.jsx'
 import SortableTh from '@/components/ui/SortableTh.jsx'
@@ -314,7 +315,7 @@ export default function FormTracker() {
                         <td>{r.full_name}</td>
                         <td>{r.position}</td>
                         <td>{r.form_name}</td>
-                        <td>{new Date(r.taken_at).toLocaleString()}</td>
+                        <td>{formatDate(r.taken_at)}</td>
                       </tr>
                     ))}
                   </tbody>

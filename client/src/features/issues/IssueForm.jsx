@@ -13,7 +13,7 @@ import { ISSUE_STATUSES, ISSUE_STATUS_LABELS } from '@/lib/constants/issue-statu
 import { ISSUE_METHODS, ISSUE_METHOD_VALUES } from '@/lib/constants/issue-methods.js'
 import { useResource } from '@/hooks/useResource.js'
 import { useFormState } from '@/hooks/useFormState.js'
-import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js'
+import { useTableControls } from '@/hooks/useTableControls.js'
 import { showError, showSuccess, showFieldErrors, handleValidationError } from '@/lib/toast.js'
 import {
   issueSchema,
@@ -49,7 +49,7 @@ const formInitialState = {
 }
 
 export default function IssueForm() {
-  const { isAdmin } = useAuth()
+  const { isAdmin, user } = useAuth()
   const location = useLocation()
 
   const [employees, setEmployees] = useState([])
@@ -73,14 +73,8 @@ export default function IssueForm() {
   const [fieldErrors, setFieldErrors] = useState({})
 
   const form = useFormState(formInitialState)
-  const { data: records, loading, error, refetch: refetchRecords } = useResource(
-    issuesService.list,
-    {},
-    { queryKey: ['issues'] }
-  )
   const { download: downloadExport, exporting: exportingSheet } = useExport()
-
-  const { search, setSearch, filters, setFilter, sort, toggleSort, resetFilters } =
+  const { search, searchApplied, setSearch, filters, setFilter, sort, toggleSort, resetFilters } =
     useTableControls({
       filters: {
         employee_id: '',
@@ -93,28 +87,38 @@ export default function IssueForm() {
       sort: { key: 'issue_date', dir: 'desc' },
     })
 
-  const dateFilteredRecords = useMemo(
-    () =>
-      records.filter((r) => {
-        const rDate = (r.issue_date || '').slice(0, 10)
-        if (filters.date_from && rDate && rDate < filters.date_from) return false
-        if (filters.date_to && rDate && rDate > filters.date_to) return false
-        return true
-      }),
-    [records, filters.date_from, filters.date_to]
+  const queryParams = useMemo(
+    () => ({
+      page: currentPage,
+      limit: 10,
+      search: searchApplied || undefined,
+      employee_id: filters.employee_id || undefined,
+      issue_method: filters.issue_method || undefined,
+      item_type_id: filters.item_type_id || undefined,
+      status: filters.status || undefined,
+      date_from: filters.date_from || undefined,
+      date_to: filters.date_to || undefined,
+    }),
+    [currentPage, searchApplied, filters]
   )
 
-  const filteredRecords = useFilteredList(dateFilteredRecords, {
-    search,
-    filters: {
-      employee_id: filters.employee_id,
-      issue_method: filters.issue_method,
-      item_type_id: filters.item_type_id,
-      status: filters.status,
-    },
-    sort,
-    searchFields: ['full_name', 'item_type_name'],
+  const {
+    data: records,
+    loading,
+    error,
+    pagination,
+    refetch: refetchRecords,
+  } = useResource(issuesService.list, queryParams, {
+    queryKey: ['issues', user?.id, queryParams],
   })
+
+  const filteredRecords = useMemo(() => {
+    if (Array.isArray(records)) return records
+    if (records && typeof records === 'object' && !Array.isArray(records)) {
+      return records.data || []
+    }
+    return []
+  }, [records])
 
   const hasActiveFilters =
     Boolean(search) ||
@@ -122,8 +126,8 @@ export default function IssueForm() {
     filters.issue_method !== '' ||
     filters.item_type_id !== '' ||
     filters.status !== '' ||
-    filters.date_from !== '' ||
-    filters.date_to !== ''
+    Boolean(filters.date_from) ||
+    Boolean(filters.date_to)
 
   useEffect(() => {
     Promise.allSettled([
@@ -147,9 +151,9 @@ export default function IssueForm() {
     }
   }, [location.search])
 
-  useEffect(() => {
+   useEffect(() => {
     setCurrentPage(1)
-  }, [search, filters, sort, records])
+  }, [searchApplied, filters])
 
   const handleSiteChange = (siteId) => {
     setSelectedSite(siteId)
@@ -480,9 +484,7 @@ const handleUpdate = async (e) => {
     setFieldErrors({})
   }
 
-  const totalItems = filteredRecords.length
-  const startIndex = (currentPage - 1) * 10
-  const paginatedRecords = filteredRecords.slice(startIndex, startIndex + 10)
+  const displayedRecords = filteredRecords || []
 
   return (
     <div className={styles.pageWrapper}>
@@ -660,7 +662,7 @@ const handleUpdate = async (e) => {
                       </tr>
                     </thead>
                     <tbody>
-                      {paginatedRecords.map((record) => (
+                      {displayedRecords.map((record) => (
                         <tr key={record.id}>
                           <td>{record.full_name}</td>
                           <td>{record.item_type_name}</td>
@@ -730,12 +732,14 @@ const handleUpdate = async (e) => {
                     </tbody>
                   </table>
                 </div>
-                <Pagination
-                  totalItems={totalItems}
-                  itemsPerPage={10}
-                  currentPage={currentPage}
-                  onPageChange={setCurrentPage}
-                />
+                {pagination && (
+                  <Pagination
+                    totalItems={pagination.total}
+                    itemsPerPage={pagination.limit}
+                    currentPage={pagination.page}
+                    onPageChange={(page) => setCurrentPage(page)}
+                  />
+                )}
               </>
             ))}
         </div>

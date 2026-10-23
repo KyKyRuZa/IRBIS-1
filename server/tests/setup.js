@@ -6,9 +6,11 @@ process.env.NODE_ENV = 'test';
 
 // Point the Prisma-backed `pool` shim at an isolated database so the
 // development database is never touched by the test suite.
+// Default to localhost:5433 for direct PostgreSQL connection (bypasses PgBouncer
+// which is incompatible with transactions used in tests).
 process.env.DATABASE_URL =
   process.env.TEST_DATABASE_URL ||
-  'postgresql://postgres:postgres@pgbouncer:5432/irbis_test';
+  'postgresql://postgres:postgres@localhost:5433/irbis_test';
 
 // Fixed secret so tokens generated in tests are deterministic.
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret-irbis';

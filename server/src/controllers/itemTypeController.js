@@ -85,7 +85,7 @@ export async function deleteItem(req, res, next) {
   try {
     const item = await deleteItemType(req.params.id)
     if (!item) return res.status(404).json({ error: 'Позиция не найдена' })
-    res.json({ message: 'Item type deleted' })
+    res.json({ message: 'Позиция удалена' })
   } catch (error) {
     log.error(error)
     next(error)

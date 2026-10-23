@@ -16,8 +16,11 @@ export async function validateCertificate(certificateId, itemTypeId) {
   if (cert.item_type_id !== Number(itemTypeId)) {
     throw badRequest('Certificate does not match the selected item type')
   }
-  if (cert.status !== 'active' || (cert.expiry_date && new Date(cert.expiry_date) < new Date())) {
-    throw badRequest('Certificate is expired or inactive')
+  if (cert.status === 'expired') {
+    throw badRequest('Certificate is expired')
+  }
+  if (cert.expiry_date && cert.expiry_date <= new Date().toISOString().split('T')[0]) {
+    throw badRequest('Certificate is expired')
   }
 }
 
@@ -41,9 +44,10 @@ async function calculateExpiryAndReorder(issueDate, wearTime, _itemTypeId) {
   let expiryDate = null
   let reorderDate = null
   if (effectiveWear && issueDate) {
-    expiryDate = addMonthsClamped(issueDate, effectiveWear)
-    expiryDate = expiryDate.toISOString().split('T')[0]
-    const reorder = addMonthsClamped(expiryDate, -2)
+    const baseDate = new Date(issueDate)
+    const expiry = addMonthsClamped(baseDate, effectiveWear)
+    expiryDate = expiry.toISOString().split('T')[0]
+    const reorder = addMonthsClamped(new Date(expiryDate), -2)
     reorderDate = reorder.toISOString().split('T')[0]
   }
   return { expiryDate, reorderDate }
@@ -253,7 +257,7 @@ export async function returnIssueRecordAtomic(id, returnDate, returnQty) {
     UPDATE issue_records
     SET status = CASE
           WHEN (return_quantity + $1) >= quantity THEN 'returned'
-          ELSE 'issued'
+          ELSE status
         END,
         return_date = $2,
         return_quantity = return_quantity + $1
@@ -300,8 +304,8 @@ export async function getExpiringItems(monthsAhead = 2) {
     FROM issue_records r
     JOIN employees e ON r.employee_id = e.id
     JOIN item_types it ON r.item_type_id = it.id
-    WHERE r.expiry_date <= NOW() + make_interval(months => $1)
-      AND r.status = 'issued'
+    WHERE r.expiry_date <= CURRENT_DATE + make_interval(months => $1)
+      AND r.status IN ('issued', 'due_for_disposal')
     ORDER BY r.expiry_date
   `,
     [monthsAhead]
@@ -378,7 +382,8 @@ export async function updateIssueRecord(id, data) {
 
   if (
     (Object.prototype.hasOwnProperty.call(patch, 'item_type_id') ||
-      Object.prototype.hasOwnProperty.call(patch, 'wear_time_override_months')) &&
+      Object.prototype.hasOwnProperty.call(patch, 'wear_time_override_months') ||
+      Object.prototype.hasOwnProperty.call(patch, 'issue_date')) &&
     !Object.prototype.hasOwnProperty.call(patch, 'expiry_date')
   ) {
     const item = await pool.query('SELECT * FROM item_types WHERE id=$1', [itemTypeId])
@@ -409,7 +414,7 @@ export async function updateIssueRecord(id, data) {
 
 export async function updateExpiredIssueRecordsStatus() {
   const result = await pool.query(
-    `UPDATE issue_records SET status='due_for_disposal' WHERE status='issued' AND expiry_date < NOW() RETURNING id`
+    `UPDATE issue_records SET status='due_for_disposal' WHERE status='issued' AND expiry_date < CURRENT_DATE RETURNING id`
   )
   return result.rows
 }

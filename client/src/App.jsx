@@ -17,8 +17,7 @@ const Reports = lazy(() => import('@features/reports/Reports.jsx'))
 const Object = lazy(() => import('@features/objects/Object.jsx'))
 const Login = lazy(() => import('@features/auth/Login.jsx'))
 const FormTracker = lazy(() => import('@features/forms/FormTracker.jsx'))
-const Orders = lazy(() => import('@features/orders/Orders.jsx'))
-const Notifications = lazy(() => import('@features/notifications/Notifications.jsx'))
+const Notifications = lazy(() => import('@/features/notifications/Notifications.jsx'))
 const DesignSystem = lazy(() => import('@/dev/DesignSystem.jsx'))
 const NotFoundPage = lazy(() => import('@/layouts/NotFoundPage.jsx'))
 
@@ -81,17 +80,17 @@ function AppContent() {
             <Route
               path="/"
               element={
-                <ProtectedRoute>
+                <AdminRoute>
                   <EmployeeList />
-                </ProtectedRoute>
+                </AdminRoute>
               }
             />
             <Route
               path="/employees/:id"
               element={
-                <ProtectedRoute>
+                <AdminRoute>
                   <EmployeeCard />
-                </ProtectedRoute>
+                </AdminRoute>
               }
             />
             <Route
@@ -142,16 +141,8 @@ function AppContent() {
                 </AdminRoute>
               }
             />
-            <Route
-              path="/orders"
-              element={
-                <ProtectedRoute>
-                  <Orders />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/notifications"
+             <Route
+               path="/notifications"
               element={
                 <AdminRoute>
                   <Notifications />

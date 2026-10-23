@@ -60,7 +60,7 @@ export async function deleteNorm(req, res, next) {
   try {
     const norm = await deleteIssueNorm(req.params.id)
     if (!norm) return res.status(404).json({ error: 'Норма не найдена' })
-    res.json({ message: 'Norm deleted' })
+    res.json({ message: 'Норма удалена' })
   } catch (error) {
     log.error(error)
     next(error)
@@ -74,6 +74,10 @@ export async function getEmployeeNorms(req, res, next) {
       req.params.employeeId,
     ])
     if (!employee.rows[0]) return res.status(404).json({ error: 'Сотрудник не найден' })
+    // Non-admins can only view their own norms.
+    if (req.user?.role !== 'admin' && req.employeeId && req.employeeId !== Number(req.params.employeeId)) {
+      return res.status(403).json({ error: 'Доступ запрещён: можно просматривать только свои нормы' })
+    }
     const norms = await getNormsForEmployee(employee.rows[0])
     res.json(norms)
   } catch (error) {

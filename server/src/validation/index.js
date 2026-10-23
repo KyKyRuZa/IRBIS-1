@@ -55,7 +55,10 @@ export const ChangePasswordSchema = z.object({
 export const EmployeeSchema = z.object({
   full_name: z.string().min(1, 'Введите ФИО'),
   position: z.string().min(1, 'Введите должность'),
-  site_id: z.preprocess(emptyToUndefined, z.union([z.string(), z.number()]).nullable().optional()),
+  site_id: z.preprocess(
+    toNumNull,
+    z.union([z.number().int('Некорректный объект').positive('Некорректный объект'), z.null()])
+  ).optional(),
   gender: z.preprocess(
     emptyToUndefined,
     z
@@ -71,7 +74,10 @@ export const EmployeeSchema = z.object({
   hire_date: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
   clothing_size: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
   shoe_size: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
-  height: z.preprocess(emptyToUndefined, z.union([z.string(), z.number()]).nullable().optional()),
+  height: z.preprocess(
+    toNumNull,
+    z.union([z.number().int('Рост должен быть целым числом').positive('Рост должен быть положительным'), z.null()])
+  ).optional(),
   personnel_number: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
   hat_size: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
   respirator_size: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
@@ -93,7 +99,7 @@ export const IssueRecordSchema = z.object({
     .preprocess(toNumNull, z.number().int().positive('Некорректный сертификат').nullable())
     .optional(),
   wear_time_override: z
-    .preprocess(toNum, z.number().positive('Срок носки должен быть больше 0'))
+    .preprocess(toNum, z.number().int('Срок носки должен быть целым числом').positive('Срок носки должен быть больше 0'))
     .optional()
     .nullable(),
   signature_path: z.string().optional().nullable(),
@@ -109,7 +115,7 @@ export const IssueRecordSchema = z.object({
             : 'Выберите способ выдачи из списка',
       })
       .nullable()
-      .optional()
+      .optional(),
   ),
   write_off_act: z.string().optional().nullable(),
 })
@@ -126,7 +132,7 @@ export const IssueBatchSchema = z.object({
     .preprocess(toNumNull, z.number().int().positive('Некорректный сертификат').nullable())
     .optional(),
   wear_time_override: z
-    .preprocess(toNum, z.number().positive('Срок носки должен быть больше 0'))
+    .preprocess(toNum, z.number().int('Срок носки должен быть целым числом').positive('Срок носки должен быть больше 0'))
     .optional()
     .nullable(),
   notes: z.string().optional().nullable(),
@@ -153,7 +159,7 @@ const IssueBatchSingleItemSchema = z.object({
     .preprocess(toNumNull, z.number().int().positive('Некорректный сертификат').nullable())
     .optional(),
   wear_time_override: z
-    .preprocess(toNum, z.number().positive('Срок носки должен быть больше 0'))
+    .preprocess(toNum, z.number().int('Срок носки должен быть целым числом').positive('Срок носки должен быть больше 0'))
     .optional()
     .nullable(),
   notes: z.string().optional().nullable(),
@@ -203,7 +209,7 @@ export const ItemTypeSchema = z.object({
   category: z.string().min(1, 'Выберите категорию'),
   unit: z.string().optional().nullable(),
   default_wear_time: z
-    .preprocess(toNum, z.number().positive('Срок годности должен быть больше 0'))
+    .preprocess(toNum, z.number().int('Срок годности должен быть целым числом').positive('Срок годности должен быть больше 0'))
     .optional()
     .nullable(),
   seasonality: z.string().optional().nullable(),
@@ -227,7 +233,7 @@ export const FormTakeSchema = z.object({
 
 export const IssueNormSchema = z.object({
   item_type_id: z.preprocess(toNum, z.number().int().positive('Некорректная позиция')),
-  period_months: z.preprocess(toNum, z.number().positive('Периодичность должна быть больше 0')),
+  period_months: z.preprocess(toNum, z.number().int('Периодичность должна быть целым числом').positive('Периодичность должна быть больше 0')),
   quantity: z
     .preprocess(toNum, z.number().int().positive('Количество должно быть целым и больше 0'))
     .optional(),
@@ -254,7 +260,10 @@ export const IssueNormSchema = z.object({
 })
 
 export const EmployeeUpdateSchema = EmployeeSchema.partial().extend({
-  site_id: z.preprocess(emptyToUndefined, z.union([z.string(), z.number()]).nullable().optional()),
+  site_id: z.preprocess(
+    toNumNull,
+    z.union([z.number().int('Некорректный объект').positive('Некорректный объект'), z.null()])
+  ).optional(),
   status: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
 })
 
@@ -265,7 +274,7 @@ export const ItemTypeUpdateSchema = z.object({
   category: z.string().min(1, 'Выберите категорию').optional(),
   unit: z.string().optional().nullable(),
   default_wear_time: z
-    .preprocess(toNum, z.number().positive('Срок годности должен быть больше 0'))
+    .preprocess(toNum, z.number().int('Срок годности должен быть целым числом').positive('Срок годности должен быть больше 0'))
     .optional()
     .nullable(),
   seasonality: z.string().optional().nullable(),
@@ -286,7 +295,7 @@ export const IssueRecordUpdateSchema = z.object({
     .preprocess(toNumNull, z.number().int().positive('Некорректный сертификат').nullable())
     .optional(),
   wear_time_override: z
-    .preprocess(toNum, z.number().positive('Срок носки должен быть больше 0'))
+    .preprocess(toNum, z.number().int('Срок носки должен быть целым числом').positive('Срок носки должен быть больше 0'))
     .optional()
     .nullable(),
   notes: z.string().optional().nullable(),
@@ -303,17 +312,16 @@ export const IssueRecordUpdateSchema = z.object({
       .optional(),
   ),
   write_off_act: z.string().optional().nullable(),
-  status: z.string().optional().nullable(),
 })
 
-export const CertificateUpdateSchema = CertificateSchema.partial()
+export const CertificateUpdateSchema = CertificateSchema.partial().omit({ status: true })
 
 export const IssueReturnSchema = z.object({
   return_date: z.string().optional().nullable(),
-  return_quantity: z
+    return_quantity: z
     .preprocess(
       toNum,
-      z.number().int().nonnegative('Количество возврата должно быть целым и не меньше 0')
+      z.number().int().positive('Количество возврата должно быть целым и больше 0')
     )
     .optional(),
 })

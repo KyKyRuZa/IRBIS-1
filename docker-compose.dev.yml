@@ -45,7 +45,7 @@ services:
       - DB_DATABASE=irbis
       - AUTH_TYPE=trust
     ports:
-      - "6432:6432"
+      - "6432:5432"
     depends_on:
       postgres:
         condition: service_healthy

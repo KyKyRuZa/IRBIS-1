@@ -45,6 +45,7 @@ export default function Orders() {
   }, [siteId])
 
   const filtered = useMemo(() => {
+    if (!Array.isArray(rows)) return []
     if (!search) return rows
     const q = search.toLowerCase()
     return rows.filter(

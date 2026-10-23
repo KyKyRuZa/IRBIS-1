@@ -37,8 +37,8 @@ export async function getCertificatesByItemTypeId(itemTypeId) {
 export async function updateCertificateStatus() {
   const result = await pool.query(`
     UPDATE certificates SET status = CASE 
-      WHEN expiry_date < NOW() THEN 'expired'
-      WHEN expiry_date < NOW() + INTERVAL '30 days' THEN 'expiring'
+      WHEN expiry_date < CURRENT_DATE THEN 'expired'
+      WHEN expiry_date < CURRENT_DATE + INTERVAL '30 days' THEN 'expiring'
       ELSE 'active'
     END
   `)

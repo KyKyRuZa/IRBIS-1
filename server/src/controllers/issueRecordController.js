@@ -65,7 +65,7 @@ export async function issueItem(req, res, next) {
           .status(400)
           .json({ error: 'Сертификат не соответствует выбранной позиции' })
       }
-      if (cert.status !== 'active' || (cert.expiry_date && new Date(cert.expiry_date) < new Date())) {
+      if (cert.status === 'expired' || (cert.expiry_date && cert.expiry_date <= new Date().toISOString().split('T')[0])) {
         return res.status(400).json({ error: 'Сертификат просрочен или не активен' })
       }
     }
@@ -154,7 +154,7 @@ export async function batchIssue(req, res, next) {
           .status(400)
           .json({ error: 'Сертификат не соответствует выбранной позиции' })
       }
-      if (cert.status !== 'active' || (cert.expiry_date && new Date(cert.expiry_date) < new Date())) {
+      if (cert.status === 'expired' || (cert.expiry_date && cert.expiry_date <= new Date().toISOString().split('T')[0])) {
         return res.status(400).json({ error: 'Сертификат просрочен или не активен' })
       }
     }
@@ -218,22 +218,22 @@ export async function batchIssueSingle(req, res, next) {
           .json({ error: `Для позиции ${entry.item_type_id} требуется сертификат` })
       }
 
-      if (entry.certificate_id) {
-        const certRow = await pool.query('SELECT * FROM certificates WHERE id = $1', [
-          entry.certificate_id,
-        ])
-        const cert = certRow.rows[0]
-        if (!cert) {
-          return res.status(404).json({ error: `Сертификат ${entry.certificate_id} не найден` })
-        }
-        if (cert.item_type_id !== Number(entry.item_type_id)) {
-          return res.status(400).json({
-            error: `Сертификат ${entry.certificate_id} не соответствует позиции ${entry.item_type_id}`,
-          })
-        }
-        if (cert.status !== 'active' || (cert.expiry_date && new Date(cert.expiry_date) < new Date())) {
-          return res.status(400).json({ error: 'Сертификат просрочен или не активен' })
-        }
+       if (entry.certificate_id) {
+         const certRow = await pool.query('SELECT * FROM certificates WHERE id = $1', [
+           entry.certificate_id,
+         ])
+         const cert = certRow.rows[0]
+         if (!cert) {
+           return res.status(404).json({ error: `Сертификат ${entry.certificate_id} не найден` })
+         }
+         if (cert.item_type_id !== Number(entry.item_type_id)) {
+           return res.status(400).json({
+             error: `Сертификат ${entry.certificate_id} не соответствует позиции ${entry.item_type_id}`,
+           })
+         }
+         if (cert.status === 'expired' || (cert.expiry_date && cert.expiry_date <= new Date().toISOString().split('T')[0])) {
+           return res.status(400).json({ error: 'Сертификат просрочен или не активен' })
+         }
       }
 
       const wearTime = entry.wear_time_override
@@ -446,19 +446,32 @@ export async function getIssue(req, res, next) {
 export async function updateIssue(req, res, next) {
   try {
     const { item_type_id, certificate_id } = req.body
-    if (item_type_id) {
-      const itemRow = await pool.query('SELECT requires_certificate FROM item_types WHERE id = $1', [
-        item_type_id,
+    const current = await getIssueRecordById(req.params.id)
+    if (!current) return res.status(404).json({ error: 'Запись выдачи не найдена' })
+
+    if (req.user?.role !== 'admin' && req.employeeId && current.employee_id !== req.employeeId) {
+      return res.status(403).json({ error: 'Доступ запрещён: можно редактировать только свои выдачи' })
+    }
+
+    // Determine the final (post-patch) values for item_type_id and certificate_id.
+    const finalItemTypeId = item_type_id ?? current.item_type_id
+    const finalCertificateId = certificate_id ?? current.certificate_id
+
+    if (finalItemTypeId) {
+      const itemRow = await pool.query('SELECT * FROM item_types WHERE id = $1', [
+        finalItemTypeId,
       ])
       const itemType = itemRow.rows[0]
       if (!itemType) return res.status(404).json({ error: 'Позиция не найдена' })
-      if (itemType.requires_certificate && !certificate_id) {
+      if (itemType.requires_certificate && !finalCertificateId) {
         return res.status(400).json({ error: 'Для этой позиции требуется сертификат' })
       }
     }
-    if (item_type_id && certificate_id) {
-      await validateCertificate(certificate_id, item_type_id)
+
+    if (finalItemTypeId && finalCertificateId) {
+      await validateCertificate(finalCertificateId, finalItemTypeId)
     }
+
     const record = await updateIssueRecord(req.params.id, req.body)
     if (!record) return res.status(404).json({ error: 'Запись выдачи не найдена' })
     res.json(record)
