@@ -12,7 +12,7 @@ import {
 
 export async function addCertificate(req, res, next) {
   try {
-    const { product_name, certificate_number, issue_date, expiry_date, file_path, item_type_id } =
+    const { product_name, certificate_number, issue_date, expiry_date, file_path, item_type_id, status } =
       req.body
     if (!product_name) {
       return res.status(400).json({ error: 'Введите наименование продукции' })
@@ -23,7 +23,8 @@ export async function addCertificate(req, res, next) {
       issue_date,
       expiry_date,
       file_path,
-      item_type_id
+      item_type_id,
+      status || 'active'
     )
     res.status(201).json(certificate)
   } catch (error) {

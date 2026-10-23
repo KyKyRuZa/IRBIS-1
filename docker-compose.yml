@@ -18,6 +18,8 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    mem_limit: 1g
+    cpus: 2.0
 
   pgbouncer:
     image: edoburu/pgbouncer:v1.25.1-p0
@@ -28,20 +30,30 @@ services:
       - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required}
       - DB_DATABASE=${DB_NAME:-irbis}
       - AUTH_TYPE=scram-sha-256
-    ports:
-      - "6432:6432"
     depends_on:
       postgres:
         condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-p", "5432", "-U", "postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    mem_limit: 128m
+    cpus: 0.5
 
   redis:
     image: redis:8.2.6-alpine
-    ports:
-      - "6379:6379"
-    command: redis-server --save 60 1 --loglevel warning
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+    command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -51,6 +63,8 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    mem_limit: 256m
+    cpus: 0.5
 
   backend:
     build: ./server
@@ -65,7 +79,7 @@ services:
       PORT: ${PORT}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@pgbouncer:5432/${DB_NAME}
-      REDIS_URL: redis://redis:6379
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:?VAPID_PUBLIC_KEY is required}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:?VAPID_PRIVATE_KEY is required}
     depends_on:
@@ -78,11 +92,8 @@ services:
     restart: unless-stopped
     volumes:
       - irbis_uploads:/app/uploads
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-          cpus: "1.0"
+    mem_limit: 512m
+    cpus: 1.0
     healthcheck:
       test: ["CMD-SHELL", "node -e 'fetch(\"http://localhost:5000/api/health\").then(()=>process.exit(0)).catch(()=>process.exit(1))'"]
       interval: 5s
@@ -107,11 +118,8 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-          cpus: "0.5"
+    mem_limit: 128m
+    cpus: 0.5
     logging:
       driver: json-file
       options:

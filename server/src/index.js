@@ -61,10 +61,41 @@ app.set('trust proxy', 1)
 app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') || false, credentials: true }))
 app.use(cookiesMiddleware)
 app.use(express.json())
+
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff')
+    res.setHeader('X-Frame-Options', 'DENY')
+    res.setHeader('Referrer-Policy', 'no-referrer')
+    res.setHeader("X-Robots-Tag", "noindex, nofollow")
+    res.setHeader(
+      'Content-Security-Policy',
+      "default-src 'self'; img-src 'self' data: https:; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'"
+    )
+    res.setHeader(
+      'Strict-Transport-Security',
+      'max-age=31536000; includeSubDomains; preload'
+    )
+    next()
+  })
+}
+
 app.use(requestLogger)
+
+function restrictUploadAccess(req, res, next) {
+  const isAdmin = req.user?.role === 'admin'
+  if (isAdmin) return next()
+  const filePath = req.path
+  if (filePath.startsWith('signatures/')) {
+    return res.status(403).json({ error: 'Access to signatures is admin-only' })
+  }
+  next()
+}
+
 app.use(
   '/uploads',
   authMiddleware,
+  restrictUploadAccess,
   express.static('uploads')
 )
 app.use(
@@ -122,8 +153,9 @@ app.use((err, req, res, _next) => {
     err.message || 'Request failed'
   )
   const status = err.status || 500
+  const isClientError = status >= 400 && status < 500
   const message =
-    isProd || isTest ? 'Internal Server Error' : err.message || 'Internal Server Error'
+    isProd || (isTest && !isClientError) ? 'Internal Server Error' : err.message || 'Internal Server Error'
   res.status(status).json({ error: message })
 })
 
@@ -144,8 +176,26 @@ process.on('uncaughtException', (err) => {
 
 const PORT = process.env.PORT || 5000
 
+let httpServer = null
+let shuttingDown = false
+
 const gracefulShutdown = async (exitCode = 0) => {
+  if (shuttingDown) return
+  shuttingDown = true
   logger.info('Shutting down services...')
+
+  if (httpServer) {
+    httpServer.close(() => {
+      logger.info('HTTP server closed')
+    })
+    try {
+      await new Promise((resolve) => httpServer.closeAllConnections?.() || resolve())
+      logger.info('All connections closed')
+    } catch (err) {
+      logger.error(err, 'Error closing HTTP connections')
+    }
+  }
+
   try {
     await pool.end()
     logger.info('Database pool closed')
@@ -157,6 +207,7 @@ const gracefulShutdown = async (exitCode = 0) => {
   } catch (err) {
     logger.error(err, 'Error closing Redis connection')
   }
+
   process.exit(exitCode)
 }
 
@@ -228,8 +279,7 @@ if (process.env.NODE_ENV !== 'test') {
         if (lockToken) await releaseLock('cron:daily-jobs', lockToken)
       }
     })
-app.listen = undefined
-    const httpServer = http.createServer(app)
+    httpServer = http.createServer(app)
     httpServer.listen(PORT, () => {
       logger.info(`Server running on port ${PORT}`)
     })

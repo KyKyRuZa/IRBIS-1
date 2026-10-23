@@ -20,6 +20,7 @@ import {
   createRefreshToken,
   persistRefreshToken,
   revokeRefreshToken,
+  revokeAllRefreshTokensForUser,
   findValidRefreshToken,
   buildCookieOptions,
   ACCESS_COOKIE,
@@ -145,7 +146,10 @@ export async function changePassword(req, res, next) {
     }
     const hash = await bcrypt.hash(new_password, 12)
     await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, userId])
-    log.info({ userId }, 'Password changed')
+    await revokeAllRefreshTokensForUser(userId)
+    res.clearCookie(ACCESS_COOKIE, buildCookieOptions())
+    res.clearCookie(REFRESH_COOKIE, buildCookieOptions())
+    log.info({ userId }, 'Password changed; all refresh tokens revoked')
     res.json({ message: 'Password changed successfully' })
   } catch (error) {
     log.error(error)

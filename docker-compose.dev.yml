@@ -6,6 +6,8 @@
 # installed at build time; source + node_modules are bind-mounted for hot
 # reload). Rebuild only when package.json / lockfile change:
 #   docker compose -f docker-compose.dev.yml up -d --build
+#   # seed (or reseed) the dev DB manually:
+#   #   docker compose -f docker-compose.dev.yml exec backend node src/scripts/seed.js --reset
 #   # run prisma migrations against the dev DB if needed:
 #   #   docker compose -f docker-compose.dev.yml exec backend npx prisma migrate deploy
 #   Frontend: http://localhost:5173   Backend: http://localhost:5000
@@ -30,6 +32,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    mem_limit: 512m
+    cpus: 1.0
 
   pgbouncer:
     image: edoburu/pgbouncer:v1.25.1-p0
@@ -45,6 +49,18 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-p", "5432", "-U", "postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    mem_limit: 64m
+    cpus: 0.25
 
   redis:
     image: redis:8.2.6-alpine
@@ -56,13 +72,15 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    mem_limit: 256m
+    cpus: 0.5
 
   backend:
     build:
       context: ./server
       dockerfile: Dockerfile.dev
     working_dir: /app
-    command: sh -c "npx prisma migrate deploy && node src/scripts/seed.js && node --watch src/index.js"
+    command: sh -c "npx prisma generate && npx prisma migrate deploy && node --watch src/index.js"
     environment:
       # Hardcode the in-network service name so we never pick up a host
       # DB_HOST=localhost from the shell environment.
@@ -82,6 +100,7 @@ services:
       - "5000:5000"
     volumes:
       - ./server:/app
+      - /app/node_modules
       - irbis_uploads_dev:/app/uploads
     depends_on:
       postgres:
@@ -90,6 +109,18 @@ services:
         condition: service_started
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e 'fetch(\"http://localhost:5000/api/health\").then(()=>process.exit(0)).catch(()=>process.exit(1))'"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    mem_limit: 512m
+    cpus: 1.0
 
   frontend:
     build:
@@ -109,6 +140,18 @@ services:
       - ./client/vite.config.js:/app/vite.config.js
     depends_on:
       - backend
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5173',r=>{process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    mem_limit: 512m
+    cpus: 1.0
 
 volumes:
   pgdata-dev:

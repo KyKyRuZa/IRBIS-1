@@ -121,9 +121,9 @@ function AppContent() {
             <Route
               path="/issue"
               element={
-                <ProtectedRoute>
+                <AdminRoute>
                   <IssueForm />
-                </ProtectedRoute>
+                </AdminRoute>
               }
             />
             <Route

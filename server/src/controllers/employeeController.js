@@ -83,6 +83,9 @@ export async function listEmployees(req, res, next) {
 
 export async function getEmployee(req, res, next) {
   try {
+    if (req.user?.role !== 'admin' && req.employeeId && req.employeeId !== Number(req.params.id)) {
+      return res.status(403).json({ error: 'Access denied: can only view your own employee record' })
+    }
     const employee = await getEmployeeById(req.params.id)
     if (!employee) return res.status(404).json({ error: 'Employee not found' })
 

@@ -266,16 +266,6 @@ describe('Issues — getExpiring days/months parameter', () => {
     return res.body;
   }
 
-  it('uses `days` query param when provided', async () => {
-    await seedExpiringItem(1);
-    const res = await request(app)
-      .get(`${base}/expiring`)
-      .set(authHeaders('admin', 1))
-      .query({ days: 730 });
-    expect(res.status).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
-  });
-
   it('uses `months` query param when provided', async () => {
     await seedExpiringItem(1);
     const res = await request(app)
@@ -286,7 +276,17 @@ describe('Issues — getExpiring days/months parameter', () => {
     expect(Array.isArray(res.body)).toBe(true);
   });
 
-  it('falls back to default 2 months when neither days nor months provided', async () => {
+  it('ignores `days` query param (only months is supported)', async () => {
+    await seedExpiringItem(1);
+    const res = await request(app)
+      .get(`${base}/expiring`)
+      .set(authHeaders('admin', 1))
+      .query({ days: 730 });
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+  });
+
+  it('falls back to default 2 months when no params provided', async () => {
     await seedExpiringItem(1);
     const res = await request(app)
       .get(`${base}/expiring`)

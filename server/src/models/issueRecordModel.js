@@ -1,9 +1,24 @@
 import pool from './db.js'
+import { addMonthsClamped } from '../utils/date.js'
 
 function badRequest(message) {
   const error = new Error(message)
   error.status = 400
   return error
+}
+
+export async function validateCertificate(certificateId, itemTypeId) {
+  const certRow = await pool.query('SELECT * FROM certificates WHERE id = $1', [certificateId])
+  const cert = certRow.rows[0]
+  if (!cert) {
+    throw badRequest('Certificate not found')
+  }
+  if (cert.item_type_id !== Number(itemTypeId)) {
+    throw badRequest('Certificate does not match the selected item type')
+  }
+  if (cert.status !== 'active' || (cert.expiry_date && new Date(cert.expiry_date) < new Date())) {
+    throw badRequest('Certificate is expired or inactive')
+  }
 }
 
 // Номер листа выдачи в карточке: титульный лист = 1, поэтому к количеству
@@ -26,11 +41,9 @@ async function calculateExpiryAndReorder(issueDate, wearTime, _itemTypeId) {
   let expiryDate = null
   let reorderDate = null
   if (effectiveWear && issueDate) {
-    expiryDate = new Date(issueDate)
-    expiryDate.setMonth(expiryDate.getMonth() + effectiveWear)
+    expiryDate = addMonthsClamped(issueDate, effectiveWear)
     expiryDate = expiryDate.toISOString().split('T')[0]
-    const reorder = new Date(expiryDate)
-    reorder.setMonth(reorder.getMonth() - 2)
+    const reorder = addMonthsClamped(expiryDate, -2)
     reorderDate = reorder.toISOString().split('T')[0]
   }
   return { expiryDate, reorderDate }
@@ -327,16 +340,11 @@ export async function updateIssueRecord(id, data) {
     'issue_method',
     'write_off_act',
   ]
-  const allowedStatuses = ['issued', 'disposed', 'returned', 'due_for_disposal']
   for (const key of whitelist) {
     if (Object.prototype.hasOwnProperty.call(data, key)) patch[key] = data[key]
   }
   if (Object.prototype.hasOwnProperty.call(data, 'status')) {
-    const s = String(data.status).toLowerCase()
-    if (!allowedStatuses.includes(s)) {
-      throw badRequest(`Недопустимый статус: ${data.status}`)
-    }
-    patch.status = s
+    throw badRequest('Изменение статуса доступно только через специализированные эндпоинты (/dispose, /return)')
   }
   // The API sends `wear_time_override`; the column is `wear_time_override_months`.
   if (Object.prototype.hasOwnProperty.call(data, 'wear_time_override')) {

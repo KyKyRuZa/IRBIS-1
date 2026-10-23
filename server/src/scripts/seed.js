@@ -1,8 +1,11 @@
 import pool from '../models/db.js'
 import bcrypt from 'bcrypt'
 import { childLogger } from '../utils/logger.js'
+import { addMonthsClamped } from '../utils/date.js'
 
 const log = childLogger('seed')
+
+const RESET_FLAG = process.argv.includes('--reset')
 
 const clearAll = async () => {
   await pool.query('DELETE FROM push_subscriptions')
@@ -417,6 +420,26 @@ const seedItemTypes = async () => {
   return result
 }
 
+const CERT_FILE_MAP = {
+  'Каска защитная': 'каска.pdf',
+  'Очки защитные открытые': 'очки_защитные.pdf',
+  'Респиратор FFP2': 'респиратор_ffp2.pdf',
+  'Костюм хлопчатобумочный с МВО пропиткой': 'костюм_хлопчатобумочный.pdf',
+  'Ботинки кожаные с МБС подошвой': 'ботинки_кожаные.pdf',
+  'Сапоги резиновые маслобензостойкие': 'сапоги_резиновые.pdf',
+  'Куртка на утепляющей прокладке': 'куртка_зимняя.pdf',
+  'Костюм зимний на утепляющей прокладке': 'куртка_зимняя.pdf',
+  'Крем для рук защитный': 'крем_для_рук.pdf',
+  'Мыло жидкое хозяйственное': 'мыло_жидкое.pdf',
+  'Перчатки нитриловые': 'перчатки_нитриловые.pdf',
+}
+
+const certFilePath = (itemName) => {
+  const mapped = CERT_FILE_MAP[itemName]
+  if (mapped) return `/certs/${mapped}`
+  return `/certs/${itemName.toLowerCase().replace(/[^a-zа-яё0-9]/g, '_')}.pdf`
+}
+
 const seedCertificates = async (itemTypes) => {
   const certs = []
   for (const item of itemTypes) {
@@ -431,7 +454,7 @@ const seedCertificates = async (itemTypes) => {
         certificate_number: `ТР ТС 019/2011-${String(item.id).padStart(4, '0')}-2025`,
         issue_date: issueDate.toISOString().split('T')[0],
         expiry_date: expiryDate.toISOString().split('T')[0],
-        file_path: `/certs/tr_ts_019_2011_${item.name.toLowerCase().replace(/[^a-zа-яё0-9]/g, '_')}.pdf`,
+        file_path: certFilePath(item.name),
         item_type_id: item.id,
         status: 'active',
       }
@@ -458,7 +481,7 @@ const seedCertificates = async (itemTypes) => {
         certificate_number: `ДЕКЛ-${String(item.id).padStart(4, '0')}-2023`,
         issue_date: issueDate.toISOString().split('T')[0],
         expiry_date: expiryDate.toISOString().split('T')[0],
-        file_path: `/certs/decl_${item.name.toLowerCase().replace(/[^a-zа-яё0-9]/g, '_')}.pdf`,
+        file_path: certFilePath(item.name),
         item_type_id: item.id,
         status: 'active',
       }
@@ -486,15 +509,15 @@ const seedCertificates = async (itemTypes) => {
     expiryDate.setMonth(expiryDate.getMonth() - 2)
     const r = await pool.query(
       'INSERT INTO certificates (product_name, certificate_number, issue_date, expiry_date, file_path, item_type_id, status) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      [
-        expiredItem.name,
-        `EXP-${expiredItem.id}-2022`,
-        issueDate.toISOString().split('T')[0],
-        expiryDate.toISOString().split('T')[0],
-        `/certs/${expiredItem.name.toLowerCase().replace(/[^a-zа-яё0-9]/g, '_')}_expired.pdf`,
-        expiredItem.id,
-        'expired',
-      ]
+       [
+         expiredItem.name,
+         `EXP-${expiredItem.id}-2022`,
+         issueDate.toISOString().split('T')[0],
+         expiryDate.toISOString().split('T')[0],
+         '/certs/куртка_зимняя_expired.pdf',
+         expiredItem.id,
+         'expired',
+       ]
     )
     certs.push(r.rows[0])
   }
@@ -553,17 +576,13 @@ const seedIssueRecords = async (employees, itemTypes, certs) => {
       const issueDate = createDate(Math.floor(Math.random() * 180) + 1)
       let expiryDate = null
       if (item.default_wear_time_months) {
-        expiryDate = new Date(issueDate)
-        expiryDate.setMonth(expiryDate.getMonth() + item.default_wear_time_months)
+        expiryDate = addMonthsClamped(issueDate, item.default_wear_time_months)
       }
       const status = statuses[Math.floor(Math.random() * statuses.length)]
       const returnDate = status === 'returned' ? createDate(Math.floor(Math.random() * 30)) : null
       const returnQuantity = status === 'returned' ? 1 : 0
       const method = methods[Math.floor(Math.random() * methods.length)]
-      const reorderDate = expiryDate ? new Date(expiryDate) : null
-      if (reorderDate) {
-        reorderDate.setMonth(reorderDate.getMonth() - 2)
-      }
+      const reorderDate = expiryDate ? addMonthsClamped(expiryDate, -2) : null
       const notesMap = {
         personal: 'Выдано по норме (лично выдача)',
         dosator: 'Выдано по норме (дозатор)',
@@ -680,6 +699,7 @@ const seedPushSubscriptions = async (employees) => {
       [username, passwordHash, 'user', true]
     )
     const userId = u.rows[0].id
+    await pool.query('UPDATE employees SET user_id = $1 WHERE id = $2', [userId, emp.id])
     const r = await pool.query(
       'INSERT INTO push_subscriptions (user_id, employee_id, endpoint, p256dh, auth, user_agent) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
       [
@@ -713,8 +733,16 @@ const seedUsers = async () => {
 
 const main = async () => {
   try {
-    await clearAll()
-    log.info('Cleared all data')
+    const existing = await pool.query('SELECT COUNT(*)::int FROM sites')
+    if (existing.rows[0].count > 0 && !RESET_FLAG) {
+      log.info('Database already seeded; skipping. Use --reset to reseed.')
+      process.exit(0)
+    }
+
+    if (RESET_FLAG) {
+      await clearAll()
+      log.info('Cleared all data')
+    }
 
     const sites = await seedSites()
     log.info({ count: sites.length }, 'Sites seeded')

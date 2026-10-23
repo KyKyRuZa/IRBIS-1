@@ -65,3 +65,17 @@ export async function validateUploadedFileType(file) {
     throw new Error('Uploaded file type does not match its extension')
   }
 }
+
+export async function cleanupUploadedFile(file) {
+  if (file?.path) {
+    await fs.promises.unlink(file.path).catch(() => {})
+  }
+}
+
+export async function cleanupOldFilePath(oldPath) {
+  if (!oldPath) return
+  const baseDir = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads')
+  const relativePath = oldPath.replace(/^\/uploads\/?/, '')
+  const fullPath = path.join(baseDir, relativePath)
+  await fs.promises.unlink(fullPath).catch(() => {})
+}

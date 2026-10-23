@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken'
 import { childLogger } from '../utils/logger.js'
+import pool from '../models/db.js'
 
 const log = childLogger('authMiddleware')
 
@@ -47,4 +48,18 @@ export function adminOnly(req, res, next) {
     return res.status(403).json({ error: 'Admin access required' })
   }
   next()
+}
+
+export async function requireEmployeeId(req, res, next) {
+  if (req.user?.role === 'admin') return next()
+  try {
+    const result = await pool.query('SELECT id FROM employees WHERE user_id = $1', [req.user.id])
+    if (!result.rows[0]) {
+      return res.status(403).json({ error: 'No employee record linked to this account' })
+    }
+    req.employeeId = result.rows[0].id
+    next()
+  } catch (error) {
+    next(error)
+  }
 }

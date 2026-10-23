@@ -2,22 +2,19 @@ self.addEventListener('push', event => {
   let title = 'IRBIS уведомление';
   let body = 'Новое уведомление';
   let data = null;
-  console.log('SW push event received');
   if (event.data) {
     try {
       data = event.data.json();
-      console.log('SW push data JSON', data);
       title = data.title || title;
       body = data.body || body;
     } catch (e) {
-      console.log('SW push data text', event.data.text());
       body = event.data.text() || body;
     }
   }
   const options = {
     body,
-    icon: '/icon-192.png',
-    badge: '/icon-72.png',
+    icon: '/icon.svg',
+    badge: '/icon.svg',
     data: data || {},
     requireInteraction: true,
   };
@@ -26,15 +23,16 @@ self.addEventListener('push', event => {
 
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-  const url = '/';
+  const target = event.notification.data?.url || '/';
+  const origin = self.location.origin;
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
       for (const client of clientList) {
-        if (client.url === url && 'focus' in client) {
+        if (client.url === target && 'focus' in client) {
           return client.focus();
         }
       }
-      return self.clients.openWindow(url);
+      return self.clients.openWindow(target);
     })
   );
 });

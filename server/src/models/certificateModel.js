@@ -6,11 +6,12 @@ export async function createCertificate(
   issueDate,
   expiryDate,
   filePath,
-  itemTypeId
+  itemTypeId,
+  status = 'active'
 ) {
   const result = await pool.query(
-    'INSERT INTO certificates (product_name, certificate_number, issue_date, expiry_date, file_path, item_type_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-    [productName, certificateNumber, issueDate, expiryDate, filePath, itemTypeId]
+    'INSERT INTO certificates (product_name, certificate_number, issue_date, expiry_date, file_path, item_type_id, status) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+    [productName, certificateNumber, issueDate, expiryDate, filePath, itemTypeId, status]
   )
   return result.rows[0]
 }

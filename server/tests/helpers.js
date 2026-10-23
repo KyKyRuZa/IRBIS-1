@@ -135,7 +135,7 @@ export async function createCertificate(overrides = {}) {
       product_name: 'Cert Product',
       certificate_number: 'CERT-1',
       issue_date: '2024-01-01',
-      expiry_date: '2025-01-01',
+      expiry_date: '2026-12-31',
       item_type_id,
       ...overrides,
     },

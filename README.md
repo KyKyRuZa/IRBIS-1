@@ -1,33 +1,76 @@
-# Ирбис ППЦ - Система учёта спецодежды
+# IRBIS ППЦ — Система учёта спецодежды
 
-## Запуск
+Система учёта специальной одежды, обуви и СИЗ (средств индивидуальной защиты) для
+автозаправочных станций. Включает выдачу, возвраты, списание, учёт сертификатов,
+уведомления и push-рассылку.
 
-### Требования
-- Node.js 18+
-- PostgreSQL 17
-- test
+## Требования
 
-### Установка и запуск сервера
+- Node.js 22+ (рекомендуется 24.x)
+- Docker + Docker Compose
+- PostgreSQL 17 + PgBouncer
+- Redis
+
+## Быстрый старт (Docker)
+
 ```bash
-cd server
-npm install
-# Создать БД в PostgreSQL:
-# CREATE DATABASE irbis;
-npm run dev
+# Production
+docker compose build
+docker compose up -d
+
+# или Dev (с горячей перезагрузкой)
+docker compose -f docker-compose.dev.yml up -d --build
 ```
 
-### Установка и запуск клиента
+Frontend: http://localhost:5173  
+Backend: http://localhost:5000
+
+## Конфигурация окружения
+
+Перед запуском создайте `.env` в корне проекта:
+
 ```bash
-cd client
-npm install
-npm run dev
+cp .env.example .env
+# отредактировать значения и сгенерировать секреты:
+#   npx web-push generate-vapid-keys  → VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY
+#   openssl rand -hex 32             → JWT_SECRET
+#   openssl rand -hex 32             → REDIS_PASSWORD
+```
+
+Для локальной разработки также нужен `server/.env.example`:
+
+```bash
+cd server
+cp .env.example .env
+```
+
+## Миграции и seed
+
+```bash
+# Применить миграции
+docker compose exec backend npx prisma migrate deploy
+
+# Сбросить и заполнить тестовыми данными
+docker compose exec backend node src/scripts/seed.js --reset
+```
+
+Без флага `--reset` сидер пропускает заполнение, если БД уже содержит данные.
+
+## Тесты
+
+Тестовая БД: `postgresql://postgres:postgres@localhost:5433/irbis_test`
+
+```bash
+cd server
+npm test              # один запуск
+npm run test:watch    # режим разработчика
 ```
 
 ## Модули
 
-1. **Сотрудники** - карточки с ФИО, должностью, объектом, размерами
-2. **Номенклатура** - спецодежда, обувь, СИЗ, расходники
-3. **Нормы выдачи** - периодичность и количество по категориям
-4. **Выдача** - оформление факта выдачи с расчётом сроков
-5. **Сертификаты** - учёт действий и просрочки
-6. **Отчёты** - история выдач и истекающие сроки# IRBIS
+1. **Сотрудники** — карточки с ФИО, должностью, объектом, размерами
+2. **Номенклатура** — спецодежда, обувь, СИЗ, расходники
+3. **Нормы выдачи** — периодичность и количество по категориям
+4. **Выдача** — оформление факта выдачи с расчётом сроков носки
+5. **Сертификаты** — учёт действия и просрочки
+6. **Отчёты** — история выдач и истекающие сроки

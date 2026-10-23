@@ -158,6 +158,10 @@ export const CertificateSchema = z.object({
     .preprocess(toNum, z.number().int().positive('Некорректная позиция'))
     .optional()
     .nullable(),
+  status: z
+    .preprocess(emptyToUndefined, z.string())
+    .optional()
+    .nullable(),
 })
 
 export const SiteSchema = z.object({
@@ -267,10 +271,10 @@ export const IssueRecordUpdateSchema = z.object({
             : 'Выберите способ выдачи из списка',
       })
       .nullable()
-      .optional()
+      .optional(),
   ),
-  status: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
   write_off_act: z.string().optional().nullable(),
+  status: z.string().optional().nullable(),
 })
 
 export const CertificateUpdateSchema = CertificateSchema.partial()
@@ -333,4 +337,28 @@ export const ClientLogSchema = z.object({
   message: z.string().min(1, 'Сообщение обязательно').max(2000, 'Сообщение слишком длинное'),
   module: z.string().max(100, 'Название модуля слишком длинное').optional().nullable(),
   context: z.record(z.any()).optional().nullable(),
+})
+
+export const IssueListQuerySchema = z.object({
+  employee_id: z.coerce.number().int().positive().optional(),
+  site_id: z.coerce.number().int().positive().optional(),
+  item_type_id: z.coerce.number().int().positive().optional(),
+  status: z.enum(['issued', 'returned', 'disposed', 'due_for_disposal']).optional(),
+  date_from: z.string().optional(),
+  date_to: z.string().optional(),
+  issue_method: z.enum(['personal', 'dosator']).optional(),
+  page: z.coerce.number().int().catch(() => 1).optional(),
+  limit: z.coerce.number().int().catch(() => 50).optional(),
+})
+
+export const ExpiringQuerySchema = z.object({
+  months: z.coerce.number().int().min(0).optional(),
+})
+
+export const EmployeeListQuerySchema = z.object({
+  search: z.string().min(1).optional(),
+  status: z.enum(['active', 'terminated']).optional(),
+  site_id: z.coerce.number().int().positive().optional(),
+  page: z.coerce.number().int().catch(() => 1).optional(),
+  limit: z.coerce.number().int().catch(() => 50).optional(),
 })

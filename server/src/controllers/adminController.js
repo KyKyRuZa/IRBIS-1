@@ -1,5 +1,8 @@
 import pool from '../models/db.js'
 import { logger } from '../utils/logger.js'
+import fs from 'fs'
+import os from 'os'
+import path from 'path'
 
 export async function getDemandReport(req, res, next) {
   try {
@@ -134,26 +137,62 @@ export async function backupDatabase(req, res, next) {
     const date = new Date().toISOString().split('T')[0]
     const args = ['-h', dbHost, '-p', String(dbPort), '-U', dbUser, '-d', dbName]
 
-    res.setHeader('Content-Type', 'application/sql')
-    res.setHeader('Content-Disposition', `attachment; filename="irbis_backup_${date}.sql"`)
+    const tmpPath = path.join(os.tmpdir(), `irbis_backup_${date}_${Date.now()}.sql`)
+    const tmpStream = fs.createWriteStream(tmpPath)
 
     const pgdump = spawn('pg_dump', args, {
       env: { PGPASSWORD: dbPassword, PGSSLMODE: 'disable' },
     })
 
-    pgdump.stdout.pipe(res)
-
-    pgdump.on('close', (code) => {
-      if (code !== 0) {
-        logger.error({ code }, 'pg_dump exited with non-zero code')
-      }
+    pgdump.stdout.pipe(tmpStream)
+    pgdump.stderr.on('data', (data) => {
+      logger.warn({ msg: data.toString().trim() }, 'pg_dump stderr')
     })
+
+    let timedOut = false
+    const timeout = setTimeout(() => {
+      timedOut = true
+      pgdump.kill('SIGKILL')
+      logger.error('pg_dump timed out and was killed')
+    }, 120 * 1000)
 
     pgdump.on('error', (err) => {
       logger.error(err, 'Failed to start pg_dump')
+      clearTimeout(timeout)
+      try { fs.unlinkSync(tmpPath) } catch { /* file may not exist */ }
       if (!res.headersSent) {
-        res.status(500).json({ error: 'Backup failed' })
+        res.status(500).json({ error: 'Backup failed to start' })
       }
+    })
+
+    pgdump.on('close', (code) => {
+      clearTimeout(timeout)
+      tmpStream.end()
+      if (timedOut || code !== 0) {
+        logger.error({ code, timedOut }, 'pg_dump failed')
+        try { fs.unlinkSync(tmpPath) } catch { /* file may not exist */ }
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Backup failed' })
+        }
+        return
+      }
+      logger.info('pg_dump completed successfully')
+      res.setHeader('Content-Type', 'application/sql')
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="irbis_backup_${date}.sql"`
+      )
+      const fileStream = fs.createReadStream(tmpPath)
+      fileStream.pipe(res)
+      fileStream.on('close', () => {
+        try { fs.unlinkSync(tmpPath) } catch { /* file may not exist */ }
+      })
+      fileStream.on('error', (err) => {
+        logger.error(err, 'Error streaming backup file')
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Backup streaming failed' })
+        }
+      })
     })
   } catch (error) {
     next(error)

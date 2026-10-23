@@ -51,6 +51,13 @@ export async function revokeRefreshToken(tokenHash) {
   })
 }
 
+export async function revokeAllRefreshTokensForUser(userId) {
+  await prisma.refreshToken.updateMany({
+    where: { userId, revokedAt: null },
+    data: { revokedAt: new Date() },
+  })
+}
+
 export async function findValidRefreshToken(tokenHash) {
   const record = await prisma.refreshToken.findFirst({
     where: { tokenHash, revokedAt: null },

@@ -1,6 +1,7 @@
 import { childLogger } from '../utils/logger.js'
 const log = childLogger('issueRecord')
 
+import { addMonthsClamped } from '../utils/date.js'
 import {
   createIssueRecord,
   disposeIssueRecord,
@@ -10,6 +11,7 @@ import {
   getExpiringItems,
   getIssueRecordById,
   updateIssueRecord,
+  validateCertificate,
   deleteIssueRecord,
   SHEET_NUMBER_SELECT,
 } from '../models/issueRecordModel.js'
@@ -44,10 +46,28 @@ export async function issueItem(req, res, next) {
       pool.query('SELECT id FROM employees WHERE id=$1', [employee_id]),
       pool.query('SELECT * FROM item_types WHERE id = $1', [item_type_id]),
     ])
-    if (!emp.rows[0]) return res.status(404).json({ error: 'Employee not found' })
+     if (!emp.rows[0]) return res.status(404).json({ error: 'Employee not found' })
     if (!item.rows[0]) return res.status(404).json({ error: 'Item type not found' })
     if (item.rows[0].requires_certificate && !certificate_id) {
       return res.status(400).json({ error: 'certificate_id is required for this item type' })
+    }
+
+    if (certificate_id) {
+      const certRow = await pool.query('SELECT * FROM certificates WHERE id = $1', [
+        certificate_id,
+      ])
+      const cert = certRow.rows[0]
+      if (!cert) {
+        return res.status(404).json({ error: 'Certificate not found' })
+      }
+      if (cert.item_type_id !== Number(item_type_id)) {
+        return res
+          .status(400)
+          .json({ error: 'Certificate does not match the selected item type' })
+      }
+      if (cert.status !== 'active' || (cert.expiry_date && new Date(cert.expiry_date) < new Date())) {
+        return res.status(400).json({ error: 'Certificate is expired or inactive' })
+      }
     }
 
     const wearTime = wear_time_override
@@ -56,14 +76,10 @@ export async function issueItem(req, res, next) {
     let expiryDate = null
     if (wearTime) {
       const issueDate = issue_date ? new Date(issue_date) : new Date()
-      expiryDate = new Date(issueDate)
-      expiryDate.setMonth(expiryDate.getMonth() + wearTime)
+      expiryDate = addMonthsClamped(issueDate, wearTime)
     }
 
-    const reorderDate = expiryDate ? new Date(expiryDate) : null
-    if (reorderDate) {
-      reorderDate.setMonth(reorderDate.getMonth() - 2)
-    }
+    const reorderDate = addMonthsClamped(expiryDate, -2) || null
 
     const record = await createIssueRecord(
       employee_id,
@@ -120,9 +136,27 @@ export async function batchIssue(req, res, next) {
       })
     }
 
-    if (!item.rows[0]) return res.status(404).json({ error: 'Item type not found' })
+     if (!item.rows[0]) return res.status(404).json({ error: 'Item type not found' })
     if (item.rows[0].requires_certificate && !certificate_id) {
       return res.status(400).json({ error: 'certificate_id is required for this item type' })
+    }
+
+    if (certificate_id) {
+      const certRow = await pool.query('SELECT * FROM certificates WHERE id = $1', [
+        certificate_id,
+      ])
+      const cert = certRow.rows[0]
+      if (!cert) {
+        return res.status(404).json({ error: 'Certificate not found' })
+      }
+      if (cert.item_type_id !== Number(item_type_id)) {
+        return res
+          .status(400)
+          .json({ error: 'Certificate does not match the selected item type' })
+      }
+      if (cert.status !== 'active' || (cert.expiry_date && new Date(cert.expiry_date) < new Date())) {
+        return res.status(400).json({ error: 'Certificate is expired or inactive' })
+      }
     }
 
     const wearTime = wear_time_override
@@ -131,13 +165,9 @@ export async function batchIssue(req, res, next) {
     const issueDate = issue_date || localDate()
     let expiryDate = null
     if (wearTime) {
-      expiryDate = new Date(issueDate)
-      expiryDate.setMonth(expiryDate.getMonth() + wearTime)
+      expiryDate = addMonthsClamped(new Date(issueDate), wearTime)
     }
-    const reorderDate = expiryDate ? new Date(expiryDate) : null
-    if (reorderDate) {
-      reorderDate.setMonth(reorderDate.getMonth() - 2)
-    }
+    const reorderDate = expiryDate ? addMonthsClamped(expiryDate, -2) : null
 
     const records = employees.rows.map((emp) => ({
       employee_id: emp.id,
@@ -188,16 +218,32 @@ export async function batchIssueSingle(req, res, next) {
           .json({ error: `certificate_id is required for item type ${entry.item_type_id}` })
       }
 
+      if (entry.certificate_id) {
+        const certRow = await pool.query('SELECT * FROM certificates WHERE id = $1', [
+          entry.certificate_id,
+        ])
+        const cert = certRow.rows[0]
+        if (!cert) {
+          return res.status(404).json({ error: `Certificate ${entry.certificate_id} not found` })
+        }
+        if (cert.item_type_id !== Number(entry.item_type_id)) {
+          return res.status(400).json({
+            error: `Certificate ${entry.certificate_id} does not match item type ${entry.item_type_id}`,
+          })
+        }
+        if (cert.status !== 'active' || (cert.expiry_date && new Date(cert.expiry_date) < new Date())) {
+          return res.status(400).json({ error: 'Certificate is expired or inactive' })
+        }
+      }
+
       const wearTime = entry.wear_time_override
         ? Number(entry.wear_time_override)
         : item.default_wear_time_months || null
       let expiryDate = null
       if (wearTime) {
-        expiryDate = new Date(issueDate)
-        expiryDate.setMonth(expiryDate.getMonth() + wearTime)
+        expiryDate = addMonthsClamped(new Date(issueDate), wearTime)
       }
-      const reorderDate = expiryDate ? new Date(expiryDate) : null
-      if (reorderDate) reorderDate.setMonth(reorderDate.getMonth() - 2)
+      const reorderDate = expiryDate ? addMonthsClamped(expiryDate, -2) : null
 
       enriched.push({
         item_type_id: entry.item_type_id,
@@ -240,10 +286,14 @@ export async function listIssues(req, res, next) {
     const limitNum = Math.min(200, Math.max(1, parseInt(limitQuery) || 50))
     const offset = (pageNum - 1) * limitNum
 
-    let whereClause = ''
+     let whereClause = ''
     const params = []
     let paramIndex = 1
 
+    if (req.user?.role !== 'admin' && req.employeeId) {
+      whereClause += ` AND r.employee_id = $${paramIndex++}`
+      params.push(req.employeeId)
+    }
     if (employee_id) {
       whereClause += ` AND r.employee_id = $${paramIndex++}`
       params.push(employee_id)
@@ -367,9 +417,9 @@ export async function returnItem(req, res, next) {
 
 export async function getExpiring(req, res, next) {
   try {
-    const months = parseInt(req.query.months || req.query.days) || 2
-    if (months < 0) {
-      return res.status(400).json({ error: 'months/days must be a non-negative number' })
+    const months = req.query.months !== undefined ? parseInt(req.query.months) : 2
+    if (Number.isNaN(months) || months < 0) {
+      return res.status(400).json({ error: 'months must be a non-negative number' })
     }
     const items = await getExpiringItems(months)
     res.json(items)
@@ -383,6 +433,9 @@ export async function getIssue(req, res, next) {
   try {
     const record = await getIssueRecordById(req.params.id)
     if (!record) return res.status(404).json({ error: 'Issue record not found' })
+    if (req.user?.role !== 'admin' && req.employeeId && record.employee_id !== req.employeeId) {
+      return res.status(403).json({ error: 'Access denied: you can only view your own issue records' })
+    }
     res.json(record)
   } catch (error) {
     log.error(error)
@@ -392,6 +445,10 @@ export async function getIssue(req, res, next) {
 
 export async function updateIssue(req, res, next) {
   try {
+    const { item_type_id, certificate_id } = req.body
+    if (item_type_id && certificate_id) {
+      await validateCertificate(certificate_id, item_type_id)
+    }
     const record = await updateIssueRecord(req.params.id, req.body)
     if (!record) return res.status(404).json({ error: 'Issue record not found' })
     res.json(record)

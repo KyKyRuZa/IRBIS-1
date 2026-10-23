@@ -16,13 +16,14 @@ RUN npm prune --omit=dev
 
 FROM node:22-alpine AS runtime
 WORKDIR /app
+RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
 COPY --from=deps /app/node_modules ./node_modules
 COPY src ./src
 COPY package.json package-lock.json ./
 COPY prisma.config.js ./
 COPY prisma ./prisma
 COPY docker-entrypoint.sh ./
-RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
+COPY --chown=nextjs:nodejs certs ./certs
 RUN apk add --no-cache su-exec postgresql-client && chmod +x docker-entrypoint.sh
 EXPOSE 5000
 ENV NODE_ENV=production
