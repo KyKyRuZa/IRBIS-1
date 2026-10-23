@@ -161,7 +161,7 @@ export async function backupDatabase(req, res, next) {
       clearTimeout(timeout)
       try { fs.unlinkSync(tmpPath) } catch { /* file may not exist */ }
       if (!res.headersSent) {
-        res.status(500).json({ error: 'Backup failed to start' })
+        res.status(500).json({ error: 'Не удалось запустить резервное копирование' })
       }
     })
 
@@ -172,7 +172,7 @@ export async function backupDatabase(req, res, next) {
         logger.error({ code, timedOut }, 'pg_dump failed')
         try { fs.unlinkSync(tmpPath) } catch { /* file may not exist */ }
         if (!res.headersSent) {
-          res.status(500).json({ error: 'Backup failed' })
+          res.status(500).json({ error: 'Ошибка резервного копирования' })
         }
         return
       }
@@ -190,7 +190,7 @@ export async function backupDatabase(req, res, next) {
       fileStream.on('error', (err) => {
         logger.error(err, 'Error streaming backup file')
         if (!res.headersSent) {
-          res.status(500).json({ error: 'Backup streaming failed' })
+          res.status(500).json({ error: 'Ошибка передачи резервной копии' })
         }
       })
     })

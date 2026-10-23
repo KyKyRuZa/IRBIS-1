@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { sitesService } from '@lib/services/sites.service.js'
 import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js'
-import { showError, showSuccess, showFieldErrors } from '@/lib/toast.js'
+import { showSuccess, showFieldErrors, handleValidationError } from '@/lib/toast.js'
 import { siteSchema } from '@/lib/validation/forms.js'
 import Modal from '@components/ui/Modal.jsx'
 import ConfirmDialog from '@components/ui/ConfirmDialog.jsx'
@@ -104,7 +104,7 @@ export default function Object() {
       setShowModal(false)
       fetchSites()
     } catch (err) {
-      showError(err.response?.data?.error || 'Не удалось сохранить объект')
+      handleValidationError(err, 'Не удалось сохранить объект')
     }
   }
 

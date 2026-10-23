@@ -49,17 +49,17 @@ function sendDocx(res, buffer, filename) {
 export async function exportEmployeeCard(req, res, next) {
   try {
     const emp = await findEmployee(req.params.id)
-    if (!emp) return res.status(404).json({ error: 'Employee not found' })
+    if (!emp) return res.status(404).json({ error: 'Сотрудник не найден' })
 
     if (req.query.part === 'sheet') {
       const issueDate = (req.query.issue_date || '').trim()
       if (!issueDate) {
-        return res.status(400).json({ error: 'issue_date is required for part=sheet' })
+        return res.status(400).json({ error: 'issue_date обязателен для листа выдачи' })
       }
       const items = await getIssueRecordsForEvent(emp.id, issueDate)
       const sheetNumber = await getIssueSheetNumber(emp.id, issueDate)
       if (items.length === 0)
-        return res.status(404).json({ error: 'No issues found for this date' })
+        return res.status(404).json({ error: 'Нет выдач для этой даты' })
 
       const data = buildSheetData(emp, items, sheetNumber, new Date(issueDate).getFullYear())
       const buffer = await renderTemplate(SHEET_TEMPLATE, data)
@@ -84,12 +84,12 @@ export async function exportEmployeeCard(req, res, next) {
 export async function exportEmployeeCardSheets(req, res, next) {
   try {
     const emp = await findEmployee(req.params.id)
-    if (!emp) return res.status(404).json({ error: 'Employee not found' })
+    if (!emp) return res.status(404).json({ error: 'Сотрудник не найден' })
 
     const year = Number(req.query.year) || new Date().getFullYear()
     const events = await getIssueEventsByEmployee(emp.id, year)
     if (events.length === 0) {
-      return res.status(404).json({ error: 'No issues found for this year' })
+      return res.status(404).json({ error: 'Нет выдач за этот год' })
     }
 
     const archive = new ZipArchive()
@@ -102,7 +102,7 @@ export async function exportEmployeeCardSheets(req, res, next) {
 
     archive.on('error', (err) => {
       logger.error(err, 'Archive error')
-      if (!res.headersSent) res.status(500).json({ error: 'Archive error' })
+      if (!res.headersSent) res.status(500).json({ error: 'Ошибка архива' })
     })
 
     for (const event of events) {

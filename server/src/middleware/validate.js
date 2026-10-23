@@ -15,7 +15,14 @@ export function validate(schema) {
           { path: req.path, issues: err.issues.map((e) => e.path.join('.')) },
           'Validation failed'
         )
-        return res.status(400).json({ error: err.issues.map((e) => e.message).join(', ') })
+        return res.status(400).json({
+          error: 'Validation failed',
+          issues: err.issues.map((e) => ({
+            path: e.path,
+            message: e.message,
+            code: e.code,
+          })),
+        })
       }
       return res.status(400).json({ error: 'Validation failed' })
     }
@@ -34,7 +41,14 @@ export function validateQuery(schema) {
           { path: req.path, issues: err.issues.map((e) => e.path.join('.')) },
           'Query validation failed'
         )
-        return res.status(400).json({ error: err.issues.map((e) => e.message).join(', ') })
+        return res.status(400).json({
+          error: 'Validation failed',
+          issues: err.issues.map((e) => ({
+            path: e.path,
+            message: e.message,
+            code: e.code,
+          })),
+        })
       }
       return res.status(400).json({ error: 'Validation failed' })
     }

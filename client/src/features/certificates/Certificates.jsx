@@ -6,10 +6,9 @@ import {
   CERTIFICATE_STATUSES,
   CERTIFICATE_STATUS_LABELS,
 } from '@lib/constants/certificate-statuses.js'
-import { formatDate } from '@/lib/utils/date.js'
-import { toDateInput } from '@/lib/utils/date.js'
+import { formatDate, fromDateInput, parseDateInput, dateMaskInput } from '@/lib/utils/date.js'
 import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js'
-import { showError, showSuccess, showFieldErrors } from '@/lib/toast.js'
+import { showSuccess, showFieldErrors, handleValidationError } from '@/lib/toast.js'
 import { certificateSchema } from '@/lib/validation/forms.js'
 import Modal from '@components/ui/Modal.jsx'
 import Pagination from '@components/ui/Pagination.jsx'
@@ -95,33 +94,38 @@ export default function Certificates() {
         showFieldErrors(result.error?.issues || [])
         return
       }
+      const payload = {
+        ...result.data,
+        issue_date: parseDateInput(result.data.issue_date),
+        expiry_date: parseDateInput(result.data.expiry_date),
+      }
       if (editingCertificate) {
         if (certificateFile) {
           const fd = new FormData()
           fd.append('certificate', certificateFile)
-          fd.append('product_name', result.data.product_name)
-          fd.append('certificate_number', result.data.certificate_number || '')
-          fd.append('issue_date', result.data.issue_date || '')
-          fd.append('expiry_date', result.data.expiry_date || '')
-          fd.append('item_type_id', result.data.item_type_id || '')
+          fd.append('product_name', payload.product_name)
+          fd.append('certificate_number', payload.certificate_number || '')
+          fd.append('issue_date', payload.issue_date || '')
+          fd.append('expiry_date', payload.expiry_date || '')
+          fd.append('item_type_id', payload.item_type_id || '')
           fd.append('certificate_id', editingCertificate.id)
           await uploadService.uploadCertificate(fd)
         } else {
-          await certificatesService.update(editingCertificate.id, result.data)
+          await certificatesService.update(editingCertificate.id, payload)
         }
         setEditingCertificate(null)
       } else {
         if (certificateFile) {
           const fd = new FormData()
           fd.append('certificate', certificateFile)
-          fd.append('product_name', result.data.product_name)
-          fd.append('certificate_number', result.data.certificate_number || '')
-          fd.append('issue_date', result.data.issue_date || '')
-          fd.append('expiry_date', result.data.expiry_date || '')
-          fd.append('item_type_id', result.data.item_type_id || '')
+          fd.append('product_name', payload.product_name)
+          fd.append('certificate_number', payload.certificate_number || '')
+          fd.append('issue_date', payload.issue_date || '')
+          fd.append('expiry_date', payload.expiry_date || '')
+          fd.append('item_type_id', payload.item_type_id || '')
           await uploadService.uploadCertificate(fd)
         } else {
-          await certificatesService.create(result.data)
+          await certificatesService.create(payload)
         }
       }
       const action = editingCertificate ? 'обновлён' : 'добавлен'
@@ -138,7 +142,7 @@ export default function Certificates() {
       setFieldErrors({})
       fetchCertificates()
     } catch (err) {
-      showError(err.response?.data?.error || 'Не удалось сохранить сертификат')
+      handleValidationError(err, 'Не удалось сохранить сертификат')
     } finally {
       setUploading(false)
     }
@@ -149,8 +153,8 @@ export default function Certificates() {
     setFormData({
       product_name: cert.product_name,
       certificate_number: cert.certificate_number || '',
-      issue_date: toDateInput(cert.issue_date),
-      expiry_date: toDateInput(cert.expiry_date),
+      issue_date: fromDateInput(cert.issue_date),
+      expiry_date: fromDateInput(cert.expiry_date),
       item_type_id: cert.item_type_id ? String(cert.item_type_id) : '',
     })
     setCertificateFile(null)
@@ -426,19 +430,21 @@ export default function Certificates() {
             <div className={`form-group ${styles.field}`}>
               <label>Дата выдачи</label>
               <input
-                type="date"
+                type="text"
                 className="form-control"
                 value={formData.issue_date}
-                onChange={(e) => setFormData({ ...formData, issue_date: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, issue_date: dateMaskInput(e.target.value) })}
+                placeholder="DD.MM.YYYY"
               />
             </div>
             <div className={`form-group ${styles.field}`}>
               <label>Срок действия *</label>
               <input
-                type="date"
+                type="text"
                 className="form-control"
                 value={formData.expiry_date}
-                onChange={(e) => setFormData({ ...formData, expiry_date: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, expiry_date: dateMaskInput(e.target.value) })}
+                placeholder="DD.MM.YYYY"
                 required
                 aria-invalid={Boolean(fieldErrors.expiry_date)}
                 aria-describedby={fieldErrors.expiry_date ? 'expiry-error' : undefined}
@@ -450,11 +456,13 @@ export default function Certificates() {
               )}
             </div>
             <div className={`form-group ${styles.field}`}>
-              <label>Позиция номенклатуры</label>
+              <label>Позиция номенклатуры *</label>
               <select
                 className="form-control"
                 value={formData.item_type_id}
                 onChange={(e) => setFormData({ ...formData, item_type_id: e.target.value })}
+                aria-invalid={Boolean(fieldErrors.item_type_id)}
+                aria-describedby={fieldErrors.item_type_id ? 'item-type-error' : undefined}
               >
                 <option value="">Выберите...</option>
                 {items.map((item) => (
@@ -463,6 +471,11 @@ export default function Certificates() {
                   </option>
                 ))}
               </select>
+              {fieldErrors.item_type_id && (
+                <div id="item-type-error" className={styles.fieldError} role="alert">
+                  {fieldErrors.item_type_id}
+                </div>
+              )}
             </div>
             <div className={`form-group ${styles.field}`}>
               <label>Файл сертификата (PDF/изображение)</label>

@@ -33,13 +33,13 @@ export async function exportIssueSheets(req, res, next) {
     if (!issueDate) {
       issueDate = await getLatestIssueDate(filters)
       if (!issueDate) {
-        return res.status(404).json({ error: 'No issue records match the filters' })
+        return res.status(404).json({ error: 'Нет выдач, соответствующих фильтрам' })
       }
     }
 
     const employees = await getEmployeesWithIssueOnDate(issueDate, filters)
     if (employees.length === 0) {
-      return res.status(404).json({ error: 'No issues found for this date and filters' })
+      return res.status(404).json({ error: 'Нет выдач для этой даты и фильтров' })
     }
 
     const archive = new ZipArchive()
@@ -52,7 +52,7 @@ export async function exportIssueSheets(req, res, next) {
 
     archive.on('error', (err) => {
       logger.error(err, 'Archive error')
-      if (!res.headersSent) res.status(500).json({ error: 'Archive error' })
+      if (!res.headersSent) res.status(500).json({ error: 'Ошибка архива' })
     })
 
     for (const emp of employees) {

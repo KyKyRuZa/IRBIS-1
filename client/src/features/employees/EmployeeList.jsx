@@ -11,7 +11,7 @@ import {
   EMPLOYEE_STATUS_VALUES,
   normalizeEmployeeStatus,
 } from '@/lib/constants/employee-statuses.js'
-import { showError, showSuccess, showFieldErrors } from '@/lib/toast.js'
+import { showSuccess, showFieldErrors, handleValidationError } from '@/lib/toast.js'
 import { employeeSchema } from '@/lib/validation/forms.js'
 import Modal from '@components/ui/Modal.jsx'
 import ConfirmDialog from '@components/ui/ConfirmDialog.jsx'
@@ -122,7 +122,7 @@ export default function EmployeeList() {
       setShowModal(false)
       refetchEmployees()
     } catch (err) {
-      showError(err.response?.data?.error || 'Не удалось сохранить сотрудника')
+      handleValidationError(err, 'Не удалось сохранить сотрудника')
     }
   }
 

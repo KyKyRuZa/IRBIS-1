@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Icon from '@components/ui/Icon.jsx'
 import { authService } from '@lib/services/auth.service.js'
 import { useAuth } from '@hooks/useAuth.js'
-import { showError, showFieldErrors } from '@/lib/toast.js'
+import { showFieldErrors, formatValidationError } from '@/lib/toast.js'
 import { loginSchema } from '@/lib/validation/forms.js'
 import styles from '@styles/Login.module.css'
 
@@ -38,7 +38,7 @@ export default function Login() {
       login({ username: res.username, role: res.role })
       navigate('/')
     } catch (err) {
-      setError(err.response?.data?.error || 'Ошибка входа. Проверьте данные.')
+      setError(formatValidationError(err, 'Ошибка входа. Проверьте данные.'))
     } finally {
       setIsLoading(false)
     }

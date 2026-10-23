@@ -173,7 +173,7 @@ export async function exportConsumables(req, res, next) {
       ),
     ])
 
-    if (!result.rows[0]) return res.status(404).json({ error: 'Employee not found' })
+    if (!result.rows[0]) return res.status(404).json({ error: 'Сотрудник не найден' })
 
     const emp = result.rows[0]
 

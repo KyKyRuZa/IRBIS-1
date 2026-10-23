@@ -1,5 +1,34 @@
 import { z } from 'zod'
 
+z.setErrorMap((issue) => {
+  if (issue.code === 'invalid_type') {
+    if (issue.expected === 'string') return 'Введите значение'
+    if (issue.expected === 'number') return 'Введите число'
+    if (issue.expected === 'boolean') return 'Выберите значение'
+    if (issue.expected === 'array') return 'Добавьте хотя бы одну позицию'
+    return 'Неверный тип данных'
+  }
+  if (issue.code === 'too_small') {
+    if (issue.minimum === 0 && !issue.inclusive) return 'Значение должно быть больше 0'
+    if (issue.minimum === 1 && issue.inclusive) return 'Поле обязательно для заполнения'
+    if (issue.inclusive) return `Минимум: ${issue.minimum}`
+    return `Минимальное значение: ${issue.minimum}`
+  }
+  if (issue.code === 'too_big') {
+    return 'Превышено максимальное значение'
+  }
+  if (issue.code === 'invalid_enum_value') {
+    return 'Выберите значение из списка'
+  }
+  if (issue.code === 'invalid_literal') {
+    return 'Неверное значение'
+  }
+  if (issue.code === 'custom') {
+    return issue.message || 'Неверные данные'
+  }
+  return 'Неверные данные'
+})
+
 export const issueSchema = z.object({
   employee_id: z.string().min(1, 'Выберите сотрудника'),
   item_type_id: z.string().min(1, 'Выберите наименование'),
@@ -175,17 +204,23 @@ export const normSchema = z.object({
 })
 
 export const certificateSchema = z.object({
-  product_name: z.string().min(1, 'Введите наименование продукции'),
+  product_name: z
+    .string({ error: () => 'Введите наименование продукции' })
+    .min(1, 'Введите наименование продукции'),
   certificate_number: z.string().optional().nullable(),
   issue_date: z.string().optional().nullable(),
-  expiry_date: z.string().min(1, 'Введите срок действия'),
-  item_type_id: z.string().optional().nullable(),
+  expiry_date: z
+    .string({ error: () => 'Введите срок действия' })
+    .min(1, 'Введите срок действия'),
+  item_type_id: z
+    .string({ error: () => 'Выберите позицию номенклатуру' })
+    .min(1, 'Выберите позицию номенклатуру'),
 })
 
 export const employeeSchema = z.object({
   full_name: z.string().min(1, 'Введите ФИО'),
   position: z.string().min(1, 'Введите должность'),
-  site_id: z.string().optional().nullable(),
+  site_id: z.string().min(1, 'Выберите объект'),
   gender: z
     .enum(['male', 'female'], {
       error: (issue) =>

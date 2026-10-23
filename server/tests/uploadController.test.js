@@ -51,7 +51,7 @@ describe('Upload — signature', () => {
       .attach('signature', pngBuffer, 'signature.png');
 
     expect(res.status).toBe(404);
-    expect(res.body.error).toContain('Issue record not found');
+    expect(res.body.error).toContain('Запись выдачи не найдена');
   });
 
   it('rejects unsupported file types', async () => {
@@ -175,7 +175,7 @@ describe('Upload — signature', () => {
       ), 'signature.png');
 
     expect(res.status).toBe(403);
-    expect(res.body.error).toBe('Forbidden');
+    expect(res.body.error).toBe('Доступ запрещён');
   });
 });
 

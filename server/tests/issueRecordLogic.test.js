@@ -62,7 +62,7 @@ describe('Issues — atomic returnItem', () => {
       .send({ return_quantity: 3 });
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toContain('exceeds remaining quantity');
+    expect(res.body.error).toContain('превышает оставшееся');
   });
 
   it('rejects return_quantity <= 0', async () => {
@@ -73,7 +73,7 @@ describe('Issues — atomic returnItem', () => {
       .send({ return_quantity: 0 });
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toContain('must be greater than 0');
+    expect(res.body.error).toContain('должно быть больше 0');
   });
 
   it('rejects return on a disposed record (409)', async () => {
@@ -103,7 +103,7 @@ describe('Issues — atomic returnItem', () => {
       .send({ return_quantity: 1 });
 
     expect(res.status).toBe(409);
-    expect(res.body.error).toContain('Cannot return a record with status');
+    expect(res.body.error).toContain('Невозможно вернуть запись со статусом');
   });
 
   it('rejects return on a non-existent record (404)', async () => {
@@ -147,7 +147,7 @@ describe('Issues — requires_certificate check', () => {
       });
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toContain('certificate_id is required');
+    expect(res.body.error).toContain('требуется сертификат');
   });
 
   it('allows issuing an item that requires_certificate WITH a certificate_id', async () => {
@@ -216,7 +216,7 @@ describe('Issues — batchIssueSingle requires_certificate check', () => {
       });
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toContain('certificate_id is required');
+    expect(res.body.error).toContain('требуется сертификат');
   });
 });
 

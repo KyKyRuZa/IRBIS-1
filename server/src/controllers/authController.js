@@ -37,12 +37,12 @@ export async function login(req, res, next) {
     if (!user) {
       await verifyPassword(password, DUMMY_HASH)
       log.warn({ username }, 'Login failed: unknown user')
-      return res.status(401).json({ error: 'Invalid credentials' })
+      return res.status(401).json({ error: 'Неверные учётные данные' })
     }
     const valid = await verifyPassword(password, user.password_hash)
     if (!valid) {
       log.warn({ username }, 'Login failed: invalid password')
-      return res.status(401).json({ error: 'Invalid credentials' })
+      return res.status(401).json({ error: 'Неверные учётные данные' })
     }
 
     const accessToken = signAccessToken(user)
@@ -65,19 +65,19 @@ export async function refresh(req, res, next) {
     const raw = req.cookies?.[REFRESH_COOKIE]
     if (!raw) {
       log.warn('Refresh failed: no refresh token')
-      return res.status(401).json({ error: 'Refresh token required' })
+      return res.status(401).json({ error: 'Refresh token обязателен' })
     }
     const tokenHash = crypto.createHash('sha256').update(raw).digest('hex')
     const record = await findValidRefreshToken(tokenHash)
     if (!record) {
       log.warn('Refresh failed: invalid or expired refresh token')
-      return res.status(401).json({ error: 'Invalid or expired refresh token' })
+      return res.status(401).json({ error: 'Недействительный или просроченный refresh token' })
     }
 
     const result = await pool.query('SELECT * FROM users WHERE id = $1', [record.userId])
     const user = result.rows[0]
     if (!user) {
-      return res.status(401).json({ error: 'User not found' })
+      return res.status(401).json({ error: 'Пользователь не найден' })
     }
 
     const accessToken = signAccessToken(user)
@@ -109,7 +109,7 @@ export async function logout(req, res, next) {
     res.clearCookie(ACCESS_COOKIE, buildCookieOptions())
     res.clearCookie(REFRESH_COOKIE, buildCookieOptions())
     log.info({ userId: req.user?.id }, 'User logged out')
-    res.json({ message: 'Logged out' })
+    res.json({ message: 'Выход выполнен' })
   } catch (error) {
     log.error(error)
     next(error)
@@ -121,7 +121,7 @@ export async function me(req, res, next) {
     const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id])
     const user = result.rows[0]
     if (!user) {
-      return res.status(401).json({ error: 'User not found' })
+      return res.status(401).json({ error: 'Пользователь не найден' })
     }
     res.json(publicUser(user))
   } catch (error) {
@@ -134,15 +134,15 @@ export async function changePassword(req, res, next) {
   try {
     const { old_password, new_password } = ChangePasswordSchema.parse(req.body)
     const userId = req.user?.id
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+    if (!userId) return res.status(401).json({ error: 'Неавторизованный запрос' })
 
     const result = await pool.query('SELECT * FROM users WHERE id = $1', [userId])
     const user = result.rows[0]
-    if (!user) return res.status(404).json({ error: 'User not found' })
+    if (!user) return res.status(404).json({ error: 'Пользователь не найден' })
     const valid = await verifyPassword(old_password, user.password_hash)
     if (!valid) {
       log.warn({ userId }, 'Change password failed: invalid old password')
-      return res.status(401).json({ error: 'Invalid old password' })
+      return res.status(401).json({ error: 'Неверный старый пароль' })
     }
     const hash = await bcrypt.hash(new_password, 12)
     await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, userId])
@@ -150,7 +150,7 @@ export async function changePassword(req, res, next) {
     res.clearCookie(ACCESS_COOKIE, buildCookieOptions())
     res.clearCookie(REFRESH_COOKIE, buildCookieOptions())
     log.info({ userId }, 'Password changed; all refresh tokens revoked')
-    res.json({ message: 'Password changed successfully' })
+    res.json({ message: 'Пароль изменён успешно' })
   } catch (error) {
     log.error(error)
     next(error)

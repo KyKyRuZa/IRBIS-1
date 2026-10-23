@@ -91,7 +91,7 @@ describe('Issues — certificate validation (P1.7)', () => {
       });
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toContain('does not match');
+    expect(res.body.error).toContain('не соответствует');
   });
 
   it('rejects issuing with an expired certificate', async () => {
@@ -122,7 +122,7 @@ describe('Issues — certificate validation (P1.7)', () => {
       });
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toContain('expired or inactive');
+    expect(res.body.error).toContain('просрочен или не активен');
   });
 
   it('rejects issuing with a non-active certificate', async () => {
@@ -153,7 +153,7 @@ describe('Issues — certificate validation (P1.7)', () => {
       });
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toContain('expired or inactive');
+    expect(res.body.error).toContain('просрочен или не активен');
   });
 
   it('rejects issuing with a non-existent certificate_id', async () => {
@@ -172,7 +172,7 @@ describe('Issues — certificate validation (P1.7)', () => {
       });
 
     expect(res.status).toBe(404);
-    expect(res.body.error).toContain('Certificate not found');
+    expect(res.body.error).toContain('Сертификат не найден');
   });
 
   it('allows issuing with a valid active certificate', async () => {

@@ -4,7 +4,7 @@ import { itemsService } from '@/lib/services/items.service.js'
 import { ITEM_CATEGORIES } from '@/lib/constants/item-categories.js'
 import { useResource } from '@/hooks/useResource.js'
 import { useTableControls } from '@/hooks/useTableControls.js'
-import { showError, showSuccess, showFieldErrors } from '@/lib/toast.js'
+import { showSuccess, showFieldErrors, handleValidationError } from '@/lib/toast.js'
 import { normSchema } from '@/lib/validation/forms.js'
 import Modal from '@components/ui/Modal.jsx'
 import Pagination from '@components/ui/Pagination.jsx'
@@ -98,7 +98,7 @@ export default function IssueNorms() {
       setShowModal(false)
       refetch()
     } catch (err) {
-      showError(err.response?.data?.error || 'Не удалось сохранить норму')
+      handleValidationError(err, 'Не удалось сохранить норму')
     }
   }
 

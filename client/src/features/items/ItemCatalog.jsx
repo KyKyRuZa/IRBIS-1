@@ -9,7 +9,7 @@ import {
 } from '@/lib/constants/certificate-statuses.js'
 import { formatDate } from '@/lib/utils/date.js'
 import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js'
-import { showError, showSuccess, showFieldErrors } from '@/lib/toast.js'
+import { showSuccess, showFieldErrors, handleValidationError } from '@/lib/toast.js'
 import { itemSchema } from '@/lib/validation/forms.js'
 import Modal from '@components/ui/Modal.jsx'
 import ConfirmDialog from '@components/ui/ConfirmDialog.jsx'
@@ -167,7 +167,7 @@ export default function ItemCatalog() {
       setShowModal(false)
       fetchItems()
     } catch (err) {
-      showError(err.response?.data?.error || 'Не удалось сохранить позицию')
+      handleValidationError(err, 'Не удалось сохранить позицию')
     }
   }
 

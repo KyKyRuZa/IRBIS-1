@@ -96,7 +96,7 @@ export async function uploadSignature(req, res, next) {
     const record = recordResult.rows[0]
     if (!record) {
       await cleanupUploadedFile(req.file)
-      return res.status(404).json({ error: 'Issue record not found' })
+      return res.status(404).json({ error: 'Запись выдачи не найдена' })
     }
     const isAdmin = req.user?.role === 'admin'
     if (!isAdmin) {
@@ -104,7 +104,7 @@ export async function uploadSignature(req, res, next) {
       const employeeId = empResult.rows[0]?.id
       if (!employeeId || record.employee_id !== employeeId) {
         await cleanupUploadedFile(req.file)
-        return res.status(403).json({ error: 'Forbidden' })
+        return res.status(403).json({ error: 'Доступ запрещён' })
       }
     }
     const relativePath = path.join('/uploads', 'signatures', req.file.filename)

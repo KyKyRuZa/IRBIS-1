@@ -1,6 +1,38 @@
 import { z } from 'zod'
 
+z.setErrorMap((issue) => {
+  if (issue.code === 'invalid_type') {
+    if (issue.expected === 'number') return 'Введите число'
+    if (issue.expected === 'string') return 'Введите значение'
+    if (issue.expected === 'boolean') return 'Выберите значение'
+    if (issue.expected === 'array') return 'Добавьте хотя бы одну позицию'
+    return 'Неверный тип данных'
+  }
+  if (issue.code === 'too_small') {
+    if (issue.minimum === 0 && !issue.inclusive) return 'Значение должно быть больше 0'
+    if (issue.minimum === 1 && issue.inclusive) return 'Поле обязательно для заполнения'
+    if (issue.inclusive) return `Минимум: ${issue.minimum}`
+    return `Минимальное значение: ${issue.minimum}`
+  }
+  if (issue.code === 'too_big') {
+    return 'Превышено максимальное значение'
+  }
+  if (issue.code === 'invalid_enum_value') {
+    return 'Выберите значение из списка'
+  }
+  if (issue.code === 'invalid_literal') {
+    return 'Неверное значение'
+  }
+  if (issue.code === 'custom') {
+    return issue.message || 'Неверные данные'
+  }
+  return 'Неверные данные'
+})
+
 const emptyToUndefined = (v) => (v === '' || v === null ? undefined : v)
+
+const toNum = (v) => (v === '' || v === null || v === undefined ? undefined : Number(v))
+const toNumNull = (v) => (v === '' || v === null || v === undefined ? null : Number(v))
 
 const PASSWORD_REGEX =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-={};:'"\\|,.<>?]).{8,128}$/
@@ -47,7 +79,7 @@ export const EmployeeSchema = z.object({
   position_change_date: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
 })
 
-const toNum = (v) => (v === '' || v === null || v === undefined ? undefined : Number(v))
+
 const toBool = (v) => (v === undefined ? undefined : v === true || v === 'true' || v === '1')
 
 export const IssueRecordSchema = z.object({
@@ -58,9 +90,8 @@ export const IssueRecordSchema = z.object({
     .optional(),
   issue_date: z.string().optional().nullable(),
   certificate_id: z
-    .preprocess(toNum, z.number().int().positive('Некорректный сертификат'))
-    .optional()
-    .nullable(),
+    .preprocess(toNumNull, z.number().int().positive('Некорректный сертификат').nullable())
+    .optional(),
   wear_time_override: z
     .preprocess(toNum, z.number().positive('Срок носки должен быть больше 0'))
     .optional()
@@ -92,9 +123,8 @@ export const IssueBatchSchema = z.object({
     .optional(),
   issue_date: z.string().optional().nullable(),
   certificate_id: z
-    .preprocess(toNum, z.number().int().positive('Некорректный сертификат'))
-    .optional()
-    .nullable(),
+    .preprocess(toNumNull, z.number().int().positive('Некорректный сертификат').nullable())
+    .optional(),
   wear_time_override: z
     .preprocess(toNum, z.number().positive('Срок носки должен быть больше 0'))
     .optional()
@@ -120,9 +150,8 @@ const IssueBatchSingleItemSchema = z.object({
     .preprocess(toNum, z.number().int().positive('Количество должно быть целым и больше 0'))
     .optional(),
   certificate_id: z
-    .preprocess(toNum, z.number().int().positive('Некорректный сертификат'))
-    .optional()
-    .nullable(),
+    .preprocess(toNumNull, z.number().int().positive('Некорректный сертификат').nullable())
+    .optional(),
   wear_time_override: z
     .preprocess(toNum, z.number().positive('Срок носки должен быть больше 0'))
     .optional()
@@ -225,6 +254,7 @@ export const IssueNormSchema = z.object({
 })
 
 export const EmployeeUpdateSchema = EmployeeSchema.partial().extend({
+  site_id: z.preprocess(emptyToUndefined, z.union([z.string(), z.number()]).nullable().optional()),
   status: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
 })
 
@@ -253,9 +283,8 @@ export const IssueRecordUpdateSchema = z.object({
   issue_date: z.string().optional().nullable(),
   expiry_date: z.string().optional().nullable(),
   certificate_id: z
-    .preprocess(toNum, z.number().int().positive('Некорректный сертификат'))
-    .optional()
-    .nullable(),
+    .preprocess(toNumNull, z.number().int().positive('Некорректный сертификат').nullable())
+    .optional(),
   wear_time_override: z
     .preprocess(toNum, z.number().positive('Срок носки должен быть больше 0'))
     .optional()
@@ -299,9 +328,8 @@ export const CertificateUploadSchema = z.object({
     .optional()
     .nullable(),
   certificate_id: z
-    .preprocess(toNum, z.number().int().positive('Некорректный сертификат'))
-    .optional()
-    .nullable(),
+    .preprocess(toNumNull, z.number().int().positive('Некорректный сертификат').nullable())
+    .optional(),
 })
 
 export const SignatureUploadSchema = z.object({

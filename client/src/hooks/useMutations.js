@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { showError, showSuccess } from '@/lib/toast.js'
+import { showError, showSuccess, handleValidationError } from '@/lib/toast.js'
 
 export function useCreateMutation(service, queryKey, successMsg) {
   const queryClient = useQueryClient()
@@ -12,7 +12,7 @@ export function useCreateMutation(service, queryKey, successMsg) {
       return data
     },
     onError: (err) => {
-      showError(err.response?.data?.error || 'Не удалось создать запись')
+      handleValidationError(err)
     },
   })
 }
@@ -28,7 +28,7 @@ export function useUpdateMutation(service, queryKey, successMsg) {
       return data
     },
     onError: (err) => {
-      showError(err.response?.data?.error || 'Не удалось обновить запись')
+      handleValidationError(err)
     },
   })
 }
@@ -43,7 +43,7 @@ export function useDeleteMutation(service, queryKey, successMsg) {
       if (successMsg) showSuccess(successMsg)
     },
     onError: (err) => {
-      showError(err.response?.data?.error || 'Не удалось удалить запись')
+      handleValidationError(err)
     },
   })
 }

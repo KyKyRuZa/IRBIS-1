@@ -39,17 +39,17 @@ export async function issueItem(req, res, next) {
       write_off_act,
     } = req.body
     if (!employee_id || !item_type_id) {
-      return res.status(400).json({ error: 'employee_id and item_type_id are required' })
+      return res.status(400).json({ error: 'employee_id и item_type_id обязательны' })
     }
 
     const [emp, item] = await Promise.all([
       pool.query('SELECT id FROM employees WHERE id=$1', [employee_id]),
       pool.query('SELECT * FROM item_types WHERE id = $1', [item_type_id]),
     ])
-     if (!emp.rows[0]) return res.status(404).json({ error: 'Employee not found' })
-    if (!item.rows[0]) return res.status(404).json({ error: 'Item type not found' })
+     if (!emp.rows[0]) return res.status(404).json({ error: 'Сотрудник не найден' })
+    if (!item.rows[0]) return res.status(404).json({ error: 'Позиция не найдена' })
     if (item.rows[0].requires_certificate && !certificate_id) {
-      return res.status(400).json({ error: 'certificate_id is required for this item type' })
+      return res.status(400).json({ error: 'Для этой позиции требуется сертификат' })
     }
 
     if (certificate_id) {
@@ -58,15 +58,15 @@ export async function issueItem(req, res, next) {
       ])
       const cert = certRow.rows[0]
       if (!cert) {
-        return res.status(404).json({ error: 'Certificate not found' })
+        return res.status(404).json({ error: 'Сертификат не найден' })
       }
       if (cert.item_type_id !== Number(item_type_id)) {
         return res
           .status(400)
-          .json({ error: 'Certificate does not match the selected item type' })
+          .json({ error: 'Сертификат не соответствует выбранной позиции' })
       }
       if (cert.status !== 'active' || (cert.expiry_date && new Date(cert.expiry_date) < new Date())) {
-        return res.status(400).json({ error: 'Certificate is expired or inactive' })
+        return res.status(400).json({ error: 'Сертификат просрочен или не активен' })
       }
     }
 
@@ -117,7 +117,7 @@ export async function batchIssue(req, res, next) {
       position,
     } = req.body
     if (!site_id || !item_type_id) {
-      return res.status(400).json({ error: 'site_id and item_type_id are required' })
+      return res.status(400).json({ error: 'site_id и item_type_id обязательны' })
     }
     // Необязательный фильтр по должности: выдать можно всем сотрудникам
     // объекта или только одной должности (например, всем операторам).
@@ -131,14 +131,14 @@ export async function batchIssue(req, res, next) {
     if (employees.rows.length === 0) {
       return res.status(404).json({
         error: position?.trim()
-          ? 'No active employees with this position at this site'
-          : 'No active employees at this site',
+          ? 'Нет активных сотрудников с этой должностью на объекте'
+          : 'Нет активных сотрудников на объекте',
       })
     }
 
-     if (!item.rows[0]) return res.status(404).json({ error: 'Item type not found' })
+    if (!item.rows[0]) return res.status(404).json({ error: 'Позиция не найдена' })
     if (item.rows[0].requires_certificate && !certificate_id) {
-      return res.status(400).json({ error: 'certificate_id is required for this item type' })
+      return res.status(400).json({ error: 'Для этой позиции требуется сертификат' })
     }
 
     if (certificate_id) {
@@ -147,15 +147,15 @@ export async function batchIssue(req, res, next) {
       ])
       const cert = certRow.rows[0]
       if (!cert) {
-        return res.status(404).json({ error: 'Certificate not found' })
+        return res.status(404).json({ error: 'Сертификат не найден' })
       }
       if (cert.item_type_id !== Number(item_type_id)) {
         return res
           .status(400)
-          .json({ error: 'Certificate does not match the selected item type' })
+          .json({ error: 'Сертификат не соответствует выбранной позиции' })
       }
       if (cert.status !== 'active' || (cert.expiry_date && new Date(cert.expiry_date) < new Date())) {
-        return res.status(400).json({ error: 'Certificate is expired or inactive' })
+        return res.status(400).json({ error: 'Сертификат просрочен или не активен' })
       }
     }
 
@@ -194,28 +194,28 @@ export async function batchIssueSingle(req, res, next) {
   try {
     const { employee_id, issue_date, items } = req.body
     if (!employee_id || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ error: 'employee_id and items array are required' })
+      return res.status(400).json({ error: 'employee_id и массив items обязательны' })
     }
     const issueDate = issue_date || localDate()
     const itemTypeIds = items.map((i) => Number(i.item_type_id)).filter(Boolean)
     if (itemTypeIds.length !== items.filter((i) => i.item_type_id).length) {
-      return res.status(400).json({ error: 'All items must have item_type_id' })
+      return res.status(400).json({ error: 'Каждая позиция должна иметь item_type_id' })
     }
     const [emp, itemsRes] = await Promise.all([
       pool.query('SELECT id FROM employees WHERE id=$1', [employee_id]),
       pool.query('SELECT * FROM item_types WHERE id = ANY($1::int[])', [itemTypeIds]),
     ])
-    if (!emp.rows[0]) return res.status(404).json({ error: 'Employee not found' })
+    if (!emp.rows[0]) return res.status(404).json({ error: 'Сотрудник не найден' })
     const itemMap = new Map(itemsRes.rows.map((i) => [i.id, i]))
 
     const enriched = []
     for (const entry of items) {
       const item = itemMap.get(Number(entry.item_type_id))
-      if (!item) return res.status(404).json({ error: `Item type ${entry.item_type_id} not found` })
+      if (!item) return res.status(404).json({ error: `Позиция ${entry.item_type_id} не найдена` })
       if (item.requires_certificate && !entry.certificate_id) {
         return res
           .status(400)
-          .json({ error: `certificate_id is required for item type ${entry.item_type_id}` })
+          .json({ error: `Для позиции ${entry.item_type_id} требуется сертификат` })
       }
 
       if (entry.certificate_id) {
@@ -224,15 +224,15 @@ export async function batchIssueSingle(req, res, next) {
         ])
         const cert = certRow.rows[0]
         if (!cert) {
-          return res.status(404).json({ error: `Certificate ${entry.certificate_id} not found` })
+          return res.status(404).json({ error: `Сертификат ${entry.certificate_id} не найден` })
         }
         if (cert.item_type_id !== Number(entry.item_type_id)) {
           return res.status(400).json({
-            error: `Certificate ${entry.certificate_id} does not match item type ${entry.item_type_id}`,
+            error: `Сертификат ${entry.certificate_id} не соответствует позиции ${entry.item_type_id}`,
           })
         }
         if (cert.status !== 'active' || (cert.expiry_date && new Date(cert.expiry_date) < new Date())) {
-          return res.status(400).json({ error: 'Certificate is expired or inactive' })
+          return res.status(400).json({ error: 'Сертификат просрочен или не активен' })
         }
       }
 
@@ -258,7 +258,7 @@ export async function batchIssueSingle(req, res, next) {
     }
 
     if (enriched.length === 0) {
-      return res.status(400).json({ error: 'No valid items to issue' })
+      return res.status(400).json({ error: 'Нет позиций для выдачи' })
     }
 
     const created = await batchIssueRecordsForEmployee(employee_id, enriched, issueDate)
@@ -367,14 +367,14 @@ export async function listIssues(req, res, next) {
 export async function dispose(req, res, next) {
   try {
     const current = await getIssueRecordById(req.params.id)
-    if (!current) return res.status(404).json({ error: 'Record not found' })
+    if (!current) return res.status(404).json({ error: 'Запись не найдена' })
     if (!['issued', 'due_for_disposal'].includes(current.status)) {
       return res
         .status(409)
-        .json({ error: `Cannot dispose a record with status '${current.status}'` })
+        .json({ error: `Невозможно списать запись со статусом '${current.status}'` })
     }
     const record = await disposeIssueRecord(req.params.id)
-    if (!record) return res.status(404).json({ error: 'Record not found' })
+    if (!record) return res.status(404).json({ error: 'Запись не найдена' })
     res.json(record)
   } catch (error) {
     log.error(error)
@@ -387,26 +387,26 @@ export async function returnItem(req, res, next) {
     const { return_date, return_quantity } = req.body
     const qty = Number(return_quantity) || 0
     if (qty <= 0) {
-      return res.status(400).json({ error: 'return_quantity must be greater than 0' })
+      return res.status(400).json({ error: 'Количество возврата должно быть больше 0' })
     }
 
     const record = await returnIssueRecordAtomic(req.params.id, return_date || localDate(), qty)
     if (!record) {
       const current = await getIssueRecordById(req.params.id)
-      if (!current) return res.status(404).json({ error: 'Record not found' })
+      if (!current) return res.status(404).json({ error: 'Запись не найдена' })
       if (!['issued', 'due_for_disposal'].includes(current.status)) {
         return res
           .status(409)
-          .json({ error: `Cannot return a record with status '${current.status}'` })
+          .json({ error: `Невозможно вернуть запись со статусом '${current.status}'` })
       }
       const alreadyReturned = Number(current.return_quantity) || 0
       const remaining = Number(current.quantity) - alreadyReturned
       if (qty > remaining) {
         return res
           .status(400)
-          .json({ error: `return_quantity exceeds remaining quantity (${remaining})` })
+          .json({ error: `Количество возврата превышает оставшееся (${remaining})` })
       }
-      return res.status(409).json({ error: 'Record status changed, please retry' })
+      return res.status(409).json({ error: 'Статус записи изменен, повторите запрос' })
     }
     res.json(record)
   } catch (error) {
@@ -419,7 +419,7 @@ export async function getExpiring(req, res, next) {
   try {
     const months = req.query.months !== undefined ? parseInt(req.query.months) : 2
     if (Number.isNaN(months) || months < 0) {
-      return res.status(400).json({ error: 'months must be a non-negative number' })
+      return res.status(400).json({ error: 'Параметр months должен быть неотрицательным числом' })
     }
     const items = await getExpiringItems(months)
     res.json(items)
@@ -432,9 +432,9 @@ export async function getExpiring(req, res, next) {
 export async function getIssue(req, res, next) {
   try {
     const record = await getIssueRecordById(req.params.id)
-    if (!record) return res.status(404).json({ error: 'Issue record not found' })
+    if (!record) return res.status(404).json({ error: 'Запись выдачи не найдена' })
     if (req.user?.role !== 'admin' && req.employeeId && record.employee_id !== req.employeeId) {
-      return res.status(403).json({ error: 'Access denied: you can only view your own issue records' })
+      return res.status(403).json({ error: 'Доступ запрещён: можно просматривать только свои выдачи' })
     }
     res.json(record)
   } catch (error) {
@@ -446,11 +446,21 @@ export async function getIssue(req, res, next) {
 export async function updateIssue(req, res, next) {
   try {
     const { item_type_id, certificate_id } = req.body
+    if (item_type_id) {
+      const itemRow = await pool.query('SELECT requires_certificate FROM item_types WHERE id = $1', [
+        item_type_id,
+      ])
+      const itemType = itemRow.rows[0]
+      if (!itemType) return res.status(404).json({ error: 'Позиция не найдена' })
+      if (itemType.requires_certificate && !certificate_id) {
+        return res.status(400).json({ error: 'Для этой позиции требуется сертификат' })
+      }
+    }
     if (item_type_id && certificate_id) {
       await validateCertificate(certificate_id, item_type_id)
     }
     const record = await updateIssueRecord(req.params.id, req.body)
-    if (!record) return res.status(404).json({ error: 'Issue record not found' })
+    if (!record) return res.status(404).json({ error: 'Запись выдачи не найдена' })
     res.json(record)
   } catch (error) {
     log.error(error)
@@ -461,8 +471,8 @@ export async function updateIssue(req, res, next) {
 export async function deleteIssue(req, res, next) {
   try {
     const record = await deleteIssueRecord(req.params.id)
-    if (!record) return res.status(404).json({ error: 'Issue record not found' })
-    res.json({ message: 'Issue record deleted' })
+    if (!record) return res.status(404).json({ error: 'Запись выдачи не найдена' })
+    res.json({ message: 'Запись выдачи удалена' })
   } catch (error) {
     log.error(error)
     next(error)

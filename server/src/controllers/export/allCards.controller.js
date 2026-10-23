@@ -59,7 +59,7 @@ export async function exportAllCards(req, res, next) {
     archive.on('error', (err) => {
       logger.error(err, 'Archive error')
       if (!res.headersSent) {
-        res.status(500).json({ error: 'Archive error' })
+        res.status(500).json({ error: 'Ошибка архива' })
       }
     })
 

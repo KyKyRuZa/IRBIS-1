@@ -84,10 +84,10 @@ export async function listEmployees(req, res, next) {
 export async function getEmployee(req, res, next) {
   try {
     if (req.user?.role !== 'admin' && req.employeeId && req.employeeId !== Number(req.params.id)) {
-      return res.status(403).json({ error: 'Access denied: can only view your own employee record' })
+      return res.status(403).json({ error: 'Доступ запрещён: можно просматривать только свои записи о сотрудниках' })
     }
     const employee = await getEmployeeById(req.params.id)
-    if (!employee) return res.status(404).json({ error: 'Employee not found' })
+    if (!employee) return res.status(404).json({ error: 'Сотрудник не найден' })
 
     const [norms, history] = await Promise.all([
       getNormsForEmployee(employee),
@@ -104,9 +104,7 @@ export async function getEmployee(req, res, next) {
 export async function editEmployee(req, res, next) {
   try {
     const data = { ...req.body }
-    if (data.site_id === '' || data.site_id === null || data.site_id === undefined)
-      data.site_id = null
-    else {
+    if (data.site_id !== undefined && data.site_id !== null && data.site_id !== '') {
       const parsedSite = Number(data.site_id)
       data.site_id = Number.isFinite(parsedSite) ? parsedSite : null
     }
@@ -119,7 +117,7 @@ export async function editEmployee(req, res, next) {
       if (data[f] === '' || data[f] === null || data[f] === undefined) data[f] = null
     })
     const employee = await updateEmployee(req.params.id, data)
-    if (!employee) return res.status(404).json({ error: 'Employee not found' })
+    if (!employee) return res.status(404).json({ error: 'Сотрудник не найден' })
     res.json(employee)
   } catch (error) {
     log.error(error)
@@ -130,7 +128,7 @@ export async function editEmployee(req, res, next) {
 export async function fireEmployee(req, res, next) {
   try {
     const employee = await terminateEmployee(req.params.id)
-    if (!employee) return res.status(404).json({ error: 'Employee not found' })
+    if (!employee) return res.status(404).json({ error: 'Сотрудник не найден' })
     res.json(employee)
   } catch (error) {
     log.error(error)
@@ -141,7 +139,7 @@ export async function fireEmployee(req, res, next) {
 export async function deleteEmployee(req, res, next) {
   try {
     const employee = await deleteEmployeeModel(req.params.id)
-    if (!employee) return res.status(404).json({ error: 'Employee not found' })
+    if (!employee) return res.status(404).json({ error: 'Сотрудник не найден' })
     res.json({ message: 'Employee deleted' })
   } catch (error) {
     log.error(error)

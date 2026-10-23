@@ -83,7 +83,7 @@ export async function takeForm(req, res, next) {
       const empResult = await pool.query('SELECT id FROM employees WHERE user_id=$1', [req.user.id])
       const userEmployeeId = empResult.rows[0]?.id
       if (!userEmployeeId || Number(employee_id) !== userEmployeeId) {
-        return res.status(403).json({ error: 'Forbidden: can only take forms for yourself' })
+        return res.status(403).json({ error: 'Доступ запрещён: можно взять только свои формы' })
       }
     }
 
@@ -127,7 +127,7 @@ export async function listFormTakenByEmployee(req, res, next) {
       const empResult = await pool.query('SELECT id FROM employees WHERE user_id=$1', [req.user.id])
       const userEmployeeId = empResult.rows[0]?.id
       if (!userEmployeeId || requestedEmployeeId !== userEmployeeId) {
-        return res.status(403).json({ error: 'Forbidden' })
+        return res.status(403).json({ error: 'Доступ запрещён' })
       }
     }
     const records = await getFormTakenByEmployee(requestedEmployeeId)

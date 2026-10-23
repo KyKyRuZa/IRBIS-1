@@ -14,7 +14,7 @@ import { ISSUE_METHODS, ISSUE_METHOD_VALUES } from '@/lib/constants/issue-method
 import { useResource } from '@/hooks/useResource.js'
 import { useFormState } from '@/hooks/useFormState.js'
 import { useTableControls, useFilteredList } from '@/hooks/useTableControls.js'
-import { showError, showSuccess, showFieldErrors } from '@/lib/toast.js'
+import { showError, showSuccess, showFieldErrors, handleValidationError } from '@/lib/toast.js'
 import {
   issueSchema,
   issueBatchSchema,
@@ -208,10 +208,12 @@ export default function IssueForm() {
   }
 
   const handleItemChange = async (itemId) => {
-    form.setMany({ item_type_id: itemId })
+    form.setMany({ item_type_id: itemId, certificate_id: '' })
     if (itemId) {
       const certs = await certificatesService.listByItem(itemId)
       setCertificates(certs)
+    } else {
+      setCertificates([])
     }
   }
 
@@ -373,7 +375,7 @@ export default function IssueForm() {
       setFieldErrors({})
       refetchRecords()
     } catch (err) {
-      showError(err.response?.data?.error || 'Не удалось сохранить выдачу')
+      handleValidationError(err, 'Не удалось сохранить выдачу')
     } finally {
       setUploading(false)
     }
@@ -396,14 +398,25 @@ export default function IssueForm() {
       notes: record.notes || '',
       issue_method: record.issue_method || 'personal',
     })
+    if (record.item_type_id) {
+      certificatesService.listByItem(record.item_type_id).then((certs) => {
+        setCertificates(certs || [])
+      })
+    }
     setShowModal(true)
   }
 
-  const handleUpdate = async (e) => {
+const handleUpdate = async (e) => {
     e.preventDefault()
     setUploading(true)
     setFieldErrors({})
     try {
+      const selectedItem = items.find((i) => String(i.id) === String(form.values.item_type_id))
+      if (selectedItem?.requires_certificate && !form.values.certificate_id) {
+        setFieldErrors({ certificate_id: 'Для этой позиции требуется сертификат' })
+        showError('Для этой позиции требуется сертификат')
+        return
+      }
       const baseData = {
         employee_id: form.values.employee_id,
         item_type_id: form.values.item_type_id,
@@ -432,7 +445,7 @@ export default function IssueForm() {
       setFieldErrors({})
       refetchRecords()
     } catch (err) {
-      showError(err.response?.data?.error || 'Не удалось обновить выдачу')
+      handleValidationError(err, 'Не удалось обновить выдачу')
     } finally {
       setUploading(false)
     }

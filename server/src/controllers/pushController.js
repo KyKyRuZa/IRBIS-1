@@ -15,11 +15,11 @@ export async function subscribePush(req, res, next) {
   try {
     const userId = req.user?.id
     if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' })
+      return res.status(401).json({ error: 'Неавторизованный запрос' })
     }
     const { endpoint, keys, employee_id } = req.body
     if (!endpoint || !keys?.p256dh || !keys?.auth) {
-      return res.status(400).json({ error: 'endpoint, keys.p256dh and keys.auth are required' })
+      return res.status(400).json({ error: 'endpoint, keys.p256dh и keys.auth обязательны' })
     }
     const isAdmin = req.user?.role === 'admin'
     let effectiveEmployeeId
@@ -27,7 +27,7 @@ export async function subscribePush(req, res, next) {
       if (employee_id) {
         const empResult = await pool.query('SELECT id FROM employees WHERE id = $1', [employee_id])
         if (empResult.rows.length === 0) {
-          return res.status(400).json({ error: 'Employee not found' })
+          return res.status(400).json({ error: 'Сотрудник не найден' })
         }
         effectiveEmployeeId = employee_id
       } else {
@@ -67,11 +67,11 @@ export async function unsubscribePush(req, res, next) {
   try {
     const userId = req.user?.id
     if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' })
+      return res.status(401).json({ error: 'Неавторизованный запрос' })
     }
     const { endpoint } = req.body
     if (!endpoint) {
-      return res.status(400).json({ error: 'endpoint is required' })
+      return res.status(400).json({ error: 'endpoint обязателен для заполнения' })
     }
     await pool.query('DELETE FROM push_subscriptions WHERE user_id = $1 AND endpoint = $2', [
       userId,
@@ -99,7 +99,7 @@ export async function sendPushToEmployee(req, res, next) {
     const result = await pool.query(query, params)
     const subscriptions = result.rows
     if (subscriptions.length === 0) {
-      return res.status(404).json({ error: 'No subscriptions found' })
+      return res.status(404).json({ error: 'Подписки не найдены' })
     }
     const payload = notificationId
       ? JSON.stringify({ notificationId })
@@ -139,7 +139,7 @@ export async function sendPushToAll(req, res, next) {
     const result = await pool.query('SELECT id, endpoint, p256dh, auth FROM push_subscriptions')
     const subscriptions = result.rows
     if (subscriptions.length === 0) {
-      return res.status(404).json({ error: 'No subscriptions found' })
+      return res.status(404).json({ error: 'Подписки не найдены' })
     }
     const payload = JSON.stringify({
       title: 'Тестовое уведомление',
@@ -172,7 +172,7 @@ export async function sendPushToAll(req, res, next) {
 export async function sendTestPush(req, res, next) {
   try {
     const userId = req.user?.id
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+    if (!userId) return res.status(401).json({ error: 'Неавторизованный запрос' })
     const result = await pool.query(
       'SELECT id, endpoint, p256dh, auth FROM push_subscriptions WHERE user_id = $1',
       [userId]
@@ -211,9 +211,9 @@ export async function sendTestPush(req, res, next) {
 export async function getPushPreferences(req, res, next) {
   try {
     const userId = req.user?.id
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+    if (!userId) return res.status(401).json({ error: 'Неавторизованный запрос' })
     const result = await pool.query('SELECT push_enabled FROM users WHERE id = $1', [userId])
-    if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' })
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Пользователь не найден' })
     res.json({ enabled: Boolean(result.rows[0].push_enabled) })
   } catch (error) {
     next(error)
@@ -223,10 +223,10 @@ export async function getPushPreferences(req, res, next) {
 export async function updatePushPreferences(req, res, next) {
   try {
     const userId = req.user?.id
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+    if (!userId) return res.status(401).json({ error: 'Неавторизованный запрос' })
     const { enabled } = req.body
     if (typeof enabled !== 'boolean') {
-      return res.status(400).json({ error: 'enabled boolean is required' })
+      return res.status(400).json({ error: 'enabled boolean обязателен для заполнения' })
     }
     await pool.query('UPDATE users SET push_enabled = $1 WHERE id = $2', [enabled, userId])
     res.json({ enabled })

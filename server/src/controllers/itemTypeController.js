@@ -13,7 +13,7 @@ export async function addItem(req, res, next) {
   try {
     const { name, category, unit, default_wear_time, seasonality, requires_certificate } = req.body
     if (!name || !category) {
-      return res.status(400).json({ error: 'name and category are required' })
+      return res.status(400).json({ error: 'name и category обязательны' })
     }
     const item = await createItemType(
       name,
@@ -62,7 +62,7 @@ export async function listItems(req, res, next) {
 export async function getItem(req, res, next) {
   try {
     const item = await getItemTypeById(req.params.id)
-    if (!item) return res.status(404).json({ error: 'Item type not found' })
+    if (!item) return res.status(404).json({ error: 'Позиция не найдена' })
     res.json(item)
   } catch (error) {
     log.error(error)
@@ -73,7 +73,7 @@ export async function getItem(req, res, next) {
 export async function updateItem(req, res, next) {
   try {
     const item = await updateItemType(req.params.id, req.body)
-    if (!item) return res.status(404).json({ error: 'Item type not found' })
+    if (!item) return res.status(404).json({ error: 'Позиция не найдена' })
     res.json(item)
   } catch (error) {
     log.error(error)
@@ -84,7 +84,7 @@ export async function updateItem(req, res, next) {
 export async function deleteItem(req, res, next) {
   try {
     const item = await deleteItemType(req.params.id)
-    if (!item) return res.status(404).json({ error: 'Item type not found' })
+    if (!item) return res.status(404).json({ error: 'Позиция не найдена' })
     res.json({ message: 'Item type deleted' })
   } catch (error) {
     log.error(error)
