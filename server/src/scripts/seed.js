@@ -13,6 +13,8 @@ const clearAll = async () => {
   await pool.query('DELETE FROM forms')
   await pool.query('DELETE FROM notifications')
   await pool.query('DELETE FROM issue_records')
+  await pool.query('DELETE FROM norm_template_items')
+  await pool.query('DELETE FROM norm_templates')
   await pool.query('DELETE FROM issue_norms')
   await pool.query('DELETE FROM certificates')
   await pool.query('DELETE FROM employees')
@@ -524,6 +526,70 @@ const seedCertificates = async (itemTypes) => {
   return certs
 }
 
+const seedNormTemplates = async (itemTypes) => {
+  const templates = []
+
+  const getItem = (name) => itemTypes.find((i) => i.name === name)
+
+  const templatesData = [
+    {
+      name: 'Оperator АЗС',
+      position: 'Оператор АЗС',
+      items: [
+        { itemType: getItem('Каска защитная'), period_months: 24, quantity: 1 },
+        { itemType: getItem('Очки защитные открытые'), period_months: 12, quantity: 1 },
+        { itemType: getItem('Респиратор FFP2'), period_months: 1, quantity: 1 },
+        { itemType: getItem('Перчатки маслобензостойкие'), period_months: 1, quantity: 1 },
+        { itemType: getItem('Крем для рук защитный'), period_months: 1, quantity: 1 },
+        { itemType: getItem('Мыло жидкое хозяйственное'), period_months: 1, quantity: 1 },
+      ],
+    },
+    {
+      name: 'Наполнитель баллонов',
+      position: 'Наполнитель баллонов',
+      items: [
+        { itemType: getItem('Каска защитная'), period_months: 24, quantity: 1 },
+        { itemType: getItem('Очки защитные открытые'), period_months: 12, quantity: 1 },
+        { itemType: getItem('Респиратор FFP2'), period_months: 1, quantity: 1 },
+        { itemType: getItem('Перчатки маслобензостойкие'), period_months: 1, quantity: 1 },
+      ],
+    },
+  ]
+
+  for (const t of templatesData) {
+    const normItem = t.items.find((i) => i.itemType !== undefined)
+    if (!normItem) continue
+
+    const tRes = await pool.query(
+      'INSERT INTO norm_templates (name, position, site_id, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) RETURNING *',
+      [t.name, t.position, null]
+    )
+    const template = tRes.rows[0]
+    template.items = []
+
+    for (const item of t.items) {
+      if (!item.itemType) continue
+      const periodText =
+        item.quantity +
+        ' ' +
+        item.itemType.unit +
+        (item.period_months === 1 ? ' в год' : ' в ' + item.period_months + ' мес.')
+      const etnPoint = 'п. ' + (100 + itemTypes.indexOf(item.itemType) + 1) + ' прил.1'
+      const r = await pool.query(
+        'INSERT INTO norm_template_items (template_id, item_type_id, period_months, quantity, etn_point, period_text, seasonality) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+        [template.id, item.itemType.id, item.period_months, item.quantity, etnPoint, periodText, item.itemType.seasonality]
+      )
+      const fullItem = { ...r.rows[0], item_type_name: item.itemType.name, category: item.itemType.category }
+      template.items.push(fullItem)
+    }
+    template.itemCount = template.items.length
+    delete template.items
+    templates.push(template)
+  }
+
+  return templates
+}
+
 const seedIssueNorms = async (itemTypes) => {
   const norms = []
   const positions = [
@@ -731,6 +797,20 @@ const seedUsers = async () => {
   return result.rows[0]
 }
 
+const assignEmployeeTemplates = async (employees, templates) => {
+  const templatesByPosition = {}
+  for (const t of templates) {
+    if (!templatesByPosition[t.position]) templatesByPosition[t.position] = []
+    templatesByPosition[t.position].push(t)
+  }
+  for (const emp of employees) {
+    const candidates = templatesByPosition[emp.position] || []
+    if (candidates.length > 0) {
+      await pool.query('UPDATE employees SET template_id = $1 WHERE id = $2', [candidates[0].id, emp.id])
+    }
+  }
+}
+
 const main = async () => {
   try {
     const existing = await pool.query('SELECT COUNT(*)::int FROM sites')
@@ -747,11 +827,17 @@ const main = async () => {
     const sites = await seedSites()
     log.info({ count: sites.length }, 'Sites seeded')
 
+    const itemTypes = await seedItemTypes()
+    log.info({ count: itemTypes.length }, 'Item types seeded')
+
+    const templates = await seedNormTemplates(itemTypes)
+    log.info({ count: templates.length }, 'Norm templates seeded')
+
     const employees = await seedEmployees(sites)
     log.info({ count: employees.length }, 'Employees seeded')
 
-    const itemTypes = await seedItemTypes()
-    log.info({ count: itemTypes.length }, 'Item types seeded')
+    await assignEmployeeTemplates(employees, templates)
+    log.info('Employee norm templates assigned')
 
     const certs = await seedCertificates(itemTypes)
     log.info({ count: certs.length }, 'Certificates seeded')

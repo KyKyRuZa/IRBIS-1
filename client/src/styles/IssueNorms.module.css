@@ -71,6 +71,10 @@
   margin-top: 20px;
 }
 
+.etnPointCell {
+  min-width: 120px;
+}
+
 .error {
   color: red;
 }

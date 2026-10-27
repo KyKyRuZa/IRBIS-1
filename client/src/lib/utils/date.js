@@ -32,11 +32,8 @@ export function parseDateInput(value) {
   if (!value) return ''
   const parts = value.split('.')
   if (parts.length !== 3) return value
-  const [day, month, year] = parts.map(Number)
-  if (day.length === 2 && month.length === 2 && year.length === 4) {
-    return `${year}-${month}-${day}`
-  }
-  return value
+  const [day, month, year] = parts
+  return `${year}-${month}-${day}`
 }
 
 export function isValidDate(value) {

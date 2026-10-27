@@ -1,4 +1,5 @@
 import pool from './db.js'
+import { getTemplateNormsForEmployee } from './normTemplateModel.js'
 
 /** Columns of `issue_norms` that may be written through the API. */
 const NORM_COLUMNS = [
@@ -113,6 +114,11 @@ export async function getAllIssueNorms() {
 }
 
 export async function getNormsForEmployee(employee) {
+  if (employee && employee.template_id) {
+    const templateNorms = await getTemplateNormsForEmployee(employee)
+    if (templateNorms && templateNorms.length > 0) return templateNorms
+  }
+
   const result = await pool.query(
     `
     SELECT n.*, it.name as item_type_name, it.category

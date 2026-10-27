@@ -141,6 +141,13 @@ export default function EmployeeCard() {
                   <strong>Размер СИЗ рук:</strong> {employee.gloves_size || '-'}
                 </p>
                 <p>
+                  <strong>Шаблон норм:</strong>{' '}
+                  {employee.template_id
+                    ? employee.templates?.find((t) => t.id === Number(employee.template_id))?.name ||
+                      `#${employee.template_id}`
+                    : 'Не назначен'}
+                </p>
+                <p>
                   <strong>Статус:</strong>{' '}
                   {normalizeEmployeeStatus(employee.status) === EMPLOYEE_STATUS_VALUES.active ? (
                     <span className={styles.statusBadgeActive}>{EMPLOYEE_STATUSES.active}</span>
@@ -259,6 +266,7 @@ export default function EmployeeCard() {
                     <thead>
                       <tr>
                         <th>Наименование</th>
+                        <th>Пункт нормы ЕТН</th>
                         <th>Периодичность</th>
                         <th>Кол-во</th>
                       </tr>
@@ -269,6 +277,7 @@ export default function EmployeeCard() {
                         .map((norm) => (
                           <tr key={norm.id}>
                             <td>{norm.item_type_name}</td>
+                            <td>{norm.etn_point || '-'}</td>
                             <td>{norm.period_months} мес</td>
                             <td>{norm.quantity}</td>
                           </tr>

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { employeesService } from '@/lib/services/employees.service.js'
 import { sitesService } from '@/lib/services/sites.service.js'
+import { normTemplatesService } from '@/lib/services/normTemplates.service.js'
 import { useAuth } from '@/hooks/useAuth.js'
 import { fromDateInput, parseDateInput, dateMaskInput } from '@/lib/utils/date.js'
 import { useResource } from '@/hooks/useResource.js'
@@ -35,7 +36,6 @@ export default function EmployeeList() {
     full_name: '',
     position: '',
     site_id: '',
-    gender: '',
     hire_date: '',
     clothing_size: '',
     shoe_size: '',
@@ -45,8 +45,10 @@ export default function EmployeeList() {
     gloves_size: '',
     height: '',
     position_change_date: '',
+    template_id: '',
   })
   const [sites, setSites] = useState([])
+  const [availableTemplates, setAvailableTemplates] = useState([])
   const [terminateId, setTerminateId] = useState(null)
   const [deleteId, setDeleteId] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
@@ -90,6 +92,13 @@ export default function EmployeeList() {
   }, [])
 
   useEffect(() => {
+    normTemplatesService
+      .list()
+      .then(setAvailableTemplates)
+      .catch(() => setAvailableTemplates([]))
+  }, [])
+
+  useEffect(() => {
     setCurrentPage(1)
   }, [searchApplied, filters])
 
@@ -107,11 +116,16 @@ export default function EmployeeList() {
       return
     }
     try {
-      const payload = {
-        ...result.data,
-        hire_date: parseDateInput(result.data.hire_date),
-        position_change_date: parseDateInput(result.data.position_change_date),
-      }
+       const payload = {
+         ...result.data,
+         hire_date: parseDateInput(result.data.hire_date),
+         position_change_date: parseDateInput(result.data.position_change_date),
+       }
+       if (result.data.template_id) {
+         payload.template_id = Number(result.data.template_id)
+       } else {
+         payload.template_id = null
+       }
       if (editingEmployee) {
         await employeesService.update(editingEmployee.id, payload)
         setEditingEmployee(null)
@@ -124,7 +138,6 @@ export default function EmployeeList() {
         full_name: '',
         position: '',
         site_id: '',
-        gender: '',
         hire_date: '',
         clothing_size: '',
         shoe_size: '',
@@ -134,6 +147,7 @@ export default function EmployeeList() {
         gloves_size: '',
         height: '',
         position_change_date: '',
+        template_id: '',
       })
       setShowModal(false)
       refetchEmployees()
@@ -148,7 +162,6 @@ export default function EmployeeList() {
       full_name: emp.full_name,
       position: emp.position,
       site_id: emp.site_id != null ? String(emp.site_id) : '',
-      gender: emp.gender || '',
       hire_date: fromDateInput(emp.hire_date),
       clothing_size: emp.clothing_size || '',
       shoe_size: emp.shoe_size || '',
@@ -158,6 +171,7 @@ export default function EmployeeList() {
       gloves_size: emp.gloves_size || '',
       height: emp.height || '',
       position_change_date: fromDateInput(emp.position_change_date),
+      template_id: emp.template_id != null ? String(emp.template_id) : '',
     })
     setShowModal(true)
   }
@@ -183,22 +197,22 @@ export default function EmployeeList() {
   const handleClose = () => {
     setShowModal(false)
     setEditingEmployee(null)
-    setFormData({
-      full_name: '',
-      position: '',
-      site_id: '',
-      gender: '',
-      hire_date: '',
-      clothing_size: '',
-      shoe_size: '',
-      personnel_number: '',
-      hat_size: '',
-      respirator_size: '',
-      gloves_size: '',
-      height: '',
-      position_change_date: '',
-    })
-    setFieldErrors({})
+      setFormData({
+        full_name: '',
+        position: '',
+        site_id: '',
+        hire_date: '',
+        clothing_size: '',
+        shoe_size: '',
+        personnel_number: '',
+        hat_size: '',
+        respirator_size: '',
+        gloves_size: '',
+        height: '',
+        position_change_date: '',
+        template_id: '',
+      })
+      setFieldErrors({})
   }
 
   const normalizedEmployees = useMemo(
@@ -536,18 +550,6 @@ export default function EmployeeList() {
           </div>
           <div className={`${styles.formRow} ${styles['formRow--three']}`}>
             <div className={`form-group ${styles.field}`}>
-              <label>Пол</label>
-              <select
-                className="form-control"
-                value={formData.gender}
-                onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-              >
-                <option value="">Выберите пол</option>
-                <option value="male">Мужской</option>
-                <option value="female">Женский</option>
-              </select>
-            </div>
-            <div className={`form-group ${styles.field}`}>
               <label>Табельный номер</label>
               <input
                 type="text"
@@ -572,6 +574,40 @@ export default function EmployeeList() {
               </select>
             </div>
           </div>
+
+          {availableTemplates.length > 0 && (
+            <div className={styles.formRow}>
+              <div className={`form-group ${styles.field}`}>
+                <label>Шаблон норм</label>
+                <select
+                  className="form-control"
+                  value={formData.template_id}
+                  onChange={(e) =>
+                    setFormData({ ...formData, template_id: e.target.value ? String(e.target.value) : '' })
+                  }
+                  aria-invalid={Boolean(fieldErrors.template_id)}
+                  aria-describedby={fieldErrors.template_id ? 'template-error' : undefined}
+                >
+                  <option value="">Выберите шаблон</option>
+                  {availableTemplates.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+                {availableTemplates.length === 0 && (
+                  <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '4px' }}>
+                    Нет доступных шаблонов
+                  </div>
+                )}
+                {fieldErrors.template_id && (
+                  <div id="template-error" className={styles.fieldError} role="alert">
+                    {fieldErrors.template_id}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className={styles.sectionLabel}>СИЗ</div>
           <div className={`${styles.formRow} ${styles['formRow--three']}`}>

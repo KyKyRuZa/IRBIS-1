@@ -11,6 +11,7 @@ const EmployeeList = lazy(() => import('@features/employees/EmployeeList.jsx'))
 const EmployeeCard = lazy(() => import('@features/employees/EmployeeCard.jsx'))
 const ItemCatalog = lazy(() => import('@features/items/ItemCatalog.jsx'))
 const IssueNorms = lazy(() => import('@features/issues/IssueNorms.jsx'))
+const NormTemplates = lazy(() => import('@features/normTemplates/NormTemplates.jsx'))
 const IssueForm = lazy(() => import('@features/issues/IssueForm.jsx'))
 const Certificates = lazy(() => import('@features/certificates/Certificates.jsx'))
 const Reports = lazy(() => import('@features/reports/Reports.jsx'))
@@ -114,6 +115,14 @@ function AppContent() {
               element={
                 <AdminRoute>
                   <IssueNorms />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/norm-templates"
+              element={
+                <AdminRoute>
+                  <NormTemplates />
                 </AdminRoute>
               }
             />

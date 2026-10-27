@@ -201,6 +201,7 @@ export const normSchema = z.object({
     .optional()
     .nullable(),
   position: z.string().optional().nullable(),
+  etn_point: z.string().optional().nullable(),
 })
 
 export const certificateSchema = z.object({
@@ -247,6 +248,7 @@ export const employeeSchema = z.object({
     .optional()
     .nullable(),
   position_change_date: z.string().optional().nullable(),
+  template_id: z.string().optional().nullable(),
 })
 
 export const siteSchema = z.object({
@@ -286,6 +288,39 @@ export const formUpdateSchema = z.object({
 export const formTakeSchema = z.object({
   employee_id: z.string().min(1, 'Выберите сотрудника'),
   form_id: z.string().min(1, 'Выберите форму'),
+})
+
+export const normTemplateSchema = z.object({
+  name: z.string().min(1, 'Введите название шаблона'),
+  position: z.string().min(1, 'Введите должность'),
+  site_id: z.string().optional().nullable(),
+})
+
+export const normTemplateItemSchema = z.object({
+  item_type_id: z.string().min(1, 'Выберите наименование'),
+  period_months: z.coerce
+    .number({
+      error: (issue) =>
+        issue.input === undefined || issue.input === ''
+          ? 'Периодичность должна быть числом'
+          : 'Периодичность должна быть числом',
+    })
+    .int('Периодичность должна быть целым')
+    .positive('Периодичность должна быть больше 0'),
+  quantity: z.coerce
+    .number({
+      error: (issue) =>
+        issue.input === undefined || issue.input === ''
+          ? 'Количество должно быть числом'
+          : 'Количество должно быть числом',
+    })
+    .int('Количество должно быть целым')
+    .positive('Количество должно быть больше 0')
+    .optional()
+    .nullable(),
+  etn_point: z.string().optional().nullable(),
+  period_text: z.string().optional().nullable(),
+  seasonality: z.string().optional().nullable(),
 })
 
 export const loginSchema = z.object({

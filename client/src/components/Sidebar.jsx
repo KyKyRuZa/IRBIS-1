@@ -9,6 +9,7 @@ const ADMIN_LINKS = [
   { to: '/objects', label: 'Объекты', icon: 'objects' },
   { to: '/items', label: 'Номенклатура', icon: 'items' },
   { to: '/norms', label: 'Нормы выдачи', icon: 'norms' },
+  { to: '/norm-templates', label: 'Шаблоны норм', icon: 'fileText' },
   { to: '/issue', label: 'Выдача', icon: 'issue' },
   { to: '/certificates', label: 'Сертификаты', icon: 'certificates' },
   { to: '/forms', label: 'Учёт форм', icon: 'forms' },

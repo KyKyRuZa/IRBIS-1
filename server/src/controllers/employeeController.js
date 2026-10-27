@@ -10,6 +10,7 @@ import {
   getEmployeesWithSizesBySite,
 } from '../models/employeeModel.js'
 import { getNormsForEmployee } from '../models/issueNormModel.js'
+import { getNormTemplatesByPosition } from '../models/normTemplateModel.js'
 import { getIssueRecordsByEmployee } from '../models/issueRecordModel.js'
 import pool from '../models/db.js'
 import { EmployeeSchema } from '../validation/index.js'
@@ -20,7 +21,7 @@ export async function registerEmployee(req, res, next) {
     const employee = await createEmployee(
       data.full_name,
       data.position,
-       data.site_id === '' || data.site_id === null || data.site_id === undefined ? null : Number(data.site_id),
+      data.site_id === '' || data.site_id === null || data.site_id === undefined ? null : Number(data.site_id),
       data.gender || null,
       data.hire_date || null,
       data.clothing_size || null,
@@ -30,7 +31,8 @@ export async function registerEmployee(req, res, next) {
       data.hat_size || null,
       data.respirator_size || null,
       data.gloves_size || null,
-      data.position_change_date || null
+      data.position_change_date || null,
+      data.template_id || null
     )
     res.status(201).json(employee)
   } catch (error) {
@@ -89,12 +91,13 @@ export async function getEmployee(req, res, next) {
     const employee = await getEmployeeById(req.params.id)
     if (!employee) return res.status(404).json({ error: 'Сотрудник не найден' })
 
-    const [norms, history] = await Promise.all([
+    const [norms, history, templates] = await Promise.all([
       getNormsForEmployee(employee),
       getIssueRecordsByEmployee(req.params.id),
+      getNormTemplatesByPosition(employee.position, employee.gender),
     ])
 
-    res.json({ ...employee, norms, history })
+    res.json({ ...employee, norms, history, templates })
   } catch (error) {
     log.error(error)
     next(error)

@@ -1,6 +1,6 @@
 import {
   Users,
-  ClipboardList,
+   ClipboardList,
   Building2,
   Package,
   PackageOpen,
@@ -52,6 +52,7 @@ import styles from '@styles/Icon.module.css'
 
 const ICONS = {
   users: Users,
+  clipboardList: ClipboardList,
   issue: ClipboardList,
   objects: Building2,
   items: Package,

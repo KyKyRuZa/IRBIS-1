@@ -13,16 +13,17 @@ export async function createEmployee(
   hatSize,
   respiratorSize,
   glovesSize,
-  positionChangeDate
+  positionChangeDate,
+  templateId = null
 ) {
   const sanitize = (v) => (v === '' || v === undefined || v === null ? null : v)
   const result = await pool.query(
-    `INSERT INTO employees (full_name, position, site_id, gender, hire_date, clothing_size, shoe_size, height, personnel_number, hat_size, respirator_size, gloves_size, position_change_date) 
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *`,
+    `INSERT INTO employees (full_name, position, site_id, gender, hire_date, clothing_size, shoe_size, height, personnel_number, hat_size, respirator_size, gloves_size, position_change_date, template_id) 
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`,
     [
       fullName,
       position,
-       sanitize(siteId) && siteId !== '' && siteId !== undefined && siteId !== null ? Number(siteId) : null,
+      sanitize(siteId) && siteId !== '' && siteId !== undefined && siteId !== null ? Number(siteId) : null,
       sanitize(gender),
       sanitize(hireDate),
       sanitize(clothingSize),
@@ -33,6 +34,7 @@ export async function createEmployee(
       sanitize(respiratorSize),
       sanitize(glovesSize),
       sanitize(positionChangeDate),
+      templateId && templateId !== '' && templateId !== undefined ? Number(templateId) : null,
     ]
   )
   return result.rows[0]
@@ -102,9 +104,15 @@ export async function updateEmployee(id, data) {
     respirator_size:
       data.respirator_size !== undefined ? sanitize(data.respirator_size) : undefined,
     gloves_size: data.gloves_size !== undefined ? sanitize(data.gloves_size) : undefined,
-    position_change_date:
-      data.position_change_date !== undefined ? sanitize(data.position_change_date) : undefined,
-  }
+  position_change_date:
+    data.position_change_date !== undefined ? sanitize(data.position_change_date) : undefined,
+  template_id:
+    data.template_id !== undefined && data.template_id !== '' && data.template_id !== null
+      ? Number(data.template_id)
+      : data.template_id === undefined
+        ? undefined
+        : null,
+}
   const entries = Object.entries(map).filter(([, v]) => v !== undefined)
   if (entries.length === 0) {
     const r = await pool.query(

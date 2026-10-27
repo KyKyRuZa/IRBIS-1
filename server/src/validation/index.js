@@ -83,6 +83,9 @@ export const EmployeeSchema = z.object({
   respirator_size: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
   gloves_size: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
   position_change_date: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+  template_id: z
+    .preprocess(toNumNull, z.union([z.number().int('Некорректный шаблон').positive('Некорректный шаблон'), z.null()]))
+    .optional(),
 })
 
 
@@ -265,6 +268,9 @@ export const EmployeeUpdateSchema = EmployeeSchema.partial().extend({
     z.union([z.number().int('Некорректный объект').positive('Некорректный объект'), z.null()])
   ).optional(),
   status: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+  template_id: z
+    .preprocess(toNumNull, z.union([z.number().int('Некорректный шаблон').positive('Некорректный шаблон'), z.null()]))
+    .optional(),
 })
 
 export const SiteUpdateSchema = SiteSchema.partial()
@@ -397,4 +403,37 @@ export const EmployeeListQuerySchema = z.object({
   site_id: z.coerce.number().int().positive().optional(),
   page: z.coerce.number().int().catch(() => 1).optional(),
   limit: z.coerce.number().int().catch(() => 50).optional(),
+})
+
+export const NormTemplateSchema = z.object({
+  name: z.string().min(1, 'Введите название шаблона'),
+  position: z.string().min(1, 'Введите должность'),
+  site_id: z
+    .preprocess(
+      toNumNull,
+      z.union([z.number().int('Некорректный объект').positive('Некорректный объект'), z.null()])
+    )
+    .optional(),
+})
+
+export const NormTemplateUpdateSchema = NormTemplateSchema.partial()
+
+export const NormTemplateItemSchema = z.object({
+  item_type_id: z.preprocess(toNum, z.number().int().positive('Некорректная позиция')),
+  period_months: z.preprocess(
+    toNum,
+    z
+      .number()
+      .int('Периодичность должна быть целым числом')
+      .positive('Периодичность должна быть больше 0')
+      .optional()
+      .nullable(),
+  ),
+  quantity: z
+    .preprocess(toNum, z.number().int('Количество должно быть целым числом').positive('Количество должно быть больше 0'))
+    .optional()
+    .nullable(),
+  etn_point: z.string().optional().nullable(),
+  period_text: z.string().optional().nullable(),
+  seasonality: z.string().optional().nullable(),
 })

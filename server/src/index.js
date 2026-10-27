@@ -8,6 +8,7 @@ import employeeRoutes from './routes/employeeRoutes.js'
 import siteRoutes from './routes/siteRoutes.js'
 import itemTypeRoutes from './routes/itemTypeRoutes.js'
 import issueNormRoutes from './routes/issueNormRoutes.js'
+import normTemplateRoutes from './routes/normTemplateRoutes.js'
 import issueRecordRoutes from './routes/issueRecordRoutes.js'
 import certificateRoutes from './routes/certificateRoutes.js'
 import reportRoutes from './routes/reportRoutes.js'
@@ -137,6 +138,7 @@ app.use('/api/employees', employeeRoutes)
 app.use('/api/sites', siteRoutes)
 app.use('/api/items', itemTypeRoutes)
 app.use('/api/norms', issueNormRoutes)
+app.use('/api/norm-templates', normTemplateRoutes)
 app.use('/api/issues', issueRecordRoutes)
 app.use('/api/certificates', certificateRoutes)
 app.use('/api/reports', reportRoutes)
