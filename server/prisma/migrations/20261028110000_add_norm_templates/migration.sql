@@ -2,7 +2,6 @@
 CREATE TABLE IF NOT EXISTS "norm_templates" (
     "id" SERIAL NOT NULL,
     "name" VARCHAR(255) NOT NULL,
-    "position" VARCHAR(255) NOT NULL,
     "gender" VARCHAR(20),
     "site_id" INTEGER,
     "created_at" TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP,
@@ -25,8 +24,11 @@ CREATE TABLE IF NOT EXISTS "norm_template_items" (
     CONSTRAINT "norm_template_items_pkey" PRIMARY KEY ("id")
 );
 
+-- Drop legacy position column if it exists (position was removed from schema)
+ALTER TABLE "norm_templates" DROP COLUMN IF EXISTS "position";
+DROP INDEX IF EXISTS "norm_templates_position_idx";
+
 -- CreateIndex
-CREATE INDEX IF NOT EXISTS "norm_templates_position_idx" ON "norm_templates"("position");
 CREATE INDEX IF NOT EXISTS "norm_templates_site_id_idx" ON "norm_templates"("site_id");
 CREATE INDEX IF NOT EXISTS "norm_template_items_template_id_idx" ON "norm_template_items"("template_id");
 CREATE INDEX IF NOT EXISTS "norm_template_items_item_type_id_idx" ON "norm_template_items"("item_type_id");
