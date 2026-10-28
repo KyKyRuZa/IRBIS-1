@@ -2,7 +2,6 @@ import pool from './db.js'
 
 const TEMPLATE_COLUMNS = [
   'name',
-  'position',
   'site_id',
 ]
 
@@ -14,7 +13,7 @@ export async function getAllNormTemplates() {
     LEFT JOIN sites s ON t.site_id = s.id
     LEFT JOIN norm_template_items ti ON ti.template_id = t.id
     GROUP BY t.id, s.name
-    ORDER BY t.position, t.name
+    ORDER BY t.name
   `)
   return result.rows
 }
@@ -155,20 +154,6 @@ export async function deleteNormTemplateItem(id) {
   }
   const result = await pool.query('DELETE FROM norm_template_items WHERE id = $1 RETURNING *', [parsedId])
   return result.rows[0] || null
-}
-
-export async function getNormTemplatesByPosition(position) {
-  const result = await pool.query(
-    `
-    SELECT t.*, s.name as site_name
-    FROM norm_templates t
-    LEFT JOIN sites s ON t.site_id = s.id
-    WHERE t.position = $1
-    ORDER BY t.name
-  `,
-    [position]
-  )
-  return result.rows
 }
 
 export async function getTemplateNormsForEmployee(employee) {
