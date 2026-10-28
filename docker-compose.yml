@@ -2,6 +2,7 @@ services:
   postgres:
     image: postgres:17-alpine
     environment:
+      TZ: Europe/Moscow
       POSTGRES_DB: ${DB_NAME:-irbis}
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
@@ -24,12 +25,16 @@ services:
   pgbouncer:
     image: edoburu/pgbouncer:v1.25.1-p0
     environment:
+      - TZ=Europe/Moscow
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_USER=${DB_USER:-postgres}
       - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required}
       - DB_DATABASE=${DB_NAME:-irbis}
       - AUTH_TYPE=scram-sha-256
+      - VERBOSE=0
+    volumes:
+      - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -42,14 +47,16 @@ services:
     logging:
       driver: json-file
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: "5m"
+        max-file: "2"
+        labels: "pgbouncer"
     mem_limit: 128m
     cpus: 0.5
 
   redis:
     image: redis:8.2.6-alpine
     environment:
+      - TZ=Europe/Moscow
       - REDIS_PASSWORD=${REDIS_PASSWORD:?REDIS_PASSWORD is required}
     command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
     healthcheck:
@@ -110,6 +117,8 @@ services:
     build:
       context: .
       dockerfile: nginx/Dockerfile
+    environment:
+      - TZ=Europe/Moscow
     ports:
       - "80:80"
       - "443:443"

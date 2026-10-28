@@ -3,6 +3,8 @@ node_modules
 .env.*
 !.env.example
 
+pgbouncer/pgbouncer.ini
+
 uploads/
 dist/
 coverage/
@@ -20,3 +22,24 @@ Thumbs.db
 # Generated local docs
 NEXT.md
 ONBOARDING.md
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Docker
+*.pid
+.dockerignore.local
+
+# Environment variants
+.env.local
+.env.development
+.env.staging
+.env.production
+
+# Database
+*.db
+*.sqlite
+*.sqlite3

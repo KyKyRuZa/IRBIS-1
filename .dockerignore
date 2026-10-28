@@ -28,3 +28,6 @@ ONBOARDING.md
 **/coverage
 **/tests
 **/uploads
+
+# Service configs (mounted at runtime, not in image)
+pgbouncer/pgbouncer.ini
