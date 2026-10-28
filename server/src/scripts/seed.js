@@ -405,16 +405,19 @@ const seedItemTypes = async () => {
     },
   ]
   const result = []
-  for (const i of items) {
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i]
+    const etnPoint = 'п. ' + (100 + i + 1) + ' прил.1'
     const r = await pool.query(
-      'INSERT INTO item_types (name, category, unit, default_wear_time_months, seasonality, requires_certificate) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      'INSERT INTO item_types (name, category, unit, default_wear_time_months, seasonality, requires_certificate, etn_point) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
       [
-        i.name,
-        i.category,
-        i.unit,
-        i.default_wear_time_months,
-        i.seasonality,
-        i.requires_certificate,
+        item.name,
+        item.category,
+        item.unit,
+        item.default_wear_time_months,
+        item.seasonality,
+        item.requires_certificate,
+        etnPoint,
       ]
     )
     result.push(r.rows[0])
@@ -574,7 +577,7 @@ const seedNormTemplates = async (itemTypes) => {
         ' ' +
         item.itemType.unit +
         (item.period_months === 1 ? ' в год' : ' в ' + item.period_months + ' мес.')
-      const etnPoint = 'п. ' + (100 + itemTypes.indexOf(item.itemType) + 1) + ' прил.1'
+      const etnPoint = item.itemType.etn_point || 'п. ' + (100 + itemTypes.indexOf(item.itemType) + 1) + ' прил.1'
       const r = await pool.query(
         'INSERT INTO norm_template_items (template_id, item_type_id, period_months, quantity, etn_point, period_text, seasonality) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
         [template.id, item.itemType.id, item.period_months, item.quantity, etnPoint, periodText, item.itemType.seasonality]
@@ -608,7 +611,7 @@ const seedIssueNorms = async (itemTypes) => {
       for (const item of itemTypes) {
         const periodMonths = item.default_wear_time_months || 12
         const quantity = item.category === 'consumable' ? 1 : 1
-        const etnPoint = 'п. ' + (100 + itemTypes.indexOf(item) + 1) + ' прил.1'
+        const etnPoint = item.etn_point || 'п. ' + (100 + itemTypes.indexOf(item) + 1) + ' прил.1'
         const periodText =
           quantity +
           ' ' +

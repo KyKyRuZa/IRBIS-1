@@ -285,6 +285,10 @@
   margin-right: 5px;
 }
 
+.etnCell {
+  min-width: 120px;
+}
+
 .error {
   color: red;
 }

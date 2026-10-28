@@ -2,7 +2,8 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import pool from '../../models/db.js'
 import { logger } from '../../utils/logger.js'
-import { buildCardData, matchNorms, renderTemplate } from './employeeCardHelpers.js'
+import { getNormsForEmployee } from '../../models/issueNormModel.js'
+import { buildCardData, renderTemplate } from './employeeCardHelpers.js'
 import { ZipArchive } from 'archiver'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -20,16 +21,8 @@ export async function exportAllCards(req, res, next) {
     )
     const employees = result.rows
 
-    let allNorms = []
     const historyByEmp = new Map()
     if (employees.length > 0) {
-      const normsRes = await pool.query(`
-        SELECT n.*, it.name as item_type_name, it.category
-        FROM issue_norms n
-        JOIN item_types it ON n.item_type_id = it.id
-      `)
-      allNorms = normsRes.rows
-
       const histRes = await pool.query(
         `
         SELECT r.*, it.name as item_type_name, it.category, c.certificate_number
@@ -66,9 +59,10 @@ export async function exportAllCards(req, res, next) {
     const templatePath = path.join(__dirname, '..', '..', 'templates', 'card-template.docx')
 
     for (const emp of employees) {
+      const norms = await getNormsForEmployee(emp)
       const data = await buildCardData(
         emp,
-        matchNorms(emp, allNorms),
+        norms,
         historyByEmp.get(emp.id) || []
       )
 

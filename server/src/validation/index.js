@@ -217,6 +217,7 @@ export const ItemTypeSchema = z.object({
     .nullable(),
   seasonality: z.string().optional().nullable(),
   requires_certificate: z.preprocess(toBool, z.boolean()).optional(),
+  etn_point: z.string().optional().nullable(),
 })
 
 export const FormSchema = z.object({
@@ -285,6 +286,7 @@ export const ItemTypeUpdateSchema = z.object({
     .nullable(),
   seasonality: z.string().optional().nullable(),
   requires_certificate: z.preprocess(toBool, z.boolean()).optional(),
+  etn_point: z.string().optional().nullable(),
 })
 
 export const IssueNormUpdateSchema = IssueNormSchema.partial()

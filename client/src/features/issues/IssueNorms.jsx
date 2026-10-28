@@ -32,7 +32,6 @@ export default function IssueNorms() {
     period_months: '',
     quantity: 1,
     position: '',
-    etn_point: '',
   })
 
   const { data: norms, loading, error, refetch } = useResource(normsService.list, {}, {
@@ -95,7 +94,7 @@ export default function IssueNorms() {
         await normsService.create(result.data)
         showSuccess('Норма добавлена')
       }
-      setFormData({ item_type_id: '', period_months: '', quantity: 1, position: '', etn_point: '' })
+      setFormData({ item_type_id: '', period_months: '', quantity: 1, position: '' })
       setShowModal(false)
       refetch()
     } catch (err) {
@@ -111,7 +110,6 @@ export default function IssueNorms() {
       period_months: norm.period_months || '',
       quantity: norm.quantity || 1,
       position: norm.position || '',
-      etn_point: norm.etn_point || '',
     })
     setShowModal(true)
   }
@@ -131,7 +129,7 @@ export default function IssueNorms() {
     setShowModal(false)
     setEditingNorm(null)
     setSubmitError('')
-    setFormData({ item_type_id: '', period_months: '', quantity: 1, position: '', etn_point: '' })
+    setFormData({ item_type_id: '', period_months: '', quantity: 1, position: '' })
   }
 
   const filteredNorms = useMemo(() => {
@@ -304,14 +302,13 @@ export default function IssueNorms() {
                   <table className={`table ${styles.tableWrapper}`}>
                     <thead>
                       <tr>
-                        <SortableTh
+                          <SortableTh
                            label="Наименование"
                            sortKey="item_type_name"
                            sort={sort}
                            onSort={toggleSort}
-                         />
-                        <th className={styles.etnPointCell}>Пункт норм ЕТН</th>
-                        <SortableTh
+                          />
+                         <SortableTh
                            label="Периодичность"
                            sortKey="period_months"
                            sort={sort}
@@ -330,7 +327,6 @@ export default function IssueNorms() {
                       {paginatedNorms.map((norm) => (
                                                 <tr key={norm.id}>
                           <td>{norm.item_type_name}</td>
-                          <td>{norm.etn_point || '-'}</td>
                           <td>{norm.period_months} мес</td>
                            <td>{norm.quantity}</td>
                           <td>
@@ -415,15 +411,6 @@ export default function IssueNorms() {
                 className="form-control"
                 value={formData.quantity}
                 onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-              />
-            </div>
-            <div className={`form-group ${styles.field}`}>
-              <label>Пункт норм ЕТН</label>
-              <input
-                type="text"
-                className="form-control"
-                value={formData.etn_point}
-                onChange={(e) => setFormData({ ...formData, etn_point: e.target.value })}
               />
             </div>
           </div>

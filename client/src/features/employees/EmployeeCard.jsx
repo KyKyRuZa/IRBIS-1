@@ -277,7 +277,7 @@ export default function EmployeeCard() {
                         .map((norm) => (
                           <tr key={norm.id}>
                             <td>{norm.item_type_name}</td>
-                            <td>{norm.etn_point || '-'}</td>
+                            <td>{norm.item_type_etn_point || '-'}</td>
                             <td>{norm.period_months} мес</td>
                             <td>{norm.quantity}</td>
                           </tr>

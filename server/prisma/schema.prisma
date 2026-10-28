@@ -61,6 +61,7 @@ model ItemType {
   defaultWearTimeMonths Int?          @map("default_wear_time_months")
   seasonality           String?       @db.VarChar(50)
   requiresCertificate   Boolean?      @default(false) @map("requires_certificate")
+  etnPoint              String?       @map("etn_point") @db.VarChar(255)
   certificates          Certificate[]
   issueNorms            IssueNorm[]
   issueRecords          IssueRecord[]

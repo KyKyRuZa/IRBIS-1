@@ -201,7 +201,6 @@ export const normSchema = z.object({
     .optional()
     .nullable(),
   position: z.string().optional().nullable(),
-  etn_point: z.string().optional().nullable(),
 })
 
 export const certificateSchema = z.object({
@@ -273,6 +272,7 @@ export const itemSchema = z.object({
     .nullable(),
   seasonality: z.string().optional().nullable(),
   requires_certificate: z.boolean().optional(),
+  etn_point: z.string().optional().nullable(),
 })
 
 export const formTrackerSchema = z.object({
@@ -318,7 +318,6 @@ export const normTemplateItemSchema = z.object({
     .positive('Количество должно быть больше 0')
     .optional()
     .nullable(),
-  etn_point: z.string().optional().nullable(),
   period_text: z.string().optional().nullable(),
   seasonality: z.string().optional().nullable(),
 })

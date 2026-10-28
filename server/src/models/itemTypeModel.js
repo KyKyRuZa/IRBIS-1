@@ -6,11 +6,12 @@ export async function createItemType(
   unit,
   defaultWearTimeMonths,
   seasonality,
-  requiresCertificate
+  requiresCertificate,
+  etnPoint
 ) {
   const result = await pool.query(
-    'INSERT INTO item_types (name, category, unit, default_wear_time_months, seasonality, requires_certificate) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-    [name, category, unit, defaultWearTimeMonths, seasonality, requiresCertificate]
+    'INSERT INTO item_types (name, category, unit, default_wear_time_months, seasonality, requires_certificate, etn_point) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+    [name, category, unit, defaultWearTimeMonths, seasonality, requiresCertificate, etnPoint]
   )
   return result.rows[0]
 }
@@ -33,6 +34,7 @@ export async function updateItemType(id, data) {
     default_wear_time_months: data.default_wear_time,
     seasonality: data.seasonality,
     requires_certificate: data.requires_certificate,
+    etn_point: data.etn_point,
   }
   const entries = Object.entries(fields).filter(([, v]) => v !== undefined)
   if (entries.length === 0) {

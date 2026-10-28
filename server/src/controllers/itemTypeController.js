@@ -11,7 +11,7 @@ import pool from '../models/db.js'
 
 export async function addItem(req, res, next) {
   try {
-    const { name, category, unit, default_wear_time, seasonality, requires_certificate } = req.body
+    const { name, category, unit, default_wear_time, seasonality, requires_certificate, etn_point } = req.body
     if (!name || !category) {
       return res.status(400).json({ error: 'name и category обязательны' })
     }
@@ -21,7 +21,8 @@ export async function addItem(req, res, next) {
       unit,
       default_wear_time,
       seasonality,
-      requires_certificate
+      requires_certificate,
+      etn_point
     )
     res.status(201).json(item)
   } catch (error) {

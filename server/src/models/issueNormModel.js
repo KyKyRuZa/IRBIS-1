@@ -121,7 +121,7 @@ export async function getNormsForEmployee(employee) {
 
   const result = await pool.query(
     `
-    SELECT n.*, it.name as item_type_name, it.category
+    SELECT n.*, it.name as item_type_name, it.category, it.etn_point as item_type_etn_point
     FROM issue_norms n
     JOIN item_types it ON n.item_type_id = it.id
     WHERE (n.gender IS NULL OR n.gender = $1)

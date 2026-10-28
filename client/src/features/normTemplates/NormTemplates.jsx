@@ -380,7 +380,6 @@ export default function NormTemplates() {
                 <thead>
                   <tr>
                     <th className={styles.itemNameCell}>Наименование</th>
-                    <th className={styles.etnPointCell}>Пункт Норм ЕТН</th>
                     <th className={styles.periodCell}>Периодичность</th>
                     <th className={styles.qtyCell}>Кол-во</th>
                     <th className={styles.actionCell}>Действия</th>
@@ -390,7 +389,6 @@ export default function NormTemplates() {
                   {templateItems.map((item) => (
                     <tr key={item.id}>
                       <td>{item.item_type_name}</td>
-                      <td>{item.etn_point || '-'}</td>
                       <td>{item.period_months} мес</td>
                       <td>{item.quantity || 1}</td>
                       <td className={styles.actionCell}>

@@ -95,7 +95,7 @@ function groupNorms(norms, categories) {
     .filter((n) => categories.includes(n.category))
     .map((n) => ({
       name: n.item_type_name || '',
-      etnPoint: n.etn_point || '',
+      etnPoint: n.item_type_etn_point || '',
       period: n.period_text ? `${n.quantity} шт. в ${n.period_text}` : `${n.quantity} шт.`,
     }))
   return normRows.length > 0 ? normRows : [{ name: '', etnPoint: '', period: '' }]

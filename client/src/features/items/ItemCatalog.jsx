@@ -45,6 +45,7 @@ export default function ItemCatalog() {
     default_wear_time: '',
     seasonality: 'year_round',
     requires_certificate: false,
+    etn_point: '',
   })
 
   const { search, searchApplied, setSearch, filters, setFilter, sort, toggleSort, resetFilters } =
@@ -163,6 +164,7 @@ export default function ItemCatalog() {
         default_wear_time: '',
         seasonality: 'year_round',
         requires_certificate: false,
+        etn_point: '',
       })
       setShowModal(false)
       fetchItems()
@@ -180,6 +182,7 @@ export default function ItemCatalog() {
       default_wear_time: item.default_wear_time || '',
       seasonality: item.seasonality || 'year_round',
       requires_certificate: item.requires_certificate || false,
+      etn_point: item.etn_point || '',
     })
     setShowModal(true)
   }
@@ -391,6 +394,12 @@ export default function ItemCatalog() {
                           sort={sort}
                           onSort={toggleSort}
                         />
+                        <SortableTh
+                          label="Пункт ЕТН"
+                          sortKey="etn_point"
+                          sort={sort}
+                          onSort={toggleSort}
+                        />
                         <th>Сертификат</th>
                         <th>Действия</th>
                       </tr>
@@ -402,6 +411,7 @@ export default function ItemCatalog() {
                           <td>{categories[item.category]}</td>
                           <td>{item.default_wear_time || '-'}</td>
                           <td>{seasonality[item.seasonality] || '-'}</td>
+                          <td className={styles.etnCell}>{item.etn_point || '-'}</td>
                           <td>
                             {item.requires_certificate ? (
                               <span className="badge badge-warning">Требуется</span>
@@ -628,6 +638,16 @@ export default function ItemCatalog() {
                 <option value="winter">Зимняя</option>
                 <option value="summer">Летняя</option>
               </select>
+            </div>
+            <div className={`form-group ${styles.field}`}>
+              <label>Пункт ЕТН</label>
+              <input
+                type="text"
+                className="form-control"
+                value={formData.etn_point}
+                onChange={(e) => setFormData({ ...formData, etn_point: e.target.value })}
+                placeholder="напр. п. 101 прил.1"
+              />
             </div>
             <div className={`form-group ${styles.field}`}>
               <div className={styles.checkboxRow}>
