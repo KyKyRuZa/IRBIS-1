@@ -110,7 +110,6 @@ model IssueNorm {
 model NormTemplate {
   id          Int       @id @default(autoincrement())
   name        String    @db.VarChar(255)
-  position    String    @db.VarChar(255)
   gender      String?   @db.VarChar(20)
   siteId      Int?      @map("site_id")
   createdAt   DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
@@ -119,7 +118,6 @@ model NormTemplate {
   employees   Employee[]
   site        Site?     @relation(fields: [siteId], references: [id], onUpdate: NoAction)
 
-  @@index([position])
   @@index([siteId])
   @@map("norm_templates")
 }
