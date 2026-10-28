@@ -209,9 +209,7 @@ export const certificateSchema = z.object({
     .min(1, 'Введите наименование продукции'),
   certificate_number: z.string().optional().nullable(),
   issue_date: z.string().optional().nullable(),
-  expiry_date: z
-    .string({ error: () => 'Введите срок действия' })
-    .min(1, 'Введите срок действия'),
+  expiry_date: z.string({ error: () => 'Введите срок действия' }).min(1, 'Введите срок действия'),
   item_type_id: z
     .string({ error: () => 'Выберите позицию номенклатуру' })
     .min(1, 'Выберите позицию номенклатуру'),
@@ -221,13 +219,7 @@ export const employeeSchema = z.object({
   full_name: z.string().min(1, 'Введите ФИО'),
   position: z.string().min(1, 'Введите должность'),
   site_id: z.string().min(1, 'Выберите объект'),
-  gender: z
-    .enum(['male', 'female'], {
-      error: (issue) =>
-        issue.input === undefined || issue.input === '' ? 'Выберите пол' : 'Выберите пол из списка',
-    })
-    .optional()
-    .nullable(),
+  gender: z.string().optional().nullable(),
   hire_date: z.string().optional().nullable(),
   clothing_size: z.string().optional().nullable(),
   shoe_size: z.string().optional().nullable(),

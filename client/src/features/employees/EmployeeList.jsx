@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { employeesService } from '@/lib/services/employees.service.js'
 import { sitesService } from '@/lib/services/sites.service.js'
 import { normTemplatesService } from '@/lib/services/normTemplates.service.js'
@@ -30,12 +31,14 @@ import styles from '@styles/EmployeeList.module.css'
 export default function EmployeeList() {
   const { user, isAdmin } = useAuth()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [editingEmployee, setEditingEmployee] = useState(null)
   const [formData, setFormData] = useState({
     full_name: '',
     position: '',
     site_id: '',
+    gender: '',
     hire_date: '',
     clothing_size: '',
     shoe_size: '',
@@ -78,11 +81,9 @@ export default function EmployeeList() {
     error,
     pagination,
     refetch: refetchEmployees,
-  } = useResource(
-    employeesService.list,
-    queryParams,
-    { queryKey: ['employees', user?.id, queryParams] }
-  )
+  } = useResource(employeesService.list, queryParams, {
+    queryKey: ['employees', user?.id, queryParams],
+  })
 
   useEffect(() => {
     sitesService
@@ -116,16 +117,16 @@ export default function EmployeeList() {
       return
     }
     try {
-       const payload = {
-         ...result.data,
-         hire_date: parseDateInput(result.data.hire_date),
-         position_change_date: parseDateInput(result.data.position_change_date),
-       }
-       if (result.data.template_id) {
-         payload.template_id = Number(result.data.template_id)
-       } else {
-         payload.template_id = null
-       }
+      const payload = {
+        ...result.data,
+        hire_date: parseDateInput(result.data.hire_date),
+        position_change_date: parseDateInput(result.data.position_change_date),
+      }
+      if (result.data.template_id) {
+        payload.template_id = Number(result.data.template_id)
+      } else {
+        payload.template_id = null
+      }
       if (editingEmployee) {
         await employeesService.update(editingEmployee.id, payload)
         setEditingEmployee(null)
@@ -138,6 +139,7 @@ export default function EmployeeList() {
         full_name: '',
         position: '',
         site_id: '',
+        gender: '',
         hire_date: '',
         clothing_size: '',
         shoe_size: '',
@@ -151,6 +153,7 @@ export default function EmployeeList() {
       })
       setShowModal(false)
       refetchEmployees()
+      queryClient.invalidateQueries({ queryKey: ['employee', user?.id] })
     } catch (err) {
       handleValidationError(err, 'Не удалось сохранить сотрудника')
     }
@@ -162,6 +165,7 @@ export default function EmployeeList() {
       full_name: emp.full_name,
       position: emp.position,
       site_id: emp.site_id != null ? String(emp.site_id) : '',
+      gender: emp.gender || '',
       hire_date: fromDateInput(emp.hire_date),
       clothing_size: emp.clothing_size || '',
       shoe_size: emp.shoe_size || '',
@@ -184,6 +188,7 @@ export default function EmployeeList() {
     if (!terminateId) return
     await employeesService.terminate(terminateId)
     refetchEmployees()
+    queryClient.invalidateQueries({ queryKey: ['employee', user?.id] })
     setTerminateId(null)
   }
 
@@ -191,28 +196,30 @@ export default function EmployeeList() {
     if (!deleteId) return
     await employeesService.delete(deleteId)
     refetchEmployees()
+    queryClient.invalidateQueries({ queryKey: ['employee', user?.id] })
     setDeleteId(null)
   }
 
   const handleClose = () => {
     setShowModal(false)
     setEditingEmployee(null)
-      setFormData({
-        full_name: '',
-        position: '',
-        site_id: '',
-        hire_date: '',
-        clothing_size: '',
-        shoe_size: '',
-        personnel_number: '',
-        hat_size: '',
-        respirator_size: '',
-        gloves_size: '',
-        height: '',
-        position_change_date: '',
-        template_id: '',
-      })
-      setFieldErrors({})
+    setFormData({
+      full_name: '',
+      position: '',
+      site_id: '',
+      gender: '',
+      hire_date: '',
+      clothing_size: '',
+      shoe_size: '',
+      personnel_number: '',
+      hat_size: '',
+      respirator_size: '',
+      gloves_size: '',
+      height: '',
+      position_change_date: '',
+      template_id: '',
+    })
+    setFieldErrors({})
   }
 
   const normalizedEmployees = useMemo(
@@ -227,8 +234,7 @@ export default function EmployeeList() {
       const cmp = String(a[key] || '').localeCompare(String(b[key] || ''), 'ru')
       return dir === 'desc' ? -cmp : cmp
     })
-  },     [normalizedEmployees, sort]
-  )
+  }, [normalizedEmployees, sort])
 
   const displayedEmployees = sortedEmployees
 
@@ -503,8 +509,8 @@ export default function EmployeeList() {
                 )}
               </>
             ))}
-          </div>
         </div>
+      </div>
 
       <Modal
         isOpen={showModal}
@@ -550,6 +556,18 @@ export default function EmployeeList() {
           </div>
           <div className={`${styles.formRow} ${styles['formRow--three']}`}>
             <div className={`form-group ${styles.field}`}>
+              <label>Пол</label>
+              <select
+                className="form-control"
+                value={formData.gender}
+                onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+              >
+                <option value="">Не указан</option>
+                <option value="male">Мужской</option>
+                <option value="female">Женский</option>
+              </select>
+            </div>
+            <div className={`form-group ${styles.field}`}>
               <label>Табельный номер</label>
               <input
                 type="text"
@@ -583,7 +601,10 @@ export default function EmployeeList() {
                   className="form-control"
                   value={formData.template_id}
                   onChange={(e) =>
-                    setFormData({ ...formData, template_id: e.target.value ? String(e.target.value) : '' })
+                    setFormData({
+                      ...formData,
+                      template_id: e.target.value ? String(e.target.value) : '',
+                    })
                   }
                   aria-invalid={Boolean(fieldErrors.template_id)}
                   aria-describedby={fieldErrors.template_id ? 'template-error' : undefined}
@@ -677,20 +698,24 @@ export default function EmployeeList() {
                 type="text"
                 className="form-control"
                 value={formData.hire_date}
-                onChange={(e) => setFormData({ ...formData, hire_date: dateMaskInput(e.target.value) })}
+                onChange={(e) =>
+                  setFormData({ ...formData, hire_date: dateMaskInput(e.target.value) })
+                }
                 placeholder="DD.MM.YYYY"
               />
             </div>
             <div className={`form-group ${styles.field}`}>
-                <label>Дата изменения профессии/подразделения</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={formData.position_change_date}
-                  onChange={(e) => setFormData({ ...formData, position_change_date: dateMaskInput(e.target.value) })}
-                  placeholder="DD.MM.YYYY"
-                />
-              </div>
+              <label>Дата изменения профессии/подразделения</label>
+              <input
+                type="text"
+                className="form-control"
+                value={formData.position_change_date}
+                onChange={(e) =>
+                  setFormData({ ...formData, position_change_date: dateMaskInput(e.target.value) })
+                }
+                placeholder="DD.MM.YYYY"
+              />
+            </div>
           </div>
 
           <div className={styles.actionButtons}>
