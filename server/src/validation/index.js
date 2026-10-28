@@ -409,7 +409,6 @@ export const EmployeeListQuerySchema = z.object({
 
 export const NormTemplateSchema = z.object({
   name: z.string().min(1, 'Введите название шаблона'),
-  position: z.string().min(1, 'Введите должность'),
   site_id: z
     .preprocess(
       toNumNull,

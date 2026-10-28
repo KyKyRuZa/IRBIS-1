@@ -10,7 +10,7 @@ import {
   getEmployeesWithSizesBySite,
 } from '../models/employeeModel.js'
 import { getNormsForEmployee } from '../models/issueNormModel.js'
-import { getNormTemplatesByPosition } from '../models/normTemplateModel.js'
+import { getAllNormTemplates } from '../models/normTemplateModel.js'
 import { getIssueRecordsByEmployee } from '../models/issueRecordModel.js'
 import pool from '../models/db.js'
 import { EmployeeSchema } from '../validation/index.js'
@@ -94,7 +94,7 @@ export async function getEmployee(req, res, next) {
     const [norms, history, templates] = await Promise.all([
       getNormsForEmployee(employee),
       getIssueRecordsByEmployee(req.params.id),
-      getNormTemplatesByPosition(employee.position, employee.gender),
+      getAllNormTemplates(),
     ])
 
     res.json({ ...employee, norms, history, templates })

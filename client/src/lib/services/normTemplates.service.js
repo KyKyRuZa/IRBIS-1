@@ -17,7 +17,4 @@ export const normTemplatesService = {
 
   removeItem: (templateId, itemId) =>
     api.delete(`/api/norm-templates/${templateId}/items/${itemId}`).then((r) => r.data),
-
-  getByPosition: (position, gender) =>
-    api.get(`/api/norm-templates/by-position/${encodeURIComponent(position)}`, { params: { gender } }).then((r) => r.data),
 }

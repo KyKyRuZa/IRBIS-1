@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { normTemplatesService } from '@/lib/services/normTemplates.service.js'
 import { itemsService } from '@/lib/services/items.service.js'
-import { employeesService } from '@/lib/services/employees.service.js'
 import { ITEM_CATEGORIES } from '@/lib/constants/item-categories.js'
 import { useResource } from '@/hooks/useResource'
 import { showSuccess, showFieldErrors, handleValidationError } from '@/lib/toast.js'
@@ -10,7 +9,6 @@ import Modal from '@components/ui/Modal.jsx'
 import ConfirmDialog from '@components/ui/ConfirmDialog.jsx'
 import LoadingState from '@components/ui/LoadingState.jsx'
 import EmptyState from '@components/ui/EmptyState.jsx'
-import Dropdown from '@components/ui/Dropdown.jsx'
 import Icon from '@components/ui/Icon.jsx'
 import styles from '@styles/NormTemplates.module.css'
 
@@ -27,9 +25,7 @@ export default function NormTemplates() {
   const [templateItems, setTemplateItems] = useState([])
   const [templateForm, setTemplateForm] = useState({
     name: '',
-    position: '',
   })
-  const [positions, setPositions] = useState([])
   const [deleteId, setDeleteId] = useState(null)
 
   const { data: templates, loading, error, refetch } = useResource(normTemplatesService.list, {}, {
@@ -57,7 +53,7 @@ export default function NormTemplates() {
   }
 
   const resetTemplateForm = () => {
-    setTemplateForm({ name: '', position: '' })
+    setTemplateForm({ name: '' })
   }
 
   const resetItemForm = () => {
@@ -74,7 +70,6 @@ export default function NormTemplates() {
     try {
       const payload = {
         name: result.data.name,
-        position: result.data.position,
       }
       if (editingTemplate) {
         await normTemplatesService.update(editingTemplate.id, payload)
@@ -119,7 +114,6 @@ export default function NormTemplates() {
         }
         const created = await normTemplatesService.create({
           name: templateResult.data.name,
-          position: templateResult.data.position,
         })
         template = created?.data ?? created
         setEditingTemplate(template)
@@ -157,10 +151,8 @@ export default function NormTemplates() {
     setEditingTemplate(template)
     setTemplateForm({
       name: template.name,
-      position: template.position,
     })
     fetchTemplateItems(template.id)
-    fetchPositions()
     setShowModal(true)
   }
 
@@ -170,7 +162,6 @@ export default function NormTemplates() {
     resetTemplateForm()
     resetItemForm()
     setTemplateItems([])
-    fetchPositions()
     setShowModal(true)
   }
 
@@ -201,17 +192,16 @@ export default function NormTemplates() {
     resetTemplateForm()
     resetItemForm()
     setTemplateItems([])
-    setPositions([])
   }
 
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.pageHeader}>
         <div className={`${styles.container} ${styles.pageHeaderContent}`}>
-          <div className={styles.title}>
-            <h1>Шаблоны норм выдачи</h1>
-            <div className={styles.subtitle}>Шаблоны норм по должностям. При создании сотрудника можно выбрать шаблон.</div>
-          </div>
+            <div className={styles.title}>
+              <h1>Шаблоны норм выдачи</h1>
+              <div className={styles.subtitle}>Шаблоны норм. При создании сотрудника можно выбрать шаблон.</div>
+            </div>
           <button className="btn" onClick={handleCreateNew}>
             <Icon name="plus" size={16} /> Создать шаблон
           </button>
@@ -226,7 +216,7 @@ export default function NormTemplates() {
               <EmptyState
                 icon={<Icon name="clipboardList" size={48} />}
                 title="Шаблоны не созданы"
-                description="Создайте шаблон норм для должности, чтобы автоматически назначать СИЗ при приёме новых сотрудников."
+                description="Нажмите «Создать шаблон», чтобы добавить набор норм выдачи."
                 action={
                   <button className="btn" onClick={handleCreateNew}>
                     <Icon name="plus" size={16} /> Создать шаблон
@@ -239,7 +229,6 @@ export default function NormTemplates() {
                   <thead>
                     <tr>
                       <th>Название</th>
-                      <th>Должность</th>
                       <th>Позиций</th>
                       <th>Действия</th>
                     </tr>
@@ -248,7 +237,6 @@ export default function NormTemplates() {
                     {templates?.map((template) => (
                       <tr key={template.id}>
                         <td>{template.name}</td>
-                        <td>{template.position}</td>
                         <td>{template.item_count || 0}</td>
                         <td>
                           <div className="action-buttons">
@@ -297,21 +285,6 @@ export default function NormTemplates() {
                 onChange={(e) => setTemplateForm({ ...templateForm, name: e.target.value })}
                 required
               />
-            </div>
-            <div className={`form-group ${styles.field}`}>
-              <label>Должность *</label>
-              <Dropdown
-                value={templateForm.position}
-                onChange={(val) => setTemplateForm({ ...templateForm, position: val })}
-                placeholder="Выберите должность..."
-              >
-                {[...new Set([...positions, ...(templates?.map((t) => t.position) || [])])]
-                  .filter((p) => p && p.trim())
-                  .sort()
-                  .map((p) => (
-                    <option key={p} value={p}>{p}</option>
-                  ))}
-              </Dropdown>
             </div>
           </div>
         </form>
@@ -371,7 +344,7 @@ export default function NormTemplates() {
               description={
                 editingTemplate
                   ? 'Добавьте позиции СИЗ в шаблон.'
-                  : 'Заполните название и должность шаблона, затем добавляйте позиции — шаблон создастся автоматически.'
+                  : 'Введите название шаблона, затем добавляйте позиции — шаблон создастся автоматически.'
               }
             />
           ) : (

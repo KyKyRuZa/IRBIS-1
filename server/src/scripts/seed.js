@@ -537,7 +537,6 @@ const seedNormTemplates = async (itemTypes) => {
   const templatesData = [
     {
       name: 'Оperator АЗС',
-      position: 'Оператор АЗС',
       items: [
         { itemType: getItem('Каска защитная'), period_months: 24, quantity: 1 },
         { itemType: getItem('Очки защитные открытые'), period_months: 12, quantity: 1 },
@@ -549,7 +548,6 @@ const seedNormTemplates = async (itemTypes) => {
     },
     {
       name: 'Наполнитель баллонов',
-      position: 'Наполнитель баллонов',
       items: [
         { itemType: getItem('Каска защитная'), period_months: 24, quantity: 1 },
         { itemType: getItem('Очки защитные открытые'), period_months: 12, quantity: 1 },
@@ -564,8 +562,8 @@ const seedNormTemplates = async (itemTypes) => {
     if (!normItem) continue
 
     const tRes = await pool.query(
-      'INSERT INTO norm_templates (name, position, site_id, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) RETURNING *',
-      [t.name, t.position, null]
+      'INSERT INTO norm_templates (name, site_id, created_at, updated_at) VALUES ($1, $2, NOW(), NOW()) RETURNING *',
+      [t.name, null]
     )
     const template = tRes.rows[0]
     template.items = []
@@ -800,20 +798,6 @@ const seedUsers = async () => {
   return result.rows[0]
 }
 
-const assignEmployeeTemplates = async (employees, templates) => {
-  const templatesByPosition = {}
-  for (const t of templates) {
-    if (!templatesByPosition[t.position]) templatesByPosition[t.position] = []
-    templatesByPosition[t.position].push(t)
-  }
-  for (const emp of employees) {
-    const candidates = templatesByPosition[emp.position] || []
-    if (candidates.length > 0) {
-      await pool.query('UPDATE employees SET template_id = $1 WHERE id = $2', [candidates[0].id, emp.id])
-    }
-  }
-}
-
 const main = async () => {
   try {
     const existing = await pool.query('SELECT COUNT(*)::int FROM sites')
@@ -838,9 +822,6 @@ const main = async () => {
 
     const employees = await seedEmployees(sites)
     log.info({ count: employees.length }, 'Employees seeded')
-
-    await assignEmployeeTemplates(employees, templates)
-    log.info('Employee norm templates assigned')
 
     const certs = await seedCertificates(itemTypes)
     log.info({ count: certs.length }, 'Certificates seeded')

@@ -8,7 +8,6 @@ import {
   listTemplateItems,
   addItemToTemplate,
   removeItemFromTemplate,
-  getTemplatesForPosition,
 } from '../controllers/normTemplateController.js'
 import { authMiddleware, adminOnly } from '../middleware/auth.js'
 import { validate } from '../middleware/validate.js'
@@ -20,7 +19,6 @@ router.use(authMiddleware)
 
 router.get('/', listTemplates)
 router.post('/', adminOnly, validate(NormTemplateSchema), addTemplate)
-router.get('/by-position/:position', getTemplatesForPosition)
 
 router.get('/:id', getTemplate)
 router.put('/:id', adminOnly, validate(NormTemplateUpdateSchema), updateTemplate)

@@ -10,7 +10,6 @@ import {
   createNormTemplateItem,
   getNormTemplateItems,
   deleteNormTemplateItem,
-  getNormTemplatesByPosition,
 } from '../models/normTemplateModel.js'
 
 export async function listTemplates(req, res, next) {
@@ -91,17 +90,6 @@ export async function removeItemFromTemplate(req, res, next) {
     const item = await deleteNormTemplateItem(req.params.itemId)
     if (!item) return res.status(404).json({ error: 'Элемент шаблона не найден' })
     res.json({ message: 'Элемент удалён' })
-  } catch (error) {
-    log.error(error)
-    next(error)
-  }
-}
-
-export async function getTemplatesForPosition(req, res, next) {
-  try {
-    const { position } = req.params
-    const templates = await getNormTemplatesByPosition(decodeURIComponent(position))
-    res.json(templates)
   } catch (error) {
     log.error(error)
     next(error)
