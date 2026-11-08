@@ -212,7 +212,12 @@ export default function IssueForm() {
   }
 
   const handleItemChange = async (itemId) => {
-    form.setMany({ item_type_id: itemId, certificate_id: '' })
+    const selectedItem = items.find((i) => String(i.id) === String(itemId))
+    form.setMany({
+      item_type_id: itemId,
+      certificate_id: '',
+      wear_time_override: selectedItem?.default_wear_time != null ? String(selectedItem.default_wear_time) : '',
+    })
     if (itemId) {
       const certs = await certificatesService.listByItem(itemId)
       setCertificates(certs)

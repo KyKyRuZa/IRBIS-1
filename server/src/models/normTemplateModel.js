@@ -161,7 +161,7 @@ export async function getTemplateNormsForEmployee(employee) {
 
   const result = await pool.query(
     `
-    SELECT ti.*, it.name as item_type_name, it.category, it.etn_point as item_type_etn_point
+    SELECT ti.*, it.name as item_type_name, it.category, it.unit, it.etn_point as item_type_etn_point
     FROM norm_template_items ti
     JOIN item_types it ON ti.item_type_id = it.id
     WHERE ti.template_id = $1

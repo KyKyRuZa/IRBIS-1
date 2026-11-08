@@ -17,6 +17,27 @@ export function formatDate(dateStr) {
   return d.toLocaleDateString('ru-RU')
 }
 
+const UNIT_FORMS = {
+  шт: ['шт', 'шт', 'шт'],
+  пара: ['пара', 'пары', 'пар'],
+  комплект: ['комплект', 'комплекта', 'комплектов'],
+  туба: ['туба', 'тубы', 'туб'],
+  флакон: ['флакон', 'флакона', 'флаконов'],
+  мл: ['мл', 'мл', 'мл'],
+  гр: ['грамм', 'грамма', 'граммов'],
+}
+
+export function unitForm(quantity, unit) {
+  const n = Math.abs(Number(quantity) || 0)
+  const forms = UNIT_FORMS[unit] || [unit, unit, unit]
+  const mod100 = n % 100
+  if (mod100 >= 11 && mod100 <= 14) return forms[2]
+  const mod10 = n % 10
+  if (mod10 === 1) return forms[0]
+  if (mod10 >= 2 && mod10 <= 4) return forms[1]
+  return forms[2]
+}
+
 export function splitFullName(fullName) {
   const parts = (fullName || '').trim().split(/\s+/)
   return {
@@ -96,7 +117,7 @@ function groupNorms(norms, categories) {
     .map((n) => ({
       name: n.item_type_name || '',
       etnPoint: n.item_type_etn_point || '',
-      period: n.period_text ? `${n.quantity} шт. в ${n.period_text}` : `${n.quantity} шт.`,
+      period: n.period_text ? n.period_text : `${n.quantity} ${unitForm(n.quantity, n.unit || 'шт')}`,
     }))
   return normRows.length > 0 ? normRows : [{ name: '', etnPoint: '', period: '' }]
 }

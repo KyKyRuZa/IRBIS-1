@@ -17,12 +17,12 @@ export async function createItemType(
 }
 
 export async function getAllItemTypes() {
-  const result = await pool.query('SELECT * FROM item_types ORDER BY category, name')
+  const result = await pool.query('SELECT *, default_wear_time_months as default_wear_time FROM item_types ORDER BY category, name')
   return result.rows
 }
 
 export async function getItemTypeById(id) {
-  const result = await pool.query('SELECT * FROM item_types WHERE id = $1', [id])
+  const result = await pool.query('SELECT *, default_wear_time_months as default_wear_time FROM item_types WHERE id = $1', [id])
   return result.rows[0]
 }
 

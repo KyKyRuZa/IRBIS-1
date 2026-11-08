@@ -34,7 +34,7 @@ export async function addItem(req, res, next) {
 export async function listItems(req, res, next) {
   try {
     const { category, requires_certificate } = req.query
-    let query = 'SELECT * FROM item_types'
+    let query = 'SELECT *, default_wear_time_months as default_wear_time FROM item_types'
     const conditions = []
     const params = []
 

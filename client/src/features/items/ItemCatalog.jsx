@@ -611,12 +611,17 @@ export default function ItemCatalog() {
             </div>
             <div className={`form-group ${styles.field}`}>
               <label>Единица измерения</label>
-              <input
-                type="text"
+              <select
                 className="form-control"
                 value={formData.unit}
                 onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-              />
+              >
+                <option value="шт">шт</option>
+                <option value="пара">пара</option>
+                <option value="комплект">комплект</option>
+                <option value="мл">мл</option>
+                <option value="гр">гр</option>
+              </select>
             </div>
             <div className={`form-group ${styles.field}`}>
               <label>Срок годности (мес)</label>
