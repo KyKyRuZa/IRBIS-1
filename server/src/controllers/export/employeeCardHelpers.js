@@ -74,7 +74,7 @@ export async function buildCardData(emp, norms, history) {
       const isConsumable = record.category === 'consumable'
       return {
         itemName: record.item_type_name || '',
-        model: record.certificate_number || '',
+        model: record.product_name || '',
         issueDate: formatDate(record.issue_date),
         issueQty: String(record.quantity || ''),
         issueMethod: record.issue_method === 'dosator' ? 'в дозаторе' : isConsumable ? 'лично' : '',
@@ -146,14 +146,23 @@ export function buildSheetData(emp, items, sheetNumber, year) {
     ...buildEmployeeData(emp, nameParts),
     sheetNumber: String(sheetNumber),
     year: String(year),
-    items: (items || []).map((record, index) => ({
-      n: String(index + 1),
-      itemName: record.item_type_name || '',
-      unit: record.unit || 'шт',
-      quantity: String(record.quantity ?? ''),
-      issueMethod: record.issue_method === 'dosator' ? 'дозатор' : 'лично',
-      issueDate: formatDate(record.issue_date),
-    })),
+    history: (items || []).map((record) => {
+      const isConsumable = record.category === 'consumable'
+      return {
+        itemName: record.item_type_name || '',
+        model: record.product_name || '',
+        issueDate: formatDate(record.issue_date),
+        issueQty: String(record.quantity ?? ''),
+        issueMethod: record.issue_method === 'dosator' ? 'дозатор' : 'лично',
+        signatureGet: '',
+        returnDate: !isConsumable && record.return_date ? formatDate(record.return_date) : '',
+        returnQty:
+          !isConsumable && record.return_quantity !== undefined
+            ? String(record.return_quantity)
+            : '',
+        signatureReturn: '',
+      }
+    }),
   }
 }
 

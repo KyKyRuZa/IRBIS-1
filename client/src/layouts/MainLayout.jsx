@@ -14,6 +14,7 @@ function getPageClass(pathname) {
   if (pathname === '/reports') return 'page-reports'
   if (pathname === '/forms') return 'page-forms'
   if (pathname === '/notifications') return 'page-notifications'
+  if (pathname === '/guide') return 'page-guide'
   return 'page-employees'
 }
 

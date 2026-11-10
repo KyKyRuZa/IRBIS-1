@@ -14,6 +14,7 @@ const ADMIN_LINKS = [
   { to: '/certificates', label: 'Сертификаты', icon: 'certificates' },
   { to: '/forms', label: 'Учёт форм', icon: 'forms' },
   { to: '/reports', label: 'Аналитика', icon: 'reports' },
+  { to: '/guide', label: 'Руководство', icon: 'guide' },
 ]
 
 function NavItem({ to, label, icon, isActive, collapsed, onClick }) {

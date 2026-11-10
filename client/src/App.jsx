@@ -19,6 +19,7 @@ const Object = lazy(() => import('@features/objects/Object.jsx'))
 const Login = lazy(() => import('@features/auth/Login.jsx'))
 const FormTracker = lazy(() => import('@features/forms/FormTracker.jsx'))
 const Notifications = lazy(() => import('@/features/notifications/Notifications.jsx'))
+const Guide = lazy(() => import('@features/guide/Guide.jsx'))
 const DesignSystem = lazy(() => import('@/dev/DesignSystem.jsx'))
 const NotFoundPage = lazy(() => import('@/layouts/NotFoundPage.jsx'))
 
@@ -155,6 +156,14 @@ function AppContent() {
               element={
                 <AdminRoute>
                   <Notifications />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/guide"
+              element={
+                <AdminRoute>
+                  <Guide />
                 </AdminRoute>
               }
             />

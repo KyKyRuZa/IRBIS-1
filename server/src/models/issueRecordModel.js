@@ -106,7 +106,7 @@ export async function getAllIssueRecords() {
 export async function getIssueRecordsByEmployee(employeeId) {
   const result = await pool.query(
     `
-    SELECT r.*, it.name as item_type_name, it.category, it.unit, c.certificate_number,
+    SELECT r.*, it.name as item_type_name, it.category, it.unit, c.certificate_number, c.product_name,
       ${SHEET_NUMBER_SELECT}
     FROM issue_records r
     JOIN item_types it ON r.item_type_id = it.id
@@ -124,7 +124,7 @@ export async function getIssueRecordsByEmployee(employeeId) {
 export async function getIssueRecordsForEvent(employeeId, issueDate) {
   const result = await pool.query(
     `
-    SELECT r.*, it.name as item_type_name, it.category, it.unit, c.certificate_number
+    SELECT r.*, it.name as item_type_name, it.category, it.unit, c.certificate_number, c.product_name
     FROM issue_records r
     JOIN item_types it ON r.item_type_id = it.id
     LEFT JOIN certificates c ON r.certificate_id = c.id
@@ -141,7 +141,7 @@ export async function getIssueRecordsForEvent(employeeId, issueDate) {
 export async function getIssueEventsByEmployee(employeeId, year) {
   const result = await pool.query(
     `
-    SELECT r.*, it.name as item_type_name, it.category, it.unit, c.certificate_number
+    SELECT r.*, it.name as item_type_name, it.category, it.unit, c.certificate_number, c.product_name
     FROM issue_records r
     JOIN item_types it ON r.item_type_id = it.id
     LEFT JOIN certificates c ON r.certificate_id = c.id
